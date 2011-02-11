@@ -1,0 +1,8 @@
+; $Id$
+name = Entity Translation
+description = Allows entities to be translated into different languages.
+;package = Multilingual
+core = 7.x
+configure = admin/config/.../entity_translation
+;dependencies[] = locale
+files[] = tests/entity_translation.test

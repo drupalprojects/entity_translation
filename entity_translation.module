@@ -1,0 +1,8 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Allows entities to be translated into different languages.
+ */
+
