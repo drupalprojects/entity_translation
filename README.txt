@@ -12,7 +12,7 @@ To submit bug reports and feature suggestions, or to track changes:
 
 -- REQUIREMENTS --
 
-* @todo
+None.
 
 
 -- INSTALLATION --
@@ -33,5 +33,6 @@ To submit bug reports and feature suggestions, or to track changes:
 -- CONTACT --
 
 Current maintainers:
+* Francesco Placella (plach) - http://drupal.org/user/183211
 * Daniel F. Kudwien (sun) - http://drupal.org/user/54136
 

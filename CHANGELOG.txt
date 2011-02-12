@@ -2,4 +2,17 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#902760 by sun: Changed module name from translation to entity_translation.
+#1032602 by rfay: Fixed bogus 'base path' docs in hook_translation_info().
+#1032816 by das-peter: Removed superfluous method getHumanReadableId().
+#1032728 by das-peter, rfay, sun: Fixed entity info cache not cleared after
+  changing module settings.
+#1021434 by plach | sun, OnkelTem: Fixed `translation` table is not created on
+  upgrading from core translation.
+#1003320 by good_man | Berdir, pcambra, plach, sun: Fixed The etid insane field.
+#1009546 by good_man: Fixed form buttons not wrapped in #type actions.
+#990120 by das-peter: Changed view mode from 'full' to 'default' in edit form.
+#929444 by das-peter, plach, sun: Fixed coding standards.
+#920826 by das-peter, sun: Fixed various issues after initial merge.
+#673300 by plach, sun: Added initial Translatable Fields UI code.
 by sun: Added initial baseline of module files.
