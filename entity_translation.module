@@ -68,26 +68,26 @@ function entity_translation_entity_info_alter(&$entity_info) {
   // Provide defaults for translation info.
   foreach ($entity_info as $entity_type => $info) {
     if (entity_translation_enabled($entity_type, TRUE)) {
-      if (!isset($entity_info[$entity_type]['translation']['translation'])) {
-        $entity_info[$entity_type]['translation']['translation'] = array();
+      if (!isset($entity_info[$entity_type]['translation']['entity_translation'])) {
+        $entity_info[$entity_type]['translation']['entity_translation'] = array();
       }
 
-      if (!isset($entity_info[$entity_type]['translation']['translation']['base path'])) {
+      if (!isset($entity_info[$entity_type]['translation']['entity_translation']['base path'])) {
         // If no base path is provided we default to the common "node/%node"
         // pattern.
         $router = menu_get_router();
         // If we cannot find a usable base path we skip to the next entity type.
         if (!isset($router["$entity_type/%"])) {
-          unset($entity_info[$entity_type]['translation']['translation']);
+          unset($entity_info[$entity_type]['translation']['entity_translation']);
           continue;
         }
         $path = "$entity_type/%$entity_type";
-        $entity_info[$entity_type]['translation']['translation']['base path'] = $path;
+        $entity_info[$entity_type]['translation']['entity_translation']['base path'] = $path;
       }
 
-      $path = $entity_info[$entity_type]['translation']['translation']['base path'];
+      $path = $entity_info[$entity_type]['translation']['entity_translation']['base path'];
 
-      $entity_info[$entity_type]['translation']['translation'] += array(
+      $entity_info[$entity_type]['translation']['entity_translation'] += array(
         'view path' => $path,
         'edit path' => "$path/edit",
         'class' => 'EntityTranslationDefaultHandler',
@@ -124,11 +124,11 @@ function entity_translation_menu() {
   foreach (entity_get_info() as $entity_type => $info) {
     // Menu is rebuilt while determining base paths so we might not have them
     // available yet.
-    if (isset($info['translation']['translation']['base path']) && entity_translation_enabled($entity_type)) {
+    if (isset($info['translation']['entity_translation']['base path']) && entity_translation_enabled($entity_type)) {
       // Extract informations from the bundle description.
-      $path = $info['translation']['translation']['base path'];
+      $path = $info['translation']['entity_translation']['base path'];
       $keys = array('theme callback', 'theme arguments', 'access callback', 'access arguments', 'load arguments');
-      $item = array_intersect_key($info['translation']['translation'], drupal_map_assoc($keys));
+      $item = array_intersect_key($info['translation']['entity_translation'], drupal_map_assoc($keys));
 
       $item += array(
         'file' => 'entity_translation.admin.inc',
@@ -196,8 +196,8 @@ function entity_translation_menu() {
 function entity_translation_admin_paths() {
   $paths = array();
   foreach (entity_get_info() as $entity_type => $info) {
-    if (entity_translation_enabled($entity_type, TRUE) && isset($info['translation']['translation']['base path'])) {
-      $base_path = preg_replace('|%[^/]*|', '*', $info['translation']['translation']['base path']);
+    if (entity_translation_enabled($entity_type, TRUE) && isset($info['translation']['entity_translation']['base path'])) {
+      $base_path = preg_replace('|%[^/]*|', '*', $info['translation']['entity_translation']['base path']);
       $paths["$base_path/translate"] = TRUE;
       $paths["$base_path/translate/*"] = TRUE;
     }
@@ -485,7 +485,7 @@ function entity_translation_get_handler($entity_type, $entity, $update = FALSE) 
 
   if (!isset($handlers[$entity_type][$entity_id])) {
     $entity_info = entity_get_info($entity_type);
-    $class = $entity_info['translation']['translation']['class'];
+    $class = $entity_info['translation']['entity_translation']['class'];
     $handler = new $class($entity_type, $entity_info, $entity, $entity_id);
 
     // If the entity id is empty we cannot cache the translation handler

@@ -9,22 +9,22 @@
 /**
  * Identifies a content type which has translation support enabled.
  */
-define('TRANSLATION_ENABLED', 4);
+define('ENTITY_TRANSLATION_ENABLED', 4);
 
 /**
  * Do not show translation metadata.
  */
-define('TRANSLATION_METADATA_HIDE', 0);
+define('ENTITY_TRANSLATION_METADATA_HIDE', 0);
 
 /**
  * Add translation metadata to the original authoring information.
  */
-define('TRANSLATION_METADATA_SHOW', 1);
+define('ENTITY_TRANSLATION_METADATA_SHOW', 1);
 
 /**
  * Replace the original authoring information with translation metadata.
  */
-define('TRANSLATION_METADATA_REPLACE', 2);
+define('ENTITY_TRANSLATION_METADATA_REPLACE', 2);
 
 /**
  * Check if the given entity has node translation enabled.
@@ -37,7 +37,15 @@ function entity_translation_node($entity_type, $node) {
  * Node specific access callback.
  */
 function entity_translation_node_tab_access($node) {
-  return !empty($node->language) && (translation_supported_type($node->type) || translation_node('node', $node)) && translation_tab_access('node');
+  if ($node->language != LANGUAGE_NONE) {
+    if (entity_translation_node_supported_type($node->type)) {
+      return entity_translation_tab_access($node);
+    }
+    elseif (entity_translation_node('node', $node)) {
+      return _translation_tab_access();
+    }
+  }
+  return FALSE;
 }
 
 /**
@@ -46,8 +54,8 @@ function entity_translation_node_tab_access($node) {
  * @return
  *   Boolean value.
  */
-function entity_translation_supported_type($type) {
-  return variable_get('language_content_type_' . $type, 0) == TRANSLATION_ENABLED;
+function entity_translation_node_supported_type($type) {
+  return variable_get('language_content_type_' . $type, 0) == ENTITY_TRANSLATION_ENABLED;
 }
 
 /**
@@ -88,7 +96,7 @@ function entity_translation_node_alter_form(&$form, $form_state, $handler) {
  * Provide content language switcher links to navigate among node translations.
  */
 function entity_translation_node_view($node, $build_mode) {
-  if (!empty($node->translations) && drupal_multilingual() && entity_translation_supported_type($node->type)) {
+  if (!empty($node->translations) && drupal_multilingual() && entity_translation_node_supported_type($node->type)) {
     $path = 'node/' . $node->nid;
     $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $path);
 
@@ -124,22 +132,22 @@ function entity_translation_node_view($node, $build_mode) {
 function entity_translation_form_node_type_form_alter(&$form, &$form_state) {
   $type = $form['#node_type']->type;
 
-  $form['workflow']['language_content_type']['#options'][TRANSLATION_ENABLED] = t('Enabled, with entity translation');
+  $form['workflow']['language_content_type']['#options'][ENTITY_TRANSLATION_ENABLED] = t('Enabled, with entity translation');
   $form['workflow']['language_content_type']['#description'] .= ' ' . t('If <em>entity translation</em> is enabled it will be possible to provide a different version of the same content for each available language.');
 
-  $form['display']['translation_node_metadata'] = array(
+  $form['display']['entity_translation_node_metadata'] = array(
     '#type' => 'radios',
     '#title' => t('Translation post information'),
     '#description' => t('Whether the translation authoring information should be hidden, shown, or replace the node\'s authoring information.'),
-    '#default_value' => variable_get("translation_node_metadata_$type", TRANSLATION_METADATA_HIDE),
+    '#default_value' => variable_get("entity_translation_node_metadata_$type", ENTITY_TRANSLATION_METADATA_HIDE),
     '#options' => array(t('Hidden'), t('Shown'), t('Replacing post information')),
   );
 
   if (isset($form['comment'])) {
-    $form['comment']['translation_comment_filter'] = array(
+    $form['comment']['entity_translation_comment_filter'] = array(
       '#type' => 'checkbox',
       '#title' => t('Filter comments per language'),
-      '#default_value' => variable_get("translation_comment_filter_$type", FALSE),
+      '#default_value' => variable_get("entity_translation_comment_filter_$type", FALSE),
       '#description' => t('Show only comments whose language matches content language.'),
     );
   }
@@ -153,9 +161,9 @@ function entity_translation_form_node_type_form_alter(&$form, &$form_state) {
 function entity_translation_preprocess_node(&$variables) {
   $node = $variables['node'];
   $submitted = variable_get("node_submitted_{$node->type}", TRUE);
-  $mode = variable_get("translation_node_metadata_{$node->type}", TRANSLATION_METADATA_HIDE);
+  $mode = variable_get("entity_translation_node_metadata_{$node->type}", ENTITY_TRANSLATION_METADATA_HIDE);
 
-  if ($submitted && $mode != TRANSLATION_METADATA_HIDE) {
+  if ($submitted && $mode != ENTITY_TRANSLATION_METADATA_HIDE) {
     global $language_content, $user;
 
     $handler = entity_translation_get_handler('node', $node);
@@ -173,14 +181,14 @@ function entity_translation_preprocess_node(&$variables) {
       }
 
       switch ($mode) {
-        case TRANSLATION_METADATA_SHOW:
+        case ENTITY_TRANSLATION_METADATA_SHOW:
           $variables['date'] .= ' (' . t('translated on <em>!date</em>', array('!date' => $date)) . ')';
           if ($name) {
             $variables['name'] .= ' (' . t('translated by !name', array('!name' => $name)) . ')';
           }
           break;
 
-        case TRANSLATION_METADATA_REPLACE:
+        case ENTITY_TRANSLATION_METADATA_REPLACE:
           $variables['date'] = $date;
           if ($name) {
             $variables['name'] = $name;
@@ -200,7 +208,7 @@ function entity_translation_preprocess_node(&$variables) {
  */
 function entity_translation_query_comment_filter_alter(QueryAlterableInterface $query) {
   $node = $query->getMetaData('node');
-  if (variable_get("translation_comment_filter_{$node->type}", FALSE)) {
+  if (variable_get("entity_translation_comment_filter_{$node->type}", FALSE)) {
     $query->where("language = :language OR language = :language_none", array(':language' => $GLOBALS['language_content']->language, ':language_none' => LANGUAGE_NONE));
   }
 }

@@ -190,7 +190,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $this->translating = FALSE;
     $this->outdated = FALSE;
 
-    $info = $entity_info['translation']['translation'];
+    $info = $entity_info['translation']['entity_translation'];
     $this->basePath = $this->getPathInstance($info['base path']);
     $this->editPath = isset($info['edit path']) ? $this->getPathInstance($info['edit path']) : FALSE;
     $this->viewPath = isset($info['view path']) ? $this->getPathInstance($info['view path']) : FALSE;
@@ -491,7 +491,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    *   The instantiated path.
    */
   protected function getPathInstance($path) {
-    $wildcard = $this->entityInfo['translation']['translation']['path wildcard'];
+    $wildcard = $this->entityInfo['translation']['entity_translation']['path wildcard'];
     return str_replace($wildcard, $this->getEntityId(), $path);
   }
 

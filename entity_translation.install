@@ -81,7 +81,8 @@ function entity_translation_schema() {
  * Implements hook_install().
  */
 function entity_translation_install() {
-  // entity_translation_form_alter() needs to run after locale_form_alter().
+  // entity_translation_form_alter() needs to run after locale_form_alter() and
+  // translation_menu().
   db_update('system')
     ->fields(array('weight' => 1))
     ->condition('name', 'entity_translation')
@@ -89,12 +90,16 @@ function entity_translation_install() {
 
   // Enable translation for nodes.
   variable_set('entity_translation_entity_types', array('node' => 'node'));
+
+  // Make translation use the content language type.
+  variable_set('translation_language_type', LANGUAGE_TYPE_CONTENT);
 }
 
 /**
  * Implements hook_uninstall().
  */
 function entity_translation_uninstall() {
+  variable_del('translation_language_type');
   variable_del('locale_field_language_fallback');
   variable_del('entity_translation_edit_form_info');
   variable_del('entity_translation_entity_types');
