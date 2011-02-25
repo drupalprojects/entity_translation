@@ -1,4 +1,3 @@
-; $Id$
 name = Entity Translation testing
 description = Tests Entity Translation module functionality. Do not enable.
 core = 7.x

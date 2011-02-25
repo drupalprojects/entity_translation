@@ -1,4 +1,3 @@
-; $Id$
 name = Entity Translation Upgrade
 description = Provides an upgrade path from node-based translation to field-based translation.
 package = Multilingual
