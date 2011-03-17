@@ -456,7 +456,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   public function isAliasEnabled() {
-    return !empty($this->entityInfo['translation']['translation']['alias']);
+    return !empty($this->entityInfo['translation']['entity_translation']['alias']);
   }
 
   /**

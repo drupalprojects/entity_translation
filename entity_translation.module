@@ -516,7 +516,7 @@ function entity_translation_get_handler($entity_type, $entity, $update = FALSE) 
 function entity_translation_edit_form_info($form) {
   if (isset($form['#entity_type']) && isset($form['#' . $form['#entity_type']])) {
     $entity_info = entity_get_info();
-    if (!empty($entity_info[$form['#entity_type']]['translation']['translation']['edit form'])) {
+    if (!empty($entity_info[$form['#entity_type']]['translation']['entity_translation']['edit form'])) {
       return array(
         'entity type' => $form['#entity_type'],
         'entity' => $form['#' . $form['#entity_type']],

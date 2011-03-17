@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1096008 by fietserwin, sun: Fixed URL alias not updated.
 #1060334 by plach: Completed the transition from Translation 2.
 #902760 by sun: Changed module name from translation to entity_translation.
 #1032602 by rfay: Fixed bogus 'base path' docs in hook_translation_info().
