@@ -38,7 +38,7 @@ function entity_translation_node($entity_type, $node) {
 function entity_translation_node_tab_access($node) {
   if ($node->language != LANGUAGE_NONE) {
     if (entity_translation_node_supported_type($node->type)) {
-      return entity_translation_tab_access($node);
+      return entity_translation_tab_access('node');
     }
     elseif (entity_translation_node('node', $node)) {
       return _translation_tab_access();
