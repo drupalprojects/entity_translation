@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1095390 by plach, klonos, sun: Changed Do not capitalize first letters in
+  project's name.
 #1032846 by plach, sun, das-peter: Removed read-ony non translatable fields from
   the translation form.
 #1082112 by fietserwin | mattwad: Fixed No argument passed to

@@ -1,4 +1,4 @@
-name = Entity Translation Upgrade
+name = Entity translation upgrade
 description = Provides an upgrade path from node-based translation to field-based translation.
 package = Multilingual
 core = 7.x

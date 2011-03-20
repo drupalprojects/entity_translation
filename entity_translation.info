@@ -1,4 +1,4 @@
-name = Entity Translation
+name = Entity translation
 description = Allows entities to be translated into different languages.
 package = Multilingual
 core = 7.x
