@@ -41,7 +41,7 @@ function entity_translation_node_tab_access($node) {
       return entity_translation_tab_access('node');
     }
     elseif (entity_translation_node('node', $node)) {
-      return _translation_tab_access();
+      return _translation_tab_access($node);
     }
   }
   return FALSE;
