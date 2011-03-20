@@ -248,11 +248,7 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
 
   // If we are creating a new translation we need to retrieve form elements
   // populated with the source language values.
-  $view_mode = 'default';
   list($id, , $bundle) = entity_extract_ids($entity_type, $entity);
-  field_attach_prepare_view($entity_type, array($id => $entity), $view_mode);
-  $field_view = field_attach_view($entity_type, $entity, $view_mode, $langcode);
-
   $source_form = array();
   if ($new_translation) {
     $source_form_state = $form_state;
@@ -263,14 +259,9 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
   foreach (field_info_instances($entity_type, $bundle) as $instance) {
     $field_name = $instance['field_name'];
     $field = field_info_field($field_name);
-    // If a field is not translatable it should not be editable from the
-    // translation form, yet it could be useful to display its value.
+    // If a field is not translatable remove it from the translation form.
     if (!$field['translatable']) {
-      $form[$field_name] = array(
-        '#markup' => drupal_render($field_view[$field_name]),
-        // Place the element where it would appear if displayed.
-        '#weight' => $instance['display'][$view_mode]['weight'],
-      );
+      $form[$field_name]['#access'] = FALSE;
     }
     // If we are creating a new translation we have to change the form item
     // language information from source to target language, this way the
