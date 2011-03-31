@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1098106 by pcambra, jelenex: Fixed Translated fields aren't validated (or
+  processed with presave and submit field_attach_() hooks).
 #1111686 by plach: Fixed API documentation wrong.
 #1095390 by plach, klonos, sun: Changed Do not capitalize first letters in
   project's name.

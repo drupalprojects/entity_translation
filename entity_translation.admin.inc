@@ -72,6 +72,7 @@ function entity_translation_overview($entity_type, $entity) {
   // languages.
   if ($handler->initOriginalTranslation()) {
     // FIXME!
+    field_attach_presave($entity_type, $entity);
     field_attach_update($entity_type, $entity);
   }
 
@@ -278,6 +279,7 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save translation'),
+    '#validate' => array('entity_translation_edit_form_save_validate'),
     '#submit' => array('entity_translation_edit_form_save_submit'),
   );
   if (!$new_translation) {
@@ -349,6 +351,13 @@ function entity_translation_edit_form_source_language_submit($form, &$form_state
 }
 
 /**
+ * Validation handler for the translation saving.
+ */
+function entity_translation_edit_form_save_validate($form, &$form_state) {
+  field_attach_form_validate($form['#entity_type'], $form['#entity'], $form, $form_state);
+}
+
+/**
  * Submit handler for the translation saving.
  */
 function entity_translation_edit_form_save_submit($form, &$form_state) {
@@ -362,6 +371,8 @@ function entity_translation_edit_form_save_submit($form, &$form_state) {
   );
 
   $handler->setTranslation($translation, $form_state['values']);
+  field_attach_submit($form['#entity_type'], $form['#entity'], $form, $form_state);
+  field_attach_presave($form['#entity_type'], $form['#entity']);
   field_attach_update($form['#entity_type'], $form['#entity']);
 
   // Update URL alias.
