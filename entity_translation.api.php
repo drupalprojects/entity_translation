@@ -37,10 +37,10 @@
 function hook_translation_info($types = NULL) {
   $info['custom_entity'] = array(
     'translation' => array(
-      'translation' => array(
-        'class' => 'TranslationCustomEntityHandler',
+      'entity_translation' => array(
+        'class' => 'EntityTranslationCustomEntityHandler',
         'base path' => 'custom_entity/%custom_entity',
-        'access callback' => 'translation_custom_entity_tab_access',
+        'access callback' => 'custom_entity_tab_access',
         'access arguments' => array(1),
         'edit form' => TRUE,
       ),

@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1111686 by plach: Fixed API documentation wrong.
 #1095390 by plach, klonos, sun: Changed Do not capitalize first letters in
   project's name.
 #1032846 by plach, sun, das-peter: Removed read-ony non translatable fields from
