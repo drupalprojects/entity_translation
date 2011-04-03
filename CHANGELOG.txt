@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1109198 by plach, Countzero: Fixed Node translation overview page broken if
+  i18n is enabled.
 #1098106 by pcambra, jelenex: Fixed Translated fields aren't validated (or
   processed with presave and submit field_attach_() hooks).
 #1111686 by plach: Fixed API documentation wrong.

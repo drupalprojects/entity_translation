@@ -55,8 +55,14 @@ function entity_translation_admin_form_submit($form, $form_state) {
 function entity_translation_overview($entity_type, $entity) {
   // Entity translation and node translation share the same system path.
   if (entity_translation_node($entity_type, $entity)) {
-    module_load_include('inc', 'translation', 'translation.pages');
-    return translation_node_overview($entity);
+    if (module_exists('i18n_node')) {
+      module_load_include('inc', 'i18n_node', 'i18n_node.pages');
+      return i18n_node_translation_overview($entity);
+    }
+    else {
+      module_load_include('inc', 'translation', 'translation.pages');
+      return translation_node_overview($entity);
+    }
   }
 
   $handler = entity_translation_get_handler($entity_type, $entity);
