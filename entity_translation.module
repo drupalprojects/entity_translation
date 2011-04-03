@@ -71,15 +71,22 @@ function entity_translation_entity_info_alter(&$entity_info) {
         $entity_info[$entity_type]['translation']['entity_translation'] = array();
       }
 
+      // If no base path is provided we default to the common "node/%node"
+      // pattern.
       if (!isset($entity_info[$entity_type]['translation']['entity_translation']['base path'])) {
-        // If no base path is provided we default to the common "node/%node"
-        // pattern.
+        // Give a hint we are not done yet with entity translation information
+        // building, since if caches have been cleared also menu cache is going
+        // to be rebuilt and would retrieve an incomplete entity information.
+        $GLOBALS['entity_translation_info_building'] = TRUE;
         $router = menu_get_router();
+        unset($GLOBALS['entity_translation_info_building']);
+
         // If we cannot find a usable base path we skip to the next entity type.
         if (!isset($router["$entity_type/%"])) {
           unset($entity_info[$entity_type]['translation']['entity_translation']);
           continue;
         }
+
         $path = "$entity_type/%$entity_type";
         $entity_info[$entity_type]['translation']['entity_translation']['base path'] = $path;
       }
@@ -121,9 +128,9 @@ function entity_translation_enabled($entity_type, $skip_handler = FALSE) {
 function entity_translation_menu() {
   // Create tabs for all possible entity types.
   foreach (entity_get_info() as $entity_type => $info) {
-    // Menu is rebuilt while determining base paths so we might not have them
-    // available yet.
-    if (isset($info['translation']['entity_translation']['base path']) && entity_translation_enabled($entity_type)) {
+    // Menu is rebuilt while determining entity translation base paths and
+    // callbacks so we might not have them available yet.
+    if (empty($GLOBALS['entity_translation_info_building']) && entity_translation_enabled($entity_type)) {
       // Extract informations from the bundle description.
       $path = $info['translation']['entity_translation']['base path'];
       $keys = array('theme callback', 'theme arguments', 'access callback', 'access arguments', 'load arguments');

@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#936646 by good_man, fietserwin, plach, klonos: Fixed Undefined index access
+  callback/arguments in entity_translation_menu().
 #1109198 by plach, Countzero: Fixed Node translation overview page broken if
   i18n is enabled.
 #1098106 by pcambra, jelenex: Fixed Translated fields aren't validated (or
