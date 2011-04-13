@@ -87,8 +87,8 @@ function entity_translation_overview($entity_type, $entity) {
   $languages = language_list();
   $source = isset($_SESSION['entity_translation_source_language']) ? $_SESSION['entity_translation_source_language'] :  $translations->original;
   $base_path = $handler->getBasePath();
-  $label = $handler->getLabel();
   $path = $handler->getViewPath();
+  $original_label = $handler->getLabel();
 
   if ($path) {
     // If we have a view path defined for the current entity get the switch
@@ -107,21 +107,12 @@ function entity_translation_overview($entity_type, $entity) {
       // Existing translation in the translation set: display status.
       $is_original = $langcode == $translations->original;
       $translation = $translations->data[$langcode];
-      $link = isset($links->links[$langcode]) ? $links->links[$langcode] : array();
+      $label = $is_original ? $original_label : _entity_translation_label($entity_type, $entity, $langcode);
+      $link = isset($links->links[$langcode]['href']) ? $links->links[$langcode] : array('href' => $path, 'language' => $language);
+      $row_title = l($label, $link['href'], $link);
 
-      if ($is_original) {
-        if (!empty($link)) {
-          $row_title = l($label, $link['href'], $link);
-        }
-        else {
-          $row_title = $path ? l($label, $path, array('language' => $language)) : $label;
-        }
-      }
-      elseif (!empty($link)) {
-        $row_title = l(t('view'), $link['href'], $link);
-      }
-      else {
-        $row_title = t('n/a');
+      if (empty($link['href'])) {
+        $row_title = $is_original ? $label : t('n/a');
       }
 
       $edit_path = $is_original ? $handler->getEditPath() : $base_path . '/translate/edit/' . $langcode;
@@ -165,7 +156,7 @@ function entity_translation_overview($entity_type, $entity) {
     $rows[] = array($language_name, $source_name, $row_title, $status, implode(" | ", $options));
   }
 
-  drupal_set_title(t('Translations of %label', array('%label' => $label)), PASS_THROUGH);
+  drupal_set_title(t('Translations of %label', array('%label' => $original_label)), PASS_THROUGH);
 
   $build['entity_translation_overview'] = array(
     '#theme' => 'table',
@@ -174,6 +165,13 @@ function entity_translation_overview($entity_type, $entity) {
   );
 
   return $build;
+}
+
+/**
+ * Return the appropriate entity label for the given language.
+ */
+function _entity_translation_label($entity_type, $entity, $langcode = NULL) {
+  return function_exists('title_entity_label') ? title_entity_label($entity, $entity_type, $langcode) : t('view');
 }
 
 /**
