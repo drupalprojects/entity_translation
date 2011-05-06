@@ -82,13 +82,12 @@ function entity_translation_overview($entity_type, $entity) {
     field_attach_update($entity_type, $entity);
   }
 
-  $header = array(t('Language'), t('Source language'), t('Title'), t('Status'), t('Operations'));
+  $header = array(t('Language'), t('Source language'), t('Translation'), t('Status'), t('Operations'));
   // @todo: Do we want only enabled languages here?
   $languages = language_list();
   $source = isset($_SESSION['entity_translation_source_language']) ? $_SESSION['entity_translation_source_language'] :  $translations->original;
   $base_path = $handler->getBasePath();
   $path = $handler->getViewPath();
-  $original_label = $handler->getLabel();
 
   if ($path) {
     // If we have a view path defined for the current entity get the switch
@@ -107,7 +106,7 @@ function entity_translation_overview($entity_type, $entity) {
       // Existing translation in the translation set: display status.
       $is_original = $langcode == $translations->original;
       $translation = $translations->data[$langcode];
-      $label = $is_original ? $original_label : _entity_translation_label($entity_type, $entity, $langcode);
+      $label = _entity_translation_label($entity_type, $entity, $langcode);
       $link = isset($links->links[$langcode]['href']) ? $links->links[$langcode] : array('href' => $path, 'language' => $language);
       $row_title = l($label, $link['href'], $link);
 
@@ -156,7 +155,7 @@ function entity_translation_overview($entity_type, $entity) {
     $rows[] = array($language_name, $source_name, $row_title, $status, implode(" | ", $options));
   }
 
-  drupal_set_title(t('Translations of %label', array('%label' => $original_label)), PASS_THROUGH);
+  drupal_set_title(t('Translations of %label', array('%label' => $handler->getLabel())), PASS_THROUGH);
 
   $build['entity_translation_overview'] = array(
     '#theme' => 'table',
