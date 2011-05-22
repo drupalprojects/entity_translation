@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1031370 by joostvdl | rfay: Fixed Translation publishing status is hidden under
+  collapsed 'publishing options' fieldset (and is hidden by default).
 #1003876 by plach, good_man: (follow-up) Fixed original label translation. 
 #1003876 by good_man, plach: Introduced support for translated entity labels.
 #936646 by good_man, fietserwin, plach, klonos: Fixed Undefined index access

@@ -239,7 +239,7 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
   $form['translation']['status'] = array(
     '#type' => 'checkbox',
     '#title' => t('This translation is published'),
-    '#default_value' => isset($translations->data[$langcode]) && $translations->data[$langcode]['status'],
+    '#default_value' => !isset($translations->data[$langcode]) || $translations->data[$langcode]['status'],
     '#description' => t('When this option is unchecked, this translation will not be visible for non-administrators.'),
   );
   $form['translation']['translate'] = array(
