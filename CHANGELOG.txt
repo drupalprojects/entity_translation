@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#944874 by das-peter, plach: Added basic tests for the translation creation and
+  editing workflow.
 #1031370 by joostvdl | rfay: Fixed Translation publishing status is hidden under
   collapsed 'publishing options' fieldset (and is hidden by default).
 #1003876 by plach, good_man: (follow-up) Fixed original label translation. 
