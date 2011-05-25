@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1003876 by plach: (follow-up) Fixed labels not replaced by Title.
 #944874 by das-peter, plach: Added basic tests for the translation creation and
   editing workflow.
 #1031370 by joostvdl | rfay: Fixed Translation publishing status is hidden under
