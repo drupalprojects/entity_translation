@@ -259,15 +259,18 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
   );
 
   // If we are creating a new translation we need to retrieve form elements
-  // populated with the source language values.
-  list($id, , $bundle) = entity_extract_ids($entity_type, $entity);
-  $source_form = array();
-  if ($new_translation) {
+  // populated with the source language values, but only if form is not being
+  // rebuilt. In this case source values have already been populated, so we need
+  // to preserve possible changes.
+  $prepare_fields = $new_translation && !$form_state['rebuild'];
+  if ($prepare_fields) {
+    $source_form = array();
     $source_form_state = $form_state;
     field_attach_form($entity_type, $entity, $source_form, $source_form_state, $source);
   }
   field_attach_form($entity_type, $entity, $form, $form_state, $langcode);
 
+  list(, , $bundle) = entity_extract_ids($entity_type, $entity);
   foreach (field_info_instances($entity_type, $bundle) as $instance) {
     $field_name = $instance['field_name'];
     $field = field_info_field($field_name);
@@ -279,7 +282,7 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
     // language information from source to target language, this way the
     // user can find the form items already populated with the source values
     // while the field form element holds the correct language information.
-    elseif ($new_translation && !isset($entity->{$field_name}[$langcode]) && isset($source_form[$field_name][$source])) {
+    elseif ($prepare_fields && !isset($entity->{$field_name}[$langcode]) && isset($source_form[$field_name][$source])) {
       $form[$field_name][$langcode] = $source_form[$field_name][$source];
       // Update #language keys in the field form subtree.
       array_walk_recursive($form[$field_name][$langcode], '_entity_translation_form_language', $langcode);
