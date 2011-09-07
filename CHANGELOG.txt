@@ -1,6 +1,10 @@
 
-Entity Translation 7.x-1.x, xxxx-xx-xx
+Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+
+
+Entity translation 7.x-1.0-alpha1, 2011-09-07
+---------------------------------------------
 #1045196 by plach: Fixed Image field translation broken.
 #1003876 by plach: (follow-up) Fixed labels not replaced by Title.
 #944874 by das-peter, plach: Added basic tests for the translation creation and
