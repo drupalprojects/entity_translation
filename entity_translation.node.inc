@@ -142,8 +142,8 @@ function entity_translation_node_view($node, $build_mode) {
 function entity_translation_form_node_type_form_alter(&$form, &$form_state) {
   $type = $form['#node_type']->type;
 
-  $form['workflow']['language_content_type']['#options'][ENTITY_TRANSLATION_ENABLED] = t('Enabled, with entity translation');
-  $form['workflow']['language_content_type']['#description'] .= ' ' . t('If <em>entity translation</em> is enabled it will be possible to provide a different version of the same content for each available language.');
+  $form['workflow']['language_content_type']['#options'][ENTITY_TRANSLATION_ENABLED] = t('Enabled, with field translation');
+  $form['workflow']['language_content_type']['#description'] .= ' ' . t('<p>If field translation is selected you can have per-field translation for each available language.');
 
   $form['display']['entity_translation_node_metadata'] = array(
     '#type' => 'radios',

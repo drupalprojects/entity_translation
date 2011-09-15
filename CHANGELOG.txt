@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1280544 by mvc, emarchak: Added Clarify difference between multilingual support
+  options.
 #1280506 by tarmstrong | plach: Fixed Simpletests broken after upgrading to
   D7.7.
 #1262512 by claudiu.cristea: Fixed Clear the entity cache after translate.
