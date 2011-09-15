@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1280506 by tarmstrong | plach: Fixed Simpletests broken after upgrading to
+  D7.7.
 #1262512 by claudiu.cristea: Fixed Clear the entity cache after translate.
 #1230858 by tarmstrong, plach | valderama: Fixed Compatibility with
   node_clone(); entity_id() of old node is used, resulting in integrity
