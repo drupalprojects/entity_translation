@@ -389,6 +389,11 @@ function entity_translation_edit_form_save_submit($form, &$form_state) {
   field_attach_presave($form['#entity_type'], $form['#entity']);
   field_attach_update($form['#entity_type'], $form['#entity']);
 
+  // Clear the cache for this entity.
+  $entity_info = entity_get_info($form['#entity_type']);
+  $id_key = $entity_info['entity keys']['id'];
+  entity_get_controller($form['#entity_type'])->resetCache(array($form['#entity']->{$id_key}));
+
   // Update URL alias.
   if (_entity_translation_path_enabled($handler) && (user_access('create url aliases') || user_access('administer url aliases'))) {
     $path = array(
