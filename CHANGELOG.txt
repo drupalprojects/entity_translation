@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1280660 by mvc, plach: Fixed Gracefully handle module being disabled and
+  re-enabled.
 #1280544 by mvc, emarchak: Added Clarify difference between multilingual support
   options.
 #1280506 by tarmstrong | plach: Fixed Simpletests broken after upgrading to
