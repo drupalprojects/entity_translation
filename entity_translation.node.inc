@@ -86,7 +86,7 @@ function entity_translation_node_alter_form(&$form, $form_state, $handler) {
     }
   }
   if (count($translations->data) > 1) {
-    unset($form['language']['#options']['']);
+    unset($form['language']['#options'][LANGUAGE_NONE]);
   }
 
   if (isset($form['translation'])) {
