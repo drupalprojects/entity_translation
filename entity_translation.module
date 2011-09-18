@@ -609,7 +609,7 @@ function entity_translation_form_alter(&$form, $form_state) {
  * TODO
  */
 function entity_translation_entity_form_validate($form, &$form_state) {
-  if (isset($form_state['values']['language'])) {
+  if (isset($form_state['values']['language']) && empty($form['language']['#attributes']['disabled'])) {
     $info = entity_translation_edit_form_info($form);
     $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
     $handler->setFormLanguage($form_state['values']['language']);
