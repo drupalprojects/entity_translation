@@ -114,12 +114,13 @@ function entity_translation_overview($entity_type, $entity) {
         $row_title = $is_original ? $label : t('n/a');
       }
 
-      $edit_path = $is_original ? $handler->getEditPath() : $base_path . '/translate/edit/' . $langcode;
+      $edit_path = $handler->getEditPath($langcode);
       if ($edit_path && $handler->getAccess('update')) {
-        $options[] = l($is_original ? t('edit') : t('edit translation'), $edit_path);
+        $options[] = l(t('edit'), $edit_path);
       }
 
       $status = $translation['status'] ? t('Published') : t('Not published');
+      // @todo Add a theming function here.
       $status .= isset($translation['translate']) && $translation['translate'] ? ' - <span class="marker">' . t('outdated') . '</span>' : '';
 
       if ($is_original) {
@@ -133,7 +134,7 @@ function entity_translation_overview($entity_type, $entity) {
     else {
       // No such translation in the set yet: help user to create it.
       $row_title = $source_name = t('n/a');
-      $add_path = "$base_path/translate/add/$langcode/$source";
+      $add_path = "$base_path/edit/add/$langcode/$source";
 
       if ($source != $langcode && $handler->getAccess('update')) {
         list(, , $bundle) = entity_extract_ids($entity_type, $entity);
@@ -148,7 +149,7 @@ function entity_translation_overview($entity_type, $entity) {
           }
         }
 
-        $options[] = $translatable ? l(t('add translation'), $add_path) : t('No translatable fields');
+        $options[] = $translatable ? l(t('add'), $add_path) : t('No translatable fields');
       }
       $status = t('Not translated');
     }
@@ -285,7 +286,7 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
     elseif ($prepare_fields && !isset($entity->{$field_name}[$langcode]) && isset($source_form[$field_name][$source])) {
       $form[$field_name][$langcode] = $source_form[$field_name][$source];
       // Update #language keys in the field form subtree.
-      array_walk_recursive($form[$field_name][$langcode], '_entity_translation_form_language', $langcode);
+      array_walk_recursive($form[$field_name][$langcode], '_entity_translation_form_language_callback_callback', $langcode);
     }
   }
 
@@ -346,7 +347,7 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
 /**
  * Helper callback: replace the source language with the given one.
  */
-function _entity_translation_form_language(&$item, $key, $langcode) {
+function _entity_translation_form_language_callback(&$item, $key, $langcode) {
   if ($key === '#language') {
     $item = $langcode;
   }

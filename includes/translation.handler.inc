@@ -132,8 +132,11 @@ interface EntityTranslationHandlerInterface {
 
   /**
    * Return the path of the entity edit form.
+   *
+   * @param $langcode
+   *   (optional) The language the edit form should be presented in.
    */
-  public function getEditPath();
+  public function getEditPath($langcode = NULL);
 
   /**
    * Return the path of the entity view page.
@@ -452,8 +455,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     return $this->basePath;
   }
 
-  public function getEditPath() {
-    return $this->editPath;
+  public function getEditPath($langcode = NULL) {
+    return empty($langcode) ? $this->editPath : $this->editPath . '/' . $langcode;
   }
 
   public function getViewPath() {
