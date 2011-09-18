@@ -84,7 +84,7 @@ function entity_translation_overview($entity_type, $entity) {
 
   $header = array(t('Language'), t('Source language'), t('Translation'), t('Status'), t('Operations'));
   // @todo: Do we want only enabled languages here?
-  $languages = language_list();
+  $languages = entity_translation_languages();
   $source = isset($_SESSION['entity_translation_source_language']) ? $_SESSION['entity_translation_source_language'] :  $translations->original;
   $base_path = $handler->getBasePath();
   $path = $handler->getViewPath();

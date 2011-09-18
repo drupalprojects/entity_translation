@@ -35,7 +35,7 @@ function entity_translation_node($entity_type, $node) {
 /**
  * Implements hook_menu_alter().
  */
-function entity_translation_menu_alter(&$items) {
+function entity_translation_node_menu_alter(&$items) {
   if (module_exists('i18n_node')) {
     $items['node/%node/translate']['page callback'] = 'entity_translation_overview';
     $items['node/%node/translate']['file'] = 'entity_translation.admin.inc';

@@ -161,6 +161,16 @@ interface EntityTranslationHandlerInterface {
    * Return TRUE if the entity supports URL aliasing.
    */
   public function isAliasEnabled();
+
+  /**
+   * TODO
+   */
+  public function setFormLanguage($langcode);
+
+  /**
+   * TODO
+   */
+  public function getFormLanguage();
 }
 
 /**
@@ -175,6 +185,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
   private $translating;
   private $outdated;
+  private $formLanguage;
 
   private $basePath;
   private $editPath;
@@ -188,6 +199,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
     $this->translating = FALSE;
     $this->outdated = FALSE;
+    $this->formLanguage = FALSE;
 
     $info = $entity_info['translation']['entity_translation'];
     $this->basePath = $this->getPathInstance($info['base path']);
@@ -463,6 +475,14 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
   public function isAliasEnabled() {
     return !empty($this->entityInfo['translation']['entity_translation']['alias']);
+  }
+
+  public function setFormLanguage($langcode) {
+    $this->formLanguage = $langcode;
+  }
+
+  public function getFormLanguage() {
+    return $this->formLanguage;
   }
 
   /**
