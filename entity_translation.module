@@ -11,10 +11,7 @@ module_load_include('inc', 'entity_translation', 'entity_translation.node');
  * Implements hook_language_type_info_alter().
  */
 function entity_translation_language_types_info_alter(array &$language_types) {
-  $language_types[LANGUAGE_TYPE_CONTENT] = array(
-    'name' => t('Content'),
-    'description' => t('Order of language detection methods for content. If a version of content is available in the detected language, it will be displayed.'),
-  );
+  unset($language_types[LANGUAGE_TYPE_CONTENT]['fixed']);
 }
 
 /**
