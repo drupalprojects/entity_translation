@@ -809,30 +809,32 @@ function _entity_translation_form_language_callback(&$item, $key, $langcode) {
  * Mark translations as outdated if the submitted value is true.
  */
 function entity_translation_field_attach_submit($entity_type, $entity, $form, &$form_state) {
-  $handler = entity_translation_get_handler($entity_type, $entity, TRUE);
-  $langcode = $handler->getFormLanguage();
+  if (entity_translation_enabled($entity_type)) {
+    $handler = entity_translation_get_handler($entity_type, $entity, TRUE);
+    $langcode = $handler->getFormLanguage();
 
-  // If the form language is different from the entity language we are dealing
-  // with an entity translation.
-  if ($langcode && $langcode != $handler->getLanguage()) {
-    $translations = $handler->getTranslations();
-    if (!isset($translations->data[$langcode])) {
-      $tab_info = entity_translation_tab_info();
-      $translation = array(
-        'language' => $langcode,
-        'source' => $tab_info['source'],
-      );
+    // If the form language is different from the entity language we are dealing
+    // with an entity translation.
+    if ($langcode && $langcode != $handler->getLanguage()) {
+      $translations = $handler->getTranslations();
+      if (!isset($translations->data[$langcode])) {
+        $tab_info = entity_translation_tab_info();
+        $translation = array(
+          'language' => $langcode,
+          'source' => $tab_info['source'],
+        );
+      }
+      else {
+        $translation = $translations->data[$langcode];
+      }
+      $translation['translate'] = 0; // $form_state['values']['translation']['translate'];
+      $translation['status'] = 1; // $form_state['values']['translation']['status'],
+      $handler->setTranslation($translation);
     }
     else {
-      $translation = $translations->data[$langcode];
+      $outdated = isset($form_state['values']['translation']) && $form_state['values']['translation']['retranslate'];
+      $handler->setOutdated($outdated);
     }
-    $translation['translate'] = 0; // $form_state['values']['translation']['translate'];
-    $translation['status'] = 1; // $form_state['values']['translation']['status'],
-    $handler->setTranslation($translation);
-  }
-  else {
-    $outdated = isset($form_state['values']['translation']) && $form_state['values']['translation']['retranslate'];
-    $handler->setOutdated($outdated);
   }
 }
 
