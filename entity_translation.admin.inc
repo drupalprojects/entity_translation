@@ -85,7 +85,7 @@ function entity_translation_overview($entity_type, $entity) {
   $header = array(t('Language'), t('Source language'), t('Translation'), t('Status'), t('Operations'));
   // @todo: Do we want only enabled languages here?
   $languages = entity_translation_languages();
-  $source = isset($_SESSION['entity_translation_source_language']) ? $_SESSION['entity_translation_source_language'] :  $translations->original;
+  $source = isset($_SESSION['entity_translation_source_language']) ? $_SESSION['entity_translation_source_language'] : $translations->original;
   $base_path = $handler->getBasePath();
   $path = $handler->getViewPath();
 
@@ -286,7 +286,7 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
     elseif ($prepare_fields && !isset($entity->{$field_name}[$langcode]) && isset($source_form[$field_name][$source])) {
       $form[$field_name][$langcode] = $source_form[$field_name][$source];
       // Update #language keys in the field form subtree.
-      array_walk_recursive($form[$field_name][$langcode], '_entity_translation_form_language_callback_callback', $langcode);
+      array_walk_recursive($form[$field_name][$langcode], '_entity_translation_form_language_callback', $langcode);
     }
   }
 
@@ -342,15 +342,6 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
   }
 
   return $form;
-}
-
-/**
- * Helper callback: replace the source language with the given one.
- */
-function _entity_translation_form_language_callback(&$item, $key, $langcode) {
-  if ($key === '#language') {
-    $item = $langcode;
-  }
 }
 
 /**

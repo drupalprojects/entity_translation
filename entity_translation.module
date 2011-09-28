@@ -245,7 +245,7 @@ function entity_translation_menu_alter(&$items) {
         $add_path = "$edit_path/add/%entity_translation_language/%entity_translation_language";
         $language_position = $entity_position + 3;
         $source_position = $entity_position + 4;
-        $items["$edit_path/add/%entity_translation_language/%entity_translation_language"] = array(
+        $items[$add_path] = array(
           'title callback' => 'Add translation',
           'page callback' => 'entity_translation_add_page',
           'page arguments' => array_merge(array($entity_type, $entity_position, $language_position, $source_position, $edit_form_item), $edit_form_item['page arguments']),
@@ -294,9 +294,8 @@ function entity_translation_edit_access() {
   $handler = entity_translation_get_handler($entity_type, $entity);
   $translations = $handler->getTranslations();
 
-  // If the translation exists and it's not the only one we can show the
-  // corresponding local tasks.
-  if (isset($translations->data[$langcode]) && count($translations->data) > 1) {
+  // If the translation exists, we can show the corresponding local task.
+  if (isset($translations->data[$langcode])) {
     // Check that the requested language is actually accessible.
     $enabled_languages = entity_translation_languages($entity_type, $entity);
     if (isset($enabled_languages[$langcode])) {
@@ -340,7 +339,7 @@ function entity_translation_add_access() {
   $handler = entity_translation_get_handler($entity_type, $entity);
   $translations = $handler->getTranslations();
 
-  // If the translation does not exist we can show the path. 
+  // If the translation does not exist we can show the tab.
   if (!isset($translations->data[$langcode]) && $langcode != $source) {
     // Check that the requested language is actually accessible.
     $enabled_languages = entity_translation_languages($entity_type, $entity);
@@ -705,7 +704,6 @@ function entity_translation_form_alter(&$form, $form_state) {
       );
 
       array_unshift($form['#validate'], 'entity_translation_entity_form_validate');
-//       array_unshift($form['#submit'], 'entity_translation_entity_form_submit');
 
       // Node specific alterations.
       if ($info['entity type'] == 'node') {
@@ -722,29 +720,114 @@ function entity_translation_entity_form_validate($form, &$form_state) {
   if (isset($form_state['values']['language']) && empty($form['language']['#attributes']['disabled'])) {
     $info = entity_translation_edit_form_info($form);
     $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
+    // Update the form language as it might have changed.
     $handler->setFormLanguage($form_state['values']['language']);
   }
 }
 
 /**
- * Submit handler for the entity edit form.
+ * Implementation of hook_field_attach_form().
+ */
+function entity_translation_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
+  if (entity_translation_enabled($entity_type)) {
+    $handler = entity_translation_get_handler($entity_type, $entity);
+    $translations = $handler->getTranslations();
+    $tab_info = entity_translation_tab_info();
+
+    // If we are creating a new translation we need to retrieve form elements
+    // populated with the source language values, but only if form is not being
+    // rebuilt. In this case source values have already been populated, so we
+    // need to preserve possible changes.
+    if (!$form_state['rebuild'] && !isset($translations->data[$langcode]) && !empty($tab_info['source']) && isset($translations->data[$source = $tab_info['source']])) {
+      list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+      foreach (field_info_instances($entity_type, $bundle) as $instance) {
+        $field_name = $instance['field_name'];
+        $field = field_info_field($field_name);
+
+        // If we are creating a new translation we have to change the form item
+        // language information from source to target language, this way the
+        // user can find the form items already populated with the source values
+        // while the field form element holds the correct language information.
+        if ($field['translatable']) {
+          $form[$field_name]['#field_name'] = $field_name;
+          $form[$field_name]['#source'] = $source;
+
+          // Swap default values during form processing to avoid recursion. We
+          // try to act before any other callback so that the correct values are
+          // already in place for them.
+          if (!isset($form[$field_name]['#process'])) {
+            $form[$field_name]['#process'] = array();
+          }
+          array_unshift($form[$field_name]['#process'], 'entity_translation_prepare_element');
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Form element process callback.
+ */
+function entity_translation_prepare_element($element, &$form_state) {
+  $source_form = drupal_static(__FUNCTION__);
+
+  if (!isset($source_form)) {
+    $source_form = array();
+    $source_form_state = $form_state;
+    $info = entity_translation_edit_form_info($form_state['complete form']);
+    field_attach_form($info['entity type'], $info['entity'], $source_form, $source_form_state, $element['#source']);
+  }
+
+  $source = $element['#source'];
+  $langcode = $element['#language'];
+  $field_name = $element['#field_name'];
+
+  // If we are creating a new translation we have to change the form item
+  // language information from source to target language, this way the
+  // user can find the form items already populated with the source values
+  // while the field form element holds the correct language information.
+  if (isset($source_form[$field_name][$source])) {
+    $element[$langcode] = $source_form[$field_name][$source];
+    array_walk_recursive($element[$langcode], '_entity_translation_form_language_callback', $langcode);
+  }
+
+  return $element;
+}
+
+/**
+ * Helper callback: replace the source language with the given one.
+ */
+function _entity_translation_form_language_callback(&$item, $key, $langcode) {
+  if ($key === '#language') {
+    $item = $langcode;
+  }
+}
+
+/**
+ * Implementation of hook_field_attach_submit().
  *
  * Mark translations as outdated if the submitted value is true.
  */
 function entity_translation_field_attach_submit($entity_type, $entity, $form, &$form_state) {
   $handler = entity_translation_get_handler($entity_type, $entity, TRUE);
   $tab_info = entity_translation_tab_info();
+  $langcode = $handler->getFormLanguage();
 
-  $translation = array(
-    'translate' => 0, // $form_state['values']['translation']['translate'],
-    'status' => 1, // $form_state['values']['translation']['status'],
-    'language' => $handler->getFormLanguage(),
-    'source' => isset($tab_info['source']) ? $tab_info['source'] : NULL,
-  );
-
-  $handler->setTranslation($translation);
-  $outdated = (bool) $form_state['values']['translation']['retranslate'];
-  $handler->setOutdated($outdated);
+  // If the form language is different from the entity language we are dealing
+  // with an entity translation.
+  if ($langcode && $langcode != $handler->getLanguage()) {
+    $translation = array(
+      'translate' => 0, // $form_state['values']['translation']['translate'],
+      'status' => 1, // $form_state['values']['translation']['status'],
+      'language' => $langcode,
+      'source' => $tab_info['source'],
+    );
+    $handler->setTranslation($translation);
+  }
+  else {
+    $outdated = isset($form_state['values']['translation']) && $form_state['values']['translation']['retranslate'];
+    $handler->setOutdated($outdated);
+  }
 }
 
 /**
@@ -760,23 +843,6 @@ function entity_translation_form_field_ui_field_settings_form_alter(&$form, $for
     '#title' => t('Users may translate this field.'),
     '#default_value' => $field['translatable'],
   );
-}
-
-/**
- * TODO
- */
-function entity_translation_handler($new_handler = NULL) {
-  static $drupal_static_fast;
-  if (!isset($drupal_static_fast['handler'])) {
-    $drupal_static_fast['handler'] = &drupal_static(__FUNCTION__, array());
-  }
-  $handler = &$drupal_static_fast['handler'];
-
-  if (isset($new_handler)) {
-    $handler = $new_handler;
-  }
-
-  return $handler;
 }
 
 /**
