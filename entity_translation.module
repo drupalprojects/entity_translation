@@ -664,7 +664,7 @@ function entity_translation_field_attach_delete($entity_type, $entity) {
 /**
  * Implements hook_form_alter().
  */
-function entity_translation_form_alter(&$form, $form_state) {
+function entity_translation_form_alter(&$form, &$form_state) {
   if (($info = entity_translation_edit_form_info($form)) && entity_translation_enabled($info['entity type'])) {
     $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
     $translations = $handler->getTranslations();
@@ -695,12 +695,12 @@ function entity_translation_form_alter(&$form, $form_state) {
           '#type' => 'submit',
           '#value' => t('Delete translation'),
           '#weight' => $form['actions']['delete'],
-          '#submit' => array('entity_translation_form_delete_translation_submit'),
+          '#submit' => array('entity_translation_entity_form_delete_translation_submit'),
         );
         unset($form['actions']['delete']);
       }
       else {
-        $form['actions']['delete']['#submit'][] = 'entity_translation_form_delete_submit';
+        $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_delete_submit';
       }
 
       $form['translation'] = array(
@@ -730,7 +730,7 @@ function entity_translation_form_alter(&$form, $form_state) {
 /**
  * Submit handler for the entity deletion.
  */
-function entity_translation_form_delete_submit($form, &$form_state) {
+function entity_translation_entity_form_delete_submit($form, &$form_state) {
   $info = entity_get_info($form['#entity_type']);
   drupal_set_message(t('This will delete all the @entity_type translations.', array('@entity_type' => drupal_strtolower($info['label']))), 'warning');
 }
@@ -738,12 +738,12 @@ function entity_translation_form_delete_submit($form, &$form_state) {
 /**
  * Submit handler for the translation deletion.
  */
-function entity_translation_form_delete_translation_submit($form, &$form_state) {
+function entity_translation_entity_form_delete_translation_submit($form, &$form_state) {
   $form_state['redirect'] = "{$form['#handler']->getBasePath()}/translate/delete/{$form['#handler']->getFormLanguage()}";
 }
 
 /**
- * TODO
+ * Validation handler for the entity edit form.
  */
 function entity_translation_entity_form_validate($form, &$form_state) {
   if (isset($form_state['values']['language']) && empty($form['language']['#attributes']['disabled'])) {
