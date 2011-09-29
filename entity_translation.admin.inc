@@ -436,7 +436,7 @@ function entity_translation_delete_confirm($form, $form_state, $entity_type, $en
   return confirm_form(
     $form,
     t('Are you sure you want to delete the @language translation of %label?', array('@language' => $languages[$langcode]->name, '%label' => $handler->getLabel())),
-    "{$handler->getBasePath()}/translate/edit/$langcode",
+    "{$handler->getBasePath()}/edit/$langcode",
     t('This action cannot be undone.'),
     t('Delete'),
     t('Cancel')

@@ -670,6 +670,8 @@ function entity_translation_form_alter(&$form, $form_state) {
     $translations = $handler->getTranslations();
 
     if (!empty($translations->data) && !entity_translation_node($info['entity type'], $info['entity'])) {
+      $form['#handler'] = $handler;
+
       if ($handler->getLanguage() != $handler->getFormLanguage()) {
         if (isset($form['language'])) {
           // If we are editing a translation set the correct value in the
@@ -687,6 +689,18 @@ function entity_translation_form_alter(&$form, $form_state) {
         $langcode = $handler->getFormLanguage();
         $args = array('@label' => $handler->getLabel(), '@language' => t($languages[$langcode]->name));
         drupal_set_title(t('@label [@language translation]', $args));
+
+        // Replace the delete button with the delete translation one.
+        $form['actions']['delete_translation'] = array(
+          '#type' => 'submit',
+          '#value' => t('Delete translation'),
+          '#weight' => $form['actions']['delete'],
+          '#submit' => array('entity_translation_form_delete_translation_submit'),
+        );
+        unset($form['actions']['delete']);
+      }
+      else {
+        $form['actions']['delete']['#submit'][] = 'entity_translation_form_delete_submit';
       }
 
       $form['translation'] = array(
@@ -711,6 +725,21 @@ function entity_translation_form_alter(&$form, $form_state) {
       }
     }
   }
+}
+
+/**
+ * Submit handler for the entity deletion.
+ */
+function entity_translation_form_delete_submit($form, &$form_state) {
+  $info = entity_get_info($form['#entity_type']);
+  drupal_set_message(t('This will delete all the @entity_type translations.', array('@entity_type' => drupal_strtolower($info['label']))), 'warning');
+}
+
+/**
+ * Submit handler for the translation deletion.
+ */
+function entity_translation_form_delete_translation_submit($form, &$form_state) {
+  $form_state['redirect'] = "{$form['#handler']->getBasePath()}/translate/delete/{$form['#handler']->getFormLanguage()}";
 }
 
 /**
