@@ -671,33 +671,36 @@ function entity_translation_form_alter(&$form, &$form_state) {
 
     if (!empty($translations->data) && !entity_translation_node($info['entity type'], $info['entity'])) {
       $form['#handler'] = $handler;
+      $form_langcode = $handler->getFormLanguage();
+      $langcode = $handler->getLanguage();
 
-      if ($handler->getLanguage() != $handler->getFormLanguage()) {
+      if ($langcode != $form_langcode) {
         if (isset($form['language'])) {
           // If we are editing a translation set the correct value in the
           // language widget and not current one.
           // @todo Consider supporting the ability to change translation
           // language.
-          $langcode = $handler->getLanguage();
           $languages = language_list();
           $form['language']['#options'][$langcode] = $languages[$langcode]->name;
           $form['language']['#default_value'] = $langcode;
-          $form['language']['#attributes']['disabled'] = 'disabled';
+          $form['language']['#disabled'] = TRUE;
         }
+
+        if (isset($translations->data[$form_langcode])) {
+          // Replace the delete button with the delete translation one.
+          $form['actions']['delete_translation'] = array(
+            '#type' => 'submit',
+            '#value' => t('Delete translation'),
+            '#weight' => $form['actions']['delete'],
+            '#submit' => array('entity_translation_entity_form_delete_translation_submit'),
+          );
+        }
+        unset($form['actions']['delete']);
 
         // Set page title.
         $langcode = $handler->getFormLanguage();
         $args = array('@label' => $handler->getLabel(), '@language' => t($languages[$langcode]->name));
         drupal_set_title(t('@label [@language translation]', $args));
-
-        // Replace the delete button with the delete translation one.
-        $form['actions']['delete_translation'] = array(
-          '#type' => 'submit',
-          '#value' => t('Delete translation'),
-          '#weight' => $form['actions']['delete'],
-          '#submit' => array('entity_translation_entity_form_delete_translation_submit'),
-        );
-        unset($form['actions']['delete']);
       }
       else {
         $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_delete_submit';
