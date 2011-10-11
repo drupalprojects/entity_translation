@@ -706,6 +706,10 @@ function entity_translation_form_alter(&$form, &$form_state) {
         $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_delete_submit';
       }
 
+      // Add form handlers.
+      $form['actions']['submit']['#submit'][] = 'entity_translation_entity_form_submit';
+      array_unshift($form['#validate'], 'entity_translation_entity_form_validate');
+
       $form['translation'] = array(
         '#type' => 'fieldset',
         '#title' => t('Translation'),
@@ -719,8 +723,6 @@ function entity_translation_form_alter(&$form, &$form_state) {
         '#default_value' => 0,
         '#description' => t('If you made a significant change, which means translations should be updated, you can flag all translations of this post as outdated. This will not change any other property of those posts, like whether they are published or not.'),
       );
-
-      array_unshift($form['#validate'], 'entity_translation_entity_form_validate');
 
       // Node specific alterations.
       if ($info['entity type'] == 'node') {
@@ -754,6 +756,21 @@ function entity_translation_entity_form_validate($form, &$form_state) {
     $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
     // Update the form language as it might have changed.
     $handler->setFormLanguage($form_state['values']['language']);
+  }
+}
+
+/**
+ * Submit handler for the translation saving.
+ */
+function entity_translation_entity_form_submit($form, &$form_state) {
+  $handler = $form['#handler'];
+  $langcode = $handler->getFormLanguage();
+  $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $handler->getViewPath());
+  if (!empty($links->links[$langcode]['href'])) {
+    $form_state['redirect'] = array(
+      $links->links[$langcode]['href'],
+      $links->links[$langcode],
+    );
   }
 }
 
