@@ -324,6 +324,10 @@ function entity_translation_field_language_alter(&$display_language, $context) {
       // Find the new fallback values.
       locale_field_language_fallback($display_language, $entity, $context['language']);
     }
+    elseif (!field_has_translation_handler($entity_type, 'locale')) {
+      // If not handled by the Locale translation handler trigger fallback too.
+      locale_field_language_fallback($display_language, $entity, $context['language']);
+    }
   }
 }
 
