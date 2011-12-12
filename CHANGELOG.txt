@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1174242 by djac, good_man, plach | Jerome F: Properly override the
+  node/%node/translate menu router path.
 #1293638 by das-peter: Fixed Language fallback on Taxonomy Terms (or any entity
   type without locale support).
 #1283200 by plach: Enable content language negotiation the right way.

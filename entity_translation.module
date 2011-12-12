@@ -120,14 +120,22 @@ function entity_translation_enabled($entity_type, $skip_handler = FALSE) {
 }
 
 /**
- * Implements hook_menu().
+ * Implements hook_menu_alter().
  */
-function entity_translation_menu() {
+function entity_translation_menu_alter(&$items) {
+  $backup = array();
+
+  // If entity translation information is being rebuilt we must not proceed to
+  // avoid recursion.
+  if (!empty($GLOBALS['entity_translation_info_building'])) {
+    return;
+  }
+
   // Create tabs for all possible entity types.
   foreach (entity_get_info() as $entity_type => $info) {
     // Menu is rebuilt while determining entity translation base paths and
     // callbacks so we might not have them available yet.
-    if (empty($GLOBALS['entity_translation_info_building']) && entity_translation_enabled($entity_type)) {
+    if (entity_translation_enabled($entity_type)) {
       // Extract informations from the bundle description.
       $path = $info['translation']['entity_translation']['base path'];
       $keys = array('theme callback', 'theme arguments', 'access callback', 'access arguments', 'load arguments');
@@ -135,11 +143,17 @@ function entity_translation_menu() {
 
       $item += array(
         'file' => 'entity_translation.admin.inc',
+        'module' => 'entity_translation',
       );
 
       $entity_position = count(explode('/', $path)) - 1;
       $source_position = $entity_position + 4;
       $language_position = $entity_position + 3;
+
+      // Backup existing values for the translate overview page.
+      if (isset($items["$path/translate"])) {
+        $backup[$entity_type] = $items["$path/translate"];
+      }
 
       $items["$path/translate"] = array(
         'title' => 'Translate',
@@ -188,7 +202,11 @@ function entity_translation_menu() {
     'page arguments' => array('entity_translation_admin_form'),
     'access arguments' => array('administer entity translation'),
     'file' => 'entity_translation.admin.inc',
-   );
+    'module' => 'entity_translation',
+  );
+
+  // Node-specific menu alterations.
+  entity_translation_node_menu_alter($items, $backup);
 
   return $items;
 }

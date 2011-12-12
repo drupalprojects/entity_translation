@@ -52,17 +52,10 @@ function entity_translation_admin_form_submit($form, $form_state) {
 /**
  * Translations overview menu callback.
  */
-function entity_translation_overview($entity_type, $entity) {
+function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   // Entity translation and node translation share the same system path.
-  if (entity_translation_node($entity_type, $entity)) {
-    if (module_exists('i18n_node')) {
-      module_load_include('inc', 'i18n_node', 'i18n_node.pages');
-      return i18n_node_translation_overview($entity);
-    }
-    else {
-      module_load_include('inc', 'translation', 'translation.pages');
-      return translation_node_overview($entity);
-    }
+  if ($callback && entity_translation_node($entity_type, $entity)) {
+    return entity_translation_overview_callback($callback, $entity);
   }
 
   $handler = entity_translation_get_handler($entity_type, $entity);
@@ -164,6 +157,19 @@ function entity_translation_overview($entity_type, $entity) {
   );
 
   return $build;
+}
+
+/**
+ * Call the appropriate translation overview callback.
+ */
+function entity_translation_overview_callback($callback, $entity) {
+  if (module_exists($callback['module'])) {
+    if (isset($callback['file'])) {
+      $path = isset($callback['file path']) ? $callback['file path'] : drupal_get_path('module', $callback['module']);
+      require_once DRUPAL_ROOT . '/' . $path . '/' . $callback['file'];
+    }
+    return $callback['page callback']($entity);
+  }
 }
 
 /**
