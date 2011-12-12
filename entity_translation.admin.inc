@@ -291,7 +291,7 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
     elseif ($prepare_fields && !isset($entity->{$field_name}[$langcode]) && isset($source_form[$field_name][$source])) {
       $form[$field_name][$langcode] = $source_form[$field_name][$source];
       // Update #language keys in the field form subtree.
-      array_walk_recursive($form[$field_name][$langcode], '_entity_translation_form_language', $langcode);
+      _entity_translation_form_language($form[$field_name][$langcode], $source, $langcode);
     }
   }
 
@@ -350,11 +350,28 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
 }
 
 /**
- * Helper callback: replace the source language with the given one.
+ * Helper function: recursively replace the source language with the given one.
  */
-function _entity_translation_form_language(&$item, $key, $langcode) {
-  if ($key === '#language') {
-    $item = $langcode;
+function _entity_translation_form_language(&$element, $source, $langcode) {
+  // Iterate through the form structure recursively.
+  foreach (element_children($element) as $key) {
+    _entity_translation_form_language($element[$key], $source, $langcode);
+  }
+
+  // Replace specific occurrences of the source language with the target
+  // language.
+  foreach (element_properties($element) as $key) {
+    if ($key === '#language') {
+      $element[$key] = $langcode;
+    }
+
+    if ($key === '#parents' || $key === '#field_parents') {
+      foreach ($element[$key] as $delta => $value) {
+        if ($value === $source) {
+          $element[$key][$delta] = $langcode;
+        }
+      }
+    }
   }
 }
 
