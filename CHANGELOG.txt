@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1380380 by bojanz: Fixed Prevent notice when translation has been removed from
+  the form.
 #1367832 by floretan: Fixed Check #parents and #field_parents() for source
   language in new translation form.
 #1174242 by djac, good_man, plach | Jerome F: Properly override the
