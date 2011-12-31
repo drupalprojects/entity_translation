@@ -33,26 +33,43 @@ function entity_translation_node($entity_type, $node) {
 }
 
 /**
- * Implements hook_menu_alter().
+ * Node-specific menu alterations.
  */
-function entity_translation_node_menu_alter(&$items) {
-  if (module_exists('i18n_node')) {
-    $items['node/%node/translate']['page callback'] = 'entity_translation_overview';
-    $items['node/%node/translate']['file'] = 'entity_translation.admin.inc';
-    $items['node/%node/translate']['module'] = 'entity_translation';
+function entity_translation_node_menu_alter(&$items, $backup) {
+  if (isset($backup['node'])) {
+    $item = $backup['node'];
+    // Preserve the menu router item defined by other modules.
+    $callback['page callback'] = $item['page callback'];
+    $callback['file'] = $item['file'];
+    $callback['module'] = $item['module'];
+    $access_arguments = array_merge(array(1, $item['access callback']), $item['access arguments']);
   }
+  else {
+    $callback = FALSE;
+    $access_arguments = array(1);
+  }
+
+  $items['node/%node/translate']['page callback'] = 'entity_translation_overview';
+  $items['node/%node/translate']['page arguments'] = array('node', 1, $callback);
+  $items['node/%node/translate']['access arguments'] = $access_arguments;
+  $items['node/%node/translate']['access callback'] = 'entity_translation_node_tab_access';
+  $items['node/%node/translate']['file'] = 'entity_translation.admin.inc';
+  $items['node/%node/translate']['module'] = 'entity_translation';
 }
 
 /**
  * Node specific access callback.
  */
-function entity_translation_node_tab_access($node) {
+function entity_translation_node_tab_access() {
+  $args = func_get_args();
+  $node = array_shift($args);
   if ($node->language != LANGUAGE_NONE) {
     if (entity_translation_node_supported_type($node->type)) {
       return entity_translation_tab_access('node');
     }
     elseif (entity_translation_node('node', $node)) {
-      return _translation_tab_access($node);
+      $function = array_shift($args);
+      return call_user_func_array($function, $args);
     }
   }
   return FALSE;
