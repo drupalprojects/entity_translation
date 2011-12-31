@@ -233,7 +233,7 @@ function entity_translation_menu_alter(&$items) {
         );
 
         // Delete translation callback.
-        $items["$path/translate/delete/%entity_translation_language"] = array(
+        $items["$edit_path/delete/%entity_translation_language"] = array(
           'title' => 'Delete',
           'page callback' => 'drupal_get_form',
           'page arguments' => array('entity_translation_delete_confirm', $entity_type, $entity_position, $language_position),
@@ -731,7 +731,7 @@ function entity_translation_entity_form_delete_submit($form, &$form_state) {
  * Submit handler for the translation deletion.
  */
 function entity_translation_entity_form_delete_translation_submit($form, &$form_state) {
-  $form_state['redirect'] = "{$form['#handler']->getBasePath()}/translate/delete/{$form['#handler']->getFormLanguage()}";
+  $form_state['redirect'] = "{$form['#handler']->getEditPath()}/delete/{$form['#handler']->getFormLanguage()}";
 }
 
 /**
