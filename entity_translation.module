@@ -660,6 +660,36 @@ function entity_translation_form_alter(&$form, &$form_state) {
       $form['#handler'] = $handler;
       $form_langcode = $handler->getFormLanguage();
       $langcode = $handler->getLanguage();
+      $new_translation = !isset($translations->data[$form_langcode]);
+
+      // Display source language selector only if we are creating a new translation
+      // and there are at least two translations available.
+      if ($new_translation && count($translations->data) > 1) {
+        $tab_info = entity_translation_tab_info();
+        $form['source_language'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Source language'),
+          '#collapsible' => TRUE,
+          '#collapsed' => TRUE,
+          '#tree' => TRUE,
+          '#weight' => -100,
+          'language' => array(
+            '#type' => 'select',
+            '#default_value' => $tab_info['source'],
+            '#options' => array(),
+          ),
+          'submit' => array(
+            '#type' => 'submit',
+            '#value' => t('Change'),
+            '#submit' => array('entity_translation_entity_form_source_language_submit'),
+          ),
+        );
+        foreach (language_list() as $language) {
+          if (isset($translations->data[$language->language])) {
+            $form['source_language']['language']['#options'][$language->language] = t($language->name);
+          }
+        }
+      }
 
       if ($langcode != $form_langcode) {
         if (isset($form['language'])) {
@@ -753,6 +783,18 @@ function entity_translation_form_alter(&$form, &$form_state) {
       }
     }
   }
+}
+
+/**
+ * Submit handler for the source language selector.
+ */
+function entity_translation_entity_form_source_language_submit($form, &$form_state) {
+  $handler = $form['#handler'];
+  $langcode = $form_state['values']['source_language']['language'];
+  $path = "{$handler->getEditPath()}/add/{$handler->getFormLanguage()}/$langcode";
+  $form_state['redirect'] = array('path' => $path);
+  $languages = language_list();
+  drupal_set_message(t('Source translation set to: %language', array('%language' => t($languages[$langcode]->name))));
 }
 
 /**
