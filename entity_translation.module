@@ -210,7 +210,7 @@ function entity_translation_menu_alter(&$items) {
             'page arguments' => array_merge(array($entity_type, $entity_position, $langcode, $edit_form_item), $edit_form_item['page arguments']),
             'access callback' => 'entity_translation_edit_access',
             'access arguments' => array_merge(array($entity_type, $entity_position, $langcode, $edit_form_item), $edit_form_item['access arguments']),
-            'weight' => -$language->weight,
+            'weight' => $language->weight,
           );
         }
 
