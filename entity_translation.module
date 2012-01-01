@@ -3,6 +3,11 @@
 /**
  * @file
  * Allows entities to be translated into different languages.
+ *
+ * @todo
+ * - revisions
+ * - menu
+ * - core entities
  */
 
 module_load_include('inc', 'entity_translation', 'entity_translation.node');
@@ -660,6 +665,7 @@ function entity_translation_form_alter(&$form, &$form_state) {
       $form['#handler'] = $handler;
       $form_langcode = $handler->getFormLanguage();
       $langcode = $handler->getLanguage();
+      $is_translation = $langcode != $form_langcode;
       $new_translation = !isset($translations->data[$form_langcode]);
 
       // Display source language selector only if we are creating a new translation
@@ -691,7 +697,7 @@ function entity_translation_form_alter(&$form, &$form_state) {
         }
       }
 
-      if ($langcode != $form_langcode) {
+      if ($is_translation) {
         if (isset($form['language'])) {
           // If we are editing a translation set the correct value in the
           // language widget and not current one.
@@ -703,8 +709,8 @@ function entity_translation_form_alter(&$form, &$form_state) {
           $form['language']['#disabled'] = TRUE;
         }
 
-        if (isset($translations->data[$form_langcode])) {
-          // Replace the delete button with the delete translation one.
+        // Replace the delete button with the delete translation one.
+        if (!$new_translation) {
           $form['actions']['delete_translation'] = array(
             '#type' => 'submit',
             '#value' => t('Delete translation'),
@@ -777,65 +783,33 @@ function entity_translation_form_alter(&$form, &$form_state) {
         );
       }
 
+      if ($is_translation) {
+        $name = $new_translation ? '' : user_load($translations->data[$form_langcode]['uid'])->name;
+        $date = $new_translation ? REQUEST_TIME : $translations->data[$form_langcode]['created'];
+
+        $form['translation']['name'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Authored by'),
+          '#maxlength' => 60,
+          '#autocomplete_path' => 'user/autocomplete',
+          '#default_value' => $name,
+          '#description' => t('Leave blank for %anonymous.', array('%anonymous' => variable_get('anonymous', t('Anonymous')))),
+        );
+
+        $form['translation']['created'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Authored on'),
+          '#maxlength' => 25,
+          '#description' => t('Format: %time. The date format is YYYY-MM-DD and %timezone is the time zone offset from UTC. Leave blank to use the time of form submission.', array('%time' => format_date($date, 'custom', 'Y-m-d H:i:s O'), '%timezone' => format_date($date, 'custom', 'O'))),
+          '#default_value' => $new_translation ? '' : format_date($date, 'custom', 'Y-m-d H:i:s O'),
+        );
+      }
+
       // Node specific alterations.
       if ($info['entity type'] == 'node') {
         entity_translation_node_alter_form($form, $form_state, $handler);
       }
     }
-  }
-}
-
-/**
- * Submit handler for the source language selector.
- */
-function entity_translation_entity_form_source_language_submit($form, &$form_state) {
-  $handler = $form['#handler'];
-  $langcode = $form_state['values']['source_language']['language'];
-  $path = "{$handler->getEditPath()}/add/{$handler->getFormLanguage()}/$langcode";
-  $form_state['redirect'] = array('path' => $path);
-  $languages = language_list();
-  drupal_set_message(t('Source translation set to: %language', array('%language' => t($languages[$langcode]->name))));
-}
-
-/**
- * Submit handler for the entity deletion.
- */
-function entity_translation_entity_form_delete_submit($form, &$form_state) {
-  $info = entity_get_info($form['#entity_type']);
-  drupal_set_message(t('This will delete all the @entity_type translations.', array('@entity_type' => drupal_strtolower($info['label']))), 'warning');
-}
-
-/**
- * Submit handler for the translation deletion.
- */
-function entity_translation_entity_form_delete_translation_submit($form, &$form_state) {
-  $form_state['redirect'] = "{$form['#handler']->getEditPath()}/delete/{$form['#handler']->getFormLanguage()}";
-}
-
-/**
- * Validation handler for the entity edit form.
- */
-function entity_translation_entity_form_validate($form, &$form_state) {
-  if (isset($form_state['values']['language']) && empty($form['language']['#attributes']['disabled'])) {
-    $info = entity_translation_edit_form_info($form);
-    $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
-    // Update the form language as it might have changed.
-    $handler->setFormLanguage($form_state['values']['language']);
-  }
-}
-
-/**
- * Submit handler for the translation saving.
- */
-function entity_translation_entity_form_submit($form, &$form_state) {
-  $handler = $form['#handler'];
-  $langcode = $handler->getFormLanguage();
-  $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $handler->getViewPath());
-  if (!empty($links->links[$langcode]['href'])) {
-    $form_state['redirect'] = array(
-      $links->links[$langcode]['href'],
-      $links->links[$langcode],
-    );
   }
 }
 
@@ -918,6 +892,61 @@ function _entity_translation_form_language_callback(&$item, $key, $langcode) {
 }
 
 /**
+ * Submit handler for the source language selector.
+ */
+function entity_translation_entity_form_source_language_submit($form, &$form_state) {
+  $handler = $form['#handler'];
+  $langcode = $form_state['values']['source_language']['language'];
+  $path = "{$handler->getEditPath()}/add/{$handler->getFormLanguage()}/$langcode";
+  $form_state['redirect'] = array('path' => $path);
+  $languages = language_list();
+  drupal_set_message(t('Source translation set to: %language', array('%language' => t($languages[$langcode]->name))));
+}
+
+/**
+ * Submit handler for the entity deletion.
+ */
+function entity_translation_entity_form_delete_submit($form, &$form_state) {
+  $info = entity_get_info($form['#entity_type']);
+  drupal_set_message(t('This will delete all the @entity_type translations.', array('@entity_type' => drupal_strtolower($info['label']))), 'warning');
+}
+
+/**
+ * Submit handler for the translation deletion.
+ */
+function entity_translation_entity_form_delete_translation_submit($form, &$form_state) {
+  $form_state['redirect'] = "{$form['#handler']->getEditPath()}/delete/{$form['#handler']->getFormLanguage()}";
+}
+
+/**
+ * Validation handler for the entity edit form.
+ */
+function entity_translation_entity_form_validate($form, &$form_state) {
+  if (isset($form_state['values']['language']) && empty($form['language']['#attributes']['disabled'])) {
+    $info = entity_translation_edit_form_info($form);
+    $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
+    // Update the form language as it might have changed.
+    $handler->setFormLanguage($form_state['values']['language']);
+  }
+}
+
+/**
+ * Submit handler for the translation saving.
+ */
+function entity_translation_entity_form_submit($form, &$form_state) {
+  $handler = $form['#handler'];
+  $langcode = $handler->getFormLanguage();
+  // Redirect to the URL having content language matching the one being edited.
+  $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $handler->getViewPath());
+  if (!empty($links->links[$langcode]['href'])) {
+    $form_state['redirect'] = array(
+      $links->links[$langcode]['href'],
+      $links->links[$langcode],
+    );
+  }
+}
+
+/**
  * Implementation of hook_field_attach_submit().
  *
  * Mark translations as outdated if the submitted value is true.
@@ -927,6 +956,7 @@ function entity_translation_field_attach_submit($entity_type, $entity, $form, &$
     $handler = entity_translation_get_handler($entity_type, $entity, TRUE);
     $langcode = $handler->getFormLanguage();
     $translations = $handler->getTranslations();
+    $values = $form_state['values']['translation'];
 
     if (!isset($translations->data[$langcode])) {
       $tab_info = entity_translation_tab_info();
@@ -939,15 +969,19 @@ function entity_translation_field_attach_submit($entity_type, $entity, $form, &$
       $translation = $translations->data[$langcode];
     }
 
-    if ($langcode && $langcode != $handler->getLanguage()) {
-      $translation['translate'] = $form_state['values']['translation']['translate'];
+    if ($translations->original != $langcode) {
+      $translation['translate'] = $values['translate'];
     }
     else {
-      $outdated = isset($form_state['values']['translation']) && $form_state['values']['translation']['retranslate'];
-      $handler->setOutdated($outdated);
+      $handler->setOutdated($values['retranslate']);
+      // Inherit entity authoring information for the original values.
+      $values['name'] = $form_state['values']['name'];
+      $values['created'] = $form_state['values']['date'];
     }
 
-    $translation['status'] = $form_state['values']['translation']['status'];
+    $translation['status'] = $values['status'];
+    $translation['uid'] = user_load_by_name($values['name'])->uid;
+    $translation['created'] = empty($values['created']) ? REQUEST_TIME : strtotime($values['created']);
     $handler->setTranslation($translation);
   }
 }
