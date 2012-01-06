@@ -174,6 +174,11 @@ interface EntityTranslationHandlerInterface {
    * TODO
    */
   public function getFormLanguage();
+
+  /**
+   * TODO
+   */
+  public function isNewEntity();
 }
 
 /**
@@ -486,6 +491,11 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
   public function getFormLanguage() {
     return $this->formLanguage;
+  }
+
+  public function isNewEntity() {
+    $id = $this->getEntityId();
+    return empty($id);
   }
 
   /**
