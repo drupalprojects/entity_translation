@@ -320,6 +320,12 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
       ->fetchField();
 
     $form['path'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('URL path settings'),
+      '#tree' => TRUE,
+    );
+
+    $form['path']['alias'] = array(
       '#type' => 'textfield',
       '#title' => t('URL alias'),
       '#default_value' => $alias,
@@ -328,7 +334,16 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
       '#collapsed' => TRUE,
       '#description' => t('Optionally specify an alternative URL by which this entity can be accessed. For example, type "about" when writing an about page. Use a relative path and don\'t add a trailing slash or the URL alias won\'t work.'),
       '#access' => user_access('create url aliases'),
-      '#weight' => -20,
+      '#weight' => 0,
+    );
+
+    $form['path']['source'] = array(
+      '#type' => 'value',
+      '#value' => $handler->getViewPath(),
+    );
+    $form['path']['language'] = array(
+      '#type' => 'value',
+      '#value' => $langcode,
     );
 
     if (!empty($alias)) {
@@ -343,6 +358,35 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
         '#type' => 'value',
         '#value' => $pid,
       );
+    }
+
+    // Load special form settings if applicable.
+    if ($entity_type == 'node') {
+      // Create temporary, decoupled stuff to avoid side effects.
+      $form_state_dummy = $form_state;
+      $form_state_dummy['node'] = clone($form['#entity']);
+      $form_state_dummy['node']->language = $langcode;
+      if (!isset($translations->data[$langcode])) {
+        // If this is a new translation simulate a new node for pathauto.
+        unset($form_state_dummy['node']->nid);
+      }
+
+      // The following part recycles code from other modules, what means that
+      // this module doesn't have control about essential functional parts.
+      // Thus this section has to be considered as fragile as changes in the
+      // other modules can easily break it.
+      if (module_exists('pathauto')) {
+        // Reuse code parts from pathauto.
+        module_load_include('module', 'pathauto');
+        pathauto_form_node_form_alter($form, $form_state_dummy);
+      }
+      if (module_exists('redirect')) {
+        // Reuse code parts from redirect.
+        module_load_include('module', 'redirect');
+        redirect_form_node_form_alter($form, $form_state);
+      }
+      // Remove the temporary stuff.
+      unset($form_state_dummy);
     }
   }
 
@@ -408,31 +452,18 @@ function entity_translation_edit_form_save_submit($form, &$form_state) {
   );
 
   $handler->setTranslation($translation, $form_state['values']);
-  field_attach_submit($form['#entity_type'], $form['#entity'], $form, $form_state);
+
+  $form['#entity'] = (object) $form['#entity'];
+  entity_form_submit_build_entity($form['#entity_type'], $form['#entity'], $form, $form_state);
   field_attach_presave($form['#entity_type'], $form['#entity']);
   field_attach_update($form['#entity_type'], $form['#entity']);
 
-  // Clear the cache for this entity.
+
   $entity_info = entity_get_info($form['#entity_type']);
   $id_key = $entity_info['entity keys']['id'];
   entity_get_controller($form['#entity_type'])->resetCache(array($form['#entity']->{$id_key}));
 
-  // Update URL alias.
-  if (_entity_translation_path_enabled($handler) && (user_access('create url aliases') || user_access('administer url aliases'))) {
-    $path = array(
-      'source' => $handler->getViewPath(),
-      'alias' => $form_state['values']['path'],
-      'pid' => isset($form_state['values']['pid']) ? $form_state['values']['pid'] : NULL,
-      'language' => $form['#language'],
-    );
-    if (!empty($path['pid']) && empty($path['alias'])) {
-      path_delete($path['pid']);
-    }
-    if (!empty($path['alias'])) {
-      path_save($path);
-    }
-  }
-
+  module_invoke_all('entity_translation_save', $form['#entity_type'], $form['#entity'], $form['#language']);
   $form_state['redirect'] = "{$handler->getBasePath()}/translate";
 }
 

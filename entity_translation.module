@@ -564,3 +564,137 @@ function entity_translation_edit_form_info($form) {
 function entity_translation_access($entity_type, $translation) {
   return $translation['status'] || user_access('translate any entity') || user_access("translate $entity_type entities");
 }
+
+/**
+ * Implements hook_entity_translation_save().
+ *
+ * @param $entity_type
+ *   The type of entity; e.g. 'node' or 'user'.
+ * @param $entity
+ *   The entity to be translated.
+ * @param $langcode
+ *   The language code of the translation.
+ */
+function entity_translation_entity_translation_save($entity_type, $entity, $langcode) {
+  $handler = entity_translation_get_handler($entity_type, $entity);
+
+  // Update URL alias if applicable.
+  // The user needs the permission and pathauto has to be disabled.
+  if (_entity_translation_path_enabled($handler) && empty($entity->path['pathauto']) && (user_access('create url aliases') || user_access('administer url aliases'))) {
+    if (!empty($entity->path['pid']) && empty($entity->path['alias'])) {
+      path_delete($entity->path['pid']);
+    }
+    if (!empty($entity->path['alias'])) {
+      path_save($entity->path);
+    }
+  }
+
+  // Trigger pathauto if module is available.
+  if (module_exists('pathauto') && !empty($entity->path['pathauto'])) {
+    module_load_include('module', 'pathauto');
+    $function = 'pathauto_' . $entity_type . '_update_alias';
+    if (function_exists($function)) {
+      $options = array('language' => $langcode);
+      $function($entity, 'update', $options);
+    }
+  }
+}
+
+/**
+ * Implements hook_pathauto().
+ *
+ * Create own bulk creation callback to deal with node aliases for translations.
+ */
+function entity_translation_pathauto($op) {
+  switch ($op) {
+    case 'settings':
+      $settings = array();
+      $settings['module'] = 'node';
+      $settings['token_type'] = 'node';
+      $settings['groupheader'] = t('Content paths');
+      $settings['patterndescr'] = t('Default path pattern (applies to all content types with blank patterns below)');
+      $settings['patterndefault'] = 'content/[node:title]';
+      $settings['batch_update_callback'] = 'entity_translation_pathauto_bulk_update_batch_process';
+      $settings['batch_file'] = drupal_get_path('module', 'entity_translation') . '/entity_translation.module';
+      $settings['patternitems'] = array();
+      return (object) $settings;
+    default:
+      break;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Remove the option for nodes - they are handled by this module now.
+ */
+function entity_translation_form_pathauto_bulk_update_form_alter(&$form, $form_state, $form_id) {
+  unset($form['update']['#options']['node_pathauto_bulk_update_batch_process']);
+}
+
+/**
+ * Callback for bulk alias creation.
+ *
+ * Make sure that every translation of a node has the appropriate alias.
+ * This function replaces node_pathauto_bulk_update_batch_process().
+ *
+ * @param array $context
+ */
+function entity_translation_pathauto_bulk_update_batch_process(&$context) {
+  if (!isset($context['sandbox']['current'])) {
+    $context['sandbox']['count'] = 0;
+    $context['sandbox']['current'] = 0;
+  }
+
+  $query = db_select('node', 'n');
+
+  if (module_exists('entity_translation') && function_exists('entity_translation_enabled') && entity_translation_enabled('node')) {
+    // Make sure that every translation of a node has an alias.
+    $query->leftJoin('entity_translation', 't', "t.entity_type = 'node' AND t.entity_id = n.nid");
+    $query->leftJoin('url_alias', 'ua', "CONCAT('node/', n.nid) AND ua.`language` = t.`language`");
+    $query->leftJoin('url_alias', 'ua', "CONCAT('node/', n.nid) = ua.source");
+    $query->addField('t', 'language');
+  }
+  else {
+    $query->leftJoin('url_alias', 'ua', "CONCAT('node/', n.nid) = ua.source");
+    $query->addField('n', 'language');
+  }
+
+  $query->addField('n', 'nid');
+  $query->isNull('ua.source');
+  $query->condition('n.nid', $context['sandbox']['current'], '>');
+  $query->orderBy('n.nid');
+  $query->addTag('pathauto_bulk_update');
+  $query->addMetaData('entity', 'node');
+
+  // Get the total amount of items to process.
+  if (!isset($context['sandbox']['total'])) {
+    $context['sandbox']['total'] = $query->countQuery()->execute()->fetchField();
+
+    // If there are no nodes to update, the stop immediately.
+    if (!$context['sandbox']['total']) {
+      $context['finished'] = 1;
+      return;
+    }
+  }
+
+  $query->range(0, 25);
+  $items = $query->execute()->fetchAll();
+
+  // Group by language.
+  $language_nids = array();
+  foreach ($items as $item) {
+    $language_nids[$item->language][] = $item->nid;
+  }
+
+  foreach ($language_nids as $language => $nids) {
+    pathauto_node_update_alias_multiple($nids, 'bulkupdate', array('language' => $language));
+    $context['sandbox']['count'] += count($nids);
+    $context['sandbox']['current'] = max($nids);
+  }
+  $context['message'] = t('Updated alias for node @nid.', array('@nid' => end($nids)));
+
+  if ($context['sandbox']['count'] != $context['sandbox']['total']) {
+    $context['finished'] = $context['sandbox']['count'] / $context['sandbox']['total'];
+  }
+}
