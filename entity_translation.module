@@ -63,11 +63,17 @@ function entity_translation_entity_info_alter(&$entity_info) {
 
   // Provide defaults for translation info.
   foreach ($entity_info as $entity_type => $info) {
-    if (entity_translation_enabled($entity_type, TRUE)) {
-      if (!isset($entity_info[$entity_type]['translation']['entity_translation'])) {
-        $entity_info[$entity_type]['translation']['entity_translation'] = array();
-      }
+    if (!isset($entity_info[$entity_type]['translation']['entity_translation'])) {
+      $entity_info[$entity_type]['translation']['entity_translation'] = array();
+    }
 
+    // Every fieldable entity type must have a translation handler class, no
+    // matter if it is enabled for translation or not. As a matter of fact we
+    // might need it to correctly switch field translatability when a field is
+    // shared accross different entities.
+    $entity_info[$entity_type]['translation']['entity_translation'] += array('class' => 'EntityTranslationDefaultHandler');
+
+    if (entity_translation_enabled($entity_type, TRUE)) {
       // If no base path is provided we default to the common "node/%node"
       // pattern.
       if (!isset($entity_info[$entity_type]['translation']['entity_translation']['base path'])) {
@@ -80,7 +86,6 @@ function entity_translation_entity_info_alter(&$entity_info) {
 
         // If we cannot find a usable base path we skip to the next entity type.
         if (!isset($router["$entity_type/%"])) {
-          unset($entity_info[$entity_type]['translation']['entity_translation']);
           continue;
         }
 
@@ -93,7 +98,6 @@ function entity_translation_entity_info_alter(&$entity_info) {
       $entity_info[$entity_type]['translation']['entity_translation'] += array(
         'view path' => $path,
         'edit path' => "$path/edit",
-        'class' => 'EntityTranslationDefaultHandler',
         'path wildcard' => "%$entity_type",
         'access callback' => 'entity_translation_tab_access',
         'access arguments' => array($entity_type),
@@ -117,6 +121,24 @@ function entity_translation_enabled($entity_type, $skip_handler = FALSE) {
   return
     !empty($enabled_types[$entity_type]) &&
     ($skip_handler || field_has_translation_handler($entity_type, 'entity_translation'));
+}
+
+/**
+ * Implments hook_menu().
+ */
+function entity_translation_menu() {
+  $items = array();
+
+  $items['admin/config/regional/entity_translation/translatable/%'] = array(
+    'title' => 'Confirm change in translatability.',
+    'description' => 'Confirm page for changing field translatability.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('entity_translation_translatable_form', 5),
+    'access arguments' => array('toggle field translatability'),
+    'file' => 'entity_translation.admin.inc',
+  );
+
+  return $items;
 }
 
 /**
@@ -211,6 +233,7 @@ function entity_translation_menu_alter(&$items) {
   return $items;
 }
 
+
 /**
  * Implements hook_admin_paths().
  */
@@ -275,6 +298,10 @@ function entity_translation_permission() {
     'administer entity translation' => array(
       'title' => t('Administer entity translation'),
       'description' => t('Select which entities can be translated.'),
+    ),
+    'toggle field translatability' => array(
+      'title' => t('Toggle field translatability'),
+      'description' => t('Toggle translatability of fields performing a bulk update.'),
     ),
   );
   foreach (entity_get_info() as $entity_type => $info) {
@@ -480,14 +507,41 @@ function entity_translation_edit_form_submit($form, &$form_state) {
  *
  * Enable a selector to choose whether a field is translatable.
  */
-function entity_translation_form_field_ui_field_settings_form_alter(&$form, $form_state) {
-  $instance = $form_state['build_info']['args'][0];
-  $field = field_info_field($instance['field_name']);
-  $form['field']['translatable'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Users may translate this field.'),
-    '#default_value' => $field['translatable'],
-  );
+function entity_translation_form_field_ui_field_edit_form_alter(&$form, $form_state) {
+  $field_name = $form['#field']['field_name'];
+  $field = field_info_field($field_name);
+  $translatable = $field['translatable'];
+  $label = t('Field translation');
+  $title = t('Users may translate this field.');
+
+  if (field_has_data($field)) {
+    $path = "admin/config/regional/entity_translation/translatable/$field_name";
+    $status = $translatable ? $title : t('This field is shared among the entity translations.');
+    $link_title = !$translatable ? t('Enable translation') : t('Disable translation');
+
+    $form['field']['translatable'] = array(
+      '#prefix' => '<div class="translatable"><label>' . $label . '</label>',
+      '#suffix' => '</div>',
+      'message' => array(
+        '#markup' => $status . ' ',
+      ),
+      'link' => array(
+        '#type' => 'link',
+        '#title' => $link_title,
+        '#href' => $path,
+        '#options' => array('query' => drupal_get_destination()),
+        '#access' => user_access('toggle field translatability'),
+      ),
+    );
+  }
+  else {
+    $form['field']['translatable'] = array(
+      '#prefix' => '<label>' . $label . '</label>',
+      '#type' => 'checkbox',
+      '#title' => $title,
+      '#default_value' => $translatable,
+    );
+  }
 }
 
 /**

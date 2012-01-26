@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1279372 by getgood, loganfsmyth, evolvingweb, plach, Kristen Pol: Enable bulk
+  field language updates when switching field translatability.
 #1155134 by das-peter, GiorgosK, zambrey: Added Integrate pathauto.
 #1380380 by bojanz: Fixed Prevent notice when translation has been removed from
   the form.
