@@ -95,6 +95,8 @@ function entity_translation_entity_info_alter(&$entity_info) {
     $entity_info[$entity_type]['translation']['entity_translation'] += array('class' => 'EntityTranslationDefaultHandler');
 
     if (entity_translation_enabled($entity_type, TRUE)) {
+      $entity_info[$entity_type]['language callback'] = 'entity_translation_language';
+
       // If no base path is provided we default to the common "node/%node"
       // pattern.
       if (!isset($entity_info[$entity_type]['translation']['entity_translation']['base path'])) {
@@ -952,7 +954,9 @@ function entity_translation_entity_form_submit($form, &$form_state) {
   $handler = $form['#handler'];
   $langcode = $handler->getFormLanguage();
   // Redirect to the URL having content language matching the one being edited.
-  $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $handler->getViewPath());
+  $links = drupal_multilingual() ?
+    language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $handler->getViewPath()) :
+    array();
   if (!empty($links->links[$langcode]['href'])) {
     $form_state['redirect'] = array(
       $links->links[$langcode]['href'],
