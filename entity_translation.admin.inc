@@ -76,77 +76,83 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   }
 
   $header = array(t('Language'), t('Source language'), t('Translation'), t('Status'), t('Operations'));
-  // @todo: Do we want only enabled languages here?
   $languages = entity_translation_languages();
   $source = isset($_SESSION['entity_translation_source_language']) ? $_SESSION['entity_translation_source_language'] : $translations->original;
   $base_path = $handler->getBasePath();
   $path = $handler->getViewPath();
+  $edit_path = $handler->getEditPath();
+  $add_path = "$base_path/edit/add/$source";
+  $rows = array();
 
-  if ($path) {
-    // If we have a view path defined for the current entity get the switch
-    // links based on it.
-    $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $path);
-  }
-
-  foreach ($languages as $language) {
-    $options = array();
-    $language_name = $language->name;
-    $langcode = $language->language;
-
-    if (isset($translations->data[$langcode])) {
-      list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-
-      // Existing translation in the translation set: display status.
-      $is_original = $langcode == $translations->original;
-      $translation = $translations->data[$langcode];
-      $label = _entity_translation_label($entity_type, $entity, $langcode);
-      $link = isset($links->links[$langcode]['href']) ? $links->links[$langcode] : array('href' => $path, 'language' => $language);
-      $row_title = l($label, $link['href'], $link);
-
-      if (empty($link['href'])) {
-        $row_title = $is_original ? $label : t('n/a');
-      }
-
-      $edit_path = $handler->getEditPath($langcode);
-      if ($edit_path && $handler->getAccess('update')) {
-        $options[] = l(t('edit'), $edit_path);
-      }
-
-      $status = $translation['status'] ? t('Published') : t('Not published');
-      // @todo Add a theming function here.
-      $status .= isset($translation['translate']) && $translation['translate'] ? ' - <span class="marker">' . t('outdated') . '</span>' : '';
-
-      if ($is_original) {
-        $language_name = t('<strong>@language_name</strong>', array('@language_name' => $language_name));
-        $source_name = t('(original content)');
-      }
-      else {
-        $source_name = $languages[$translation['source']]->name;
-      }
+  if (drupal_multilingual()) {
+    if ($base_path) {
+      // If we have a view path defined for the current entity get the switch
+      // links based on it.
+      $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $path);
+      $edit_links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $edit_path);
+      $add_links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $add_path);
     }
-    else {
-      // No such translation in the set yet: help user to create it.
-      $row_title = $source_name = t('n/a');
-      $add_path = "$base_path/edit/add/$langcode/$source";
 
-      if ($source != $langcode && $handler->getAccess('update')) {
-        list(, , $bundle) = entity_extract_ids($entity_type, $entity);
-        $translatable = FALSE;
+    foreach ($languages as $language) {
+      $options = array();
+      $language_name = $language->name;
+      $langcode = $language->language;
 
-        foreach (field_info_instances($entity_type, $bundle) as $instance) {
-          $field_name = $instance['field_name'];
-          $field = field_info_field($field_name);
-          if ($field['translatable']) {
-            $translatable = TRUE;
-            break;
-          }
+      if (isset($translations->data[$langcode])) {
+        list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
+        // Existing translation in the translation set: display status.
+        $is_original = $langcode == $translations->original;
+        $translation = $translations->data[$langcode];
+        $label = _entity_translation_label($entity_type, $entity, $langcode);
+        $link = isset($links->links[$langcode]['href']) ? $links->links[$langcode] : array('href' => $path, 'language' => $language);
+        $row_title = l($label, $link['href'], $link);
+
+        if (empty($link['href'])) {
+          $row_title = $is_original ? $label : t('n/a');
         }
 
-        $options[] = $translatable ? l(t('add'), $add_path) : t('No translatable fields');
+        if ($edit_path && $handler->getAccess('update')) {
+          $link = isset($edit_links->links[$langcode]['href']) ? $edit_links->links[$langcode] : array('href' => $path, 'language' => $language);
+          $options[] = l(t('edit'), $link['href'], $link);
+        }
+
+        $status = $translation['status'] ? t('Published') : t('Not published');
+        // @todo Add a theming function here.
+        $status .= isset($translation['translate']) && $translation['translate'] ? ' - <span class="marker">' . t('outdated') . '</span>' : '';
+
+        if ($is_original) {
+          $language_name = t('<strong>@language_name</strong>', array('@language_name' => $language_name));
+          $source_name = t('(original content)');
+        }
+        else {
+          $source_name = $languages[$translation['source']]->name;
+        }
       }
-      $status = t('Not translated');
+      else {
+        // No such translation in the set yet: help user to create it.
+        $row_title = $source_name = t('n/a');
+
+        if ($source != $langcode && $handler->getAccess('update')) {
+          list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+          $translatable = FALSE;
+
+          foreach (field_info_instances($entity_type, $bundle) as $instance) {
+            $field_name = $instance['field_name'];
+            $field = field_info_field($field_name);
+            if ($field['translatable']) {
+              $translatable = TRUE;
+              break;
+            }
+          }
+
+          $link = isset($add_links->links[$langcode]['href']) ? $add_links->links[$langcode] : array('href' => $path, 'language' => $language);
+          $options[] = $translatable ? l(t('add'), $link['href'], $link) : t('No translatable fields');
+        }
+        $status = t('Not translated');
+      }
+      $rows[] = array($language_name, $source_name, $row_title, $status, implode(" | ", $options));
     }
-    $rows[] = array($language_name, $source_name, $row_title, $status, implode(" | ", $options));
   }
 
   drupal_set_title(t('Translations of %label', array('%label' => $handler->getLabel())), PASS_THROUGH);

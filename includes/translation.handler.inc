@@ -132,11 +132,8 @@ interface EntityTranslationHandlerInterface {
 
   /**
    * Return the path of the entity edit form.
-   *
-   * @param $langcode
-   *   (optional) The language the edit form should be presented in.
    */
-  public function getEditPath($langcode = NULL);
+  public function getEditPath();
 
   /**
    * Return the path of the entity view page.
@@ -178,6 +175,16 @@ interface EntityTranslationHandlerInterface {
   /**
    * TODO
    */
+  public function setSourceLanguage($langcode);
+
+  /**
+   * TODO
+   */
+  public function getSourceLanguage();
+
+  /**
+   * TODO
+   */
   public function isNewEntity();
 }
 
@@ -194,6 +201,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   private $translating;
   private $outdated;
   private $formLanguage;
+  private $sourceLanguage;
 
   private $basePath;
   private $editPath;
@@ -208,6 +216,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $this->translating = FALSE;
     $this->outdated = FALSE;
     $this->formLanguage = FALSE;
+    $this->sourceLanguage = FALSE;
 
     $info = $entity_info['translation']['entity_translation'];
     $this->basePath = $this->getPathInstance($info['base path']);
@@ -460,8 +469,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     return $this->basePath;
   }
 
-  public function getEditPath($langcode = NULL) {
-    return empty($langcode) ? $this->editPath : $this->editPath . '/' . $langcode;
+  public function getEditPath() {
+    return $this->editPath;
   }
 
   public function getViewPath() {
@@ -491,6 +500,14 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
   public function getFormLanguage() {
     return $this->formLanguage;
+  }
+
+  public function setSourceLanguage($langcode) {
+    $this->sourceLanguage = $langcode;
+  }
+
+  public function getSourceLanguage() {
+    return $this->sourceLanguage;
   }
 
   public function isNewEntity() {
