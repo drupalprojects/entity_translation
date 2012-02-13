@@ -634,6 +634,11 @@ function entity_translation_translatable_batch($translatable, $field_name, &$con
       $handler = entity_translation_get_handler($entity_type, $entity);
       $langcode = $handler->getLanguage();
 
+      // Skip process for language neutral entities.
+      if ($langcode == LANGUAGE_NONE) {
+        continue;
+      }
+
       // We need a two-steps approach while updating field translations: given
       // that field-specific update functions might rely on the stored values to
       // perform their processing, see for instance file_field_update(), first
