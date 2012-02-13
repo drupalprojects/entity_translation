@@ -80,23 +80,26 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   $source = isset($_SESSION['entity_translation_source_language']) ? $_SESSION['entity_translation_source_language'] : $translations->original;
   $base_path = $handler->getBasePath();
   $path = $handler->getViewPath();
-  $edit_path = $handler->getEditPath();
-  $add_path = "$base_path/edit/add/$source";
   $rows = array();
 
   if (drupal_multilingual()) {
-    if ($base_path) {
-      // If we have a view path defined for the current entity get the switch
-      // links based on it.
+    // If we have a view path defined for the current entity get the switch
+    // links based on it.
+    if ($path) {
       $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $path);
-      $edit_links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $edit_path);
-      $add_links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $add_path);
     }
 
     foreach ($languages as $language) {
       $options = array();
       $language_name = $language->name;
       $langcode = $language->language;
+      $edit_path = $handler->getEditPath($langcode);
+      $add_path = "$base_path/edit/add/$source/$langcode";
+
+      if ($base_path) {
+        $add_links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $add_path);
+        $edit_links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $edit_path);
+      }
 
       if (isset($translations->data[$langcode])) {
         list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
