@@ -125,7 +125,7 @@ function entity_translation_node_alter_form(&$form, $form_state, $handler) {
 function entity_translation_node_view($node, $build_mode) {
   if (!empty($node->translations) && drupal_multilingual() && entity_translation_node_supported_type($node->type)) {
     $path = 'node/' . $node->nid;
-    $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $path);
+    $links = _entity_translation_language_switch_links($path);
 
     if (is_object($links) && !empty($links->links)) {
       $handler = entity_translation_get_handler('node', $node);

@@ -408,7 +408,7 @@ function entity_translation_menu_local_tasks_alter(&$data, $router_item, $root_p
       }
 
       foreach ($translations->data as $langcode => $translation) {
-        $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $handler->getEditPath($langcode));
+        $links = _entity_translation_language_switch_links($handler->getEditPath($langcode));
         $link = $links->links[$langcode];
         $tab = array();
         $tab['#theme'] = 'menu_local_task';
@@ -428,6 +428,17 @@ function entity_translation_menu_local_tasks_alter(&$data, $router_item, $root_p
       usort($data['tabs'][1]['output'], '_entity_translation_tab_sort');
     }
   }
+}
+
+function _entity_translation_language_switch_links($path) {
+  $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $path);
+  if (empty($links)) {
+    // If content language is set up to fall back to the interface language,
+    // then there will be no switch links for LANGUAGE_TYPE_CONTENT, ergo we
+    // also need to use interface switch links.
+    $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_INTERFACE, $path);
+  }
+  return $links;
 }
 
 /**
