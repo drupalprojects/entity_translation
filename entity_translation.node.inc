@@ -86,38 +86,6 @@ function entity_translation_node_supported_type($type) {
 }
 
 /**
- * Perform alterations on the node edit form.
- *
- * Clean up the language selector to avoid the possibility to change the node
- * language to a value already assigned to an existing translation.
- * Convert the translation update status fieldset into a vartical tab.
- */
-function entity_translation_node_alter_form(&$form, $form_state, $handler) {
-  $translations = $handler->getTranslations();
-
-  // Disable languages for existing translations, so it is not possible to
-  // switch this node to some language which is already in the translation set.
-  foreach ($translations->data as $langcode => $translation) {
-    if ($langcode != $translations->original) {
-      unset($form['language']['#options'][$langcode]);
-    }
-  }
-  if (count($translations->data) > 1) {
-    unset($form['language']['#options'][LANGUAGE_NONE]);
-  }
-
-  if (isset($form['translation'])) {
-    $form['translation'] += array(
-      '#group' => 'additional_settings',
-      '#weight' => 100,
-      '#attached' => array(
-        'js' => array(drupal_get_path('module', 'entity_translation') . '/entity_translation.node-form.js'),
-      ),
-    );
-  }
-}
-
-/**
  * Implements hook_node_view().
  *
  * Provide content language switcher links to navigate among node translations.

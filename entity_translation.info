@@ -6,4 +6,5 @@ configure = admin/config/regional/entity_translation
 dependencies[] = locale
 files[] = includes/translation.handler.inc
 files[] = includes/translation.handler.node.inc
+files[] = includes/translation.handler.taxonomy_term.inc
 files[] = tests/entity_translation.test
