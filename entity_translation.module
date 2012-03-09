@@ -43,7 +43,7 @@ function entity_translation_translation_info($types = NULL) {
     'comment' => array(
       'translation' => array(
         'entity_translation' => array(
-          'edit form' => FALSE,
+          'class' => 'EntityTranslationCommentHandler',
         ),
       ),
     ),
@@ -51,7 +51,6 @@ function entity_translation_translation_info($types = NULL) {
       'translation' => array(
         'entity_translation' => array(
           'class' => 'EntityTranslationNodeHandler',
-          'alias' => TRUE,
           'access callback' => 'entity_translation_node_tab_access',
           'access arguments' => array(1),
         ),
@@ -62,13 +61,11 @@ function entity_translation_translation_info($types = NULL) {
         'entity_translation' => array(
           'class' => 'EntityTranslationTaxonomyTermHandler',
           'base path' => 'taxonomy/term/%taxonomy_term',
-          'alias' => TRUE,
-          'edit form' => '#term',
+          'edit form' => 'term',
         ),
       ),
     ),
-    'user' => array(
-    ),
+    'user' => array(),
   );
 
   return isset($types) ? array_intersect_key($info, $types) : $info;
@@ -128,7 +125,7 @@ function entity_translation_entity_info_alter(&$entity_info) {
         'access arguments' => array($entity_type),
         'theme callback' => 'variable_get',
         'theme arguments' => array('admin_theme'),
-        'edit form' => '#' . $entity_type,
+        'edit form' => $entity_type,
       );
 
       $entity_info[$entity_type]['entity keys'] += array(
@@ -406,7 +403,7 @@ function entity_translation_menu_local_tasks_alter(&$data, $router_item, $root_p
         foreach ($data['tabs'][1]['output'] as &$add_tab) {
           if ($add_tab['#link']['path'] == $root_path) {
             $add_tab['#link']['title'] = $languages[$form_langcode]->name;
-            $add_tab['#link']['weight'] = -$languages[$form_langcode]->weight;
+            $add_tab['#link']['weight'] = $languages[$form_langcode]->weight;
             $add_tab['#active'] = TRUE;
             break;
           }
@@ -422,7 +419,7 @@ function entity_translation_menu_local_tasks_alter(&$data, $router_item, $root_p
         $tab['#link'] = array(
           'href' => $link['href'],
           'title' => $languages[$langcode]->name,
-          'weight' => -$languages[$langcode]->weight,
+          'weight' => $languages[$langcode]->weight,
           'localized_options' => $link,
         ) + $router_item;
         $data['tabs'][1]['output'][] = $tab;
@@ -732,7 +729,7 @@ function entity_translation_prepare_element($element, &$form_state) {
   if (!isset($source_form[$build_id][$source])) {
     $source_form[$build_id][$source] = array('#entity_translation_source_form' => TRUE);
     $source_form_state = $form_state;
-    $info = entity_translation_edit_form_info($form);
+    $info = entity_translation_edit_form_info($form, $form_state);
     field_attach_form($info['entity type'], $info['entity'], $source_form[$build_id][$source], $source_form_state, $source);
   }
 
@@ -942,7 +939,7 @@ function entity_translation_entity_form_get_handler($form, &$form_state) {
   $handler = FALSE;
 
   if (empty($form_state['storage']['entity_translation']['handler'])) {
-    $info = entity_translation_edit_form_info($form);
+    $info = entity_translation_edit_form_info($form, $form_state);
     if (entity_translation_enabled($info['entity type']) && !entity_translation_node($info['entity type'], $info['entity'])) {
       $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
       $form_state['storage']['entity_translation']['handler'] = $handler;
@@ -960,25 +957,30 @@ function entity_translation_entity_form_get_handler($form, &$form_state) {
  *
  * @param $form
  *   The entity edit form.
+ * @param $form_state
+ *   The entity edit form state.
  *
  * @return
  *   An edit form info array containing the entity to be translated in the
  *   'entity' key.
  */
-function entity_translation_edit_form_info($form) {
+function entity_translation_edit_form_info($form, $form_state) {
+  $info = FALSE;
+
   if (isset($form['#entity_type'])) {
     $entity_info = entity_get_info($form['#entity_type']);
     if (!empty($entity_info['translation']['entity_translation']['edit form'])) {
       $entity_key = $entity_info['translation']['entity_translation']['edit form'];
-      if (isset($form[$entity_key])) {
-        return array(
+      if (isset($form_state[$entity_key])) {
+        $info = array(
           'entity type' => $form['#entity_type'],
-          'entity' => (object) $form[$entity_key],
+          'entity' => (object) $form_state[$entity_key],
         );
       }
     }
   }
-  return FALSE;
+
+  return $info;
 }
 
 /**

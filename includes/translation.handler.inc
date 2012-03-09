@@ -444,6 +444,12 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   public function getLanguage() {
+    if (!empty($this->entityInfo['entity keys']['language'])) {
+      $language_key = $this->entityInfo['entity keys']['language'];
+      if (!empty($this->entity->{$language_key})) {
+        return $this->entity->{$language_key};
+      }
+    }
     return language_default()->language;
   }
 
@@ -585,7 +591,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         $form['actions']['delete_translation'] = array(
           '#type' => 'submit',
           '#value' => t('Delete translation'),
-          '#weight' => $form['actions']['delete'],
+          '#weight' => isset($form['actions']['delete']) ? $form['actions']['delete']['weight'] : 100,
           '#submit' => array('entity_translation_entity_form_delete_translation_submit'),
         );
       }
@@ -681,10 +687,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $form['#submit'][] = 'entity_translation_entity_form_submit';
   }
 
-  public function entityFormValidate($form, &$form_state) {
-    // Update the form language as it might have changed.
-    $this->setFormLanguage($form_state['values']['language']);
-  }
+  public function entityFormValidate($form, &$form_state) {}
 
   public function entityFormSubmit($form, &$form_state) {
     $langcode = $this->getLanguage();

@@ -21,10 +21,6 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
     return !empty($this->entity->revision);
   }
 
-  public function getLanguage() {
-    return $this->entity->language;
-  }
-
   public function getAccess($op) {
     return node_access($op, $this->entity);
   }
@@ -71,6 +67,11 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
         ),
       );
     }
+  }
+
+  public function entityFormValidate($form, &$form_state) {
+    // Update the form language as it might have changed.
+    $this->setFormLanguage($form_state['values']['language']);
   }
 
   public function entityFormSubmit($form, &$form_state) {
