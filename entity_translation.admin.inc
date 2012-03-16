@@ -86,7 +86,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
     // If we have a view path defined for the current entity get the switch
     // links based on it.
     if ($path) {
-      $links = _entity_translation_language_switch_links($path);
+      $links = EntityTranslationDefaultHandler::languageSwitchLinks($path);
     }
 
     foreach ($languages as $language) {
@@ -97,8 +97,8 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
       $add_path = "$base_path/edit/add/$source/$langcode";
 
       if ($base_path) {
-        $add_links = _entity_translation_language_switch_links($add_path);
-        $edit_links = _entity_translation_language_switch_links($edit_path);
+        $add_links = EntityTranslationDefaultHandler::languageSwitchLinks($add_path);
+        $edit_links = EntityTranslationDefaultHandler::languageSwitchLinks($edit_path);
       }
 
       if (isset($translations->data[$langcode])) {

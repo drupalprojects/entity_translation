@@ -204,6 +204,11 @@ interface EntityTranslationHandlerInterface {
    * TODO
    */
   public function entityFormSubmit($form, &$form_state);
+
+  /**
+   * TODO
+   */
+  public function localTasksAlter(&$data, $router_item, $root_path);
 }
 
 /**
@@ -270,6 +275,20 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         $entities[$id]->{$translations_key}->original = $row->language;
       }
     }
+  }
+
+  /**
+   * TODO
+   */
+  public static function languageSwitchLinks($path) {
+    $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $path);
+    if (empty($links)) {
+      // If content language is set up to fall back to the interface language,
+      // then there will be no switch links for LANGUAGE_TYPE_CONTENT, ergo we
+      // also need to use interface switch links.
+      $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_INTERFACE, $path);
+    }
+    return $links;
   }
 
   public function loadTranslations() {
@@ -591,7 +610,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         $form['actions']['delete_translation'] = array(
           '#type' => 'submit',
           '#value' => t('Delete translation'),
-          '#weight' => isset($form['actions']['delete']) ? $form['actions']['delete']['weight'] : 100,
+          '#weight' => isset($form['actions']['delete']['weight']) ? $form['actions']['delete']['weight'] : 100,
           '#submit' => array('entity_translation_entity_form_delete_translation_submit'),
         );
       }
@@ -732,6 +751,60 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     if ($new_translation && empty($form_state['redirect'])) {
       $form_state['redirect'] = $this->getEditPath($form_langcode);
     }
+  }
+
+  public function localTasksAlter(&$data, $router_item, $root_path) {
+    $translations = $this->getTranslations();
+
+    if (count($translations->data) > 0) {
+      $languages = language_list();
+      $form_langcode = $this->getFormLanguage();
+      $language_tabs = array();
+
+      if ($this->getSourceLanguage()) {
+        foreach ($data['tabs'][1]['output'] as $index => &$add_tab) {
+          if ($add_tab['#link']['path'] == $root_path) {
+            $add_tab['#link']['title'] = $languages[$form_langcode]->name;
+            $add_tab['#link']['weight'] = $languages[$form_langcode]->weight;
+            $add_tab['#active'] = TRUE;
+            $add_tab['#language_tab'] = TRUE;
+            $language_tabs[] = $add_tab;
+            unset($data['tabs'][1]['output'][$index]);
+            break;
+          }
+        }
+      }
+
+      foreach ($translations->data as $langcode => $translation) {
+        $links = $this->languageSwitchLinks($this->getEditPath($langcode));
+        $link = $links->links[$langcode];
+        $tab = array();
+        $tab['#theme'] = 'menu_local_task';
+        $tab['#active'] = $langcode == $form_langcode;
+        $tab['#language_tab'] = TRUE;
+        $tab['#link'] = array(
+          'href' => $link['href'],
+          'title' => $languages[$langcode]->name,
+          'weight' => $languages[$langcode]->weight,
+          'localized_options' => $link,
+        ) + $router_item;
+        $language_tabs[] = $tab;
+      }
+
+      // Reorder tabs to make the add tab respect language weights.
+      usort($language_tabs, array($this, 'translationTabSort'));
+
+      // Merge the reordered language tabs into the second level tabs.
+      $data['tabs'][1]['output'] = array_merge($data['tabs'][1]['output'], $language_tabs);
+      $data['tabs'][1]['count'] = count($data['tabs'][1]['output']);
+    }
+  }
+
+  /**
+   * TODO
+   */
+  protected function translationTabSort($a, $b) {
+    return $a['#link']['weight'] > $b['#link']['weight'];
   }
 
   /**
