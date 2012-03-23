@@ -125,8 +125,13 @@ function entity_translation_entity_info_alter(&$entity_info) {
         'access arguments' => array($entity_type),
         'theme callback' => 'variable_get',
         'theme arguments' => array('admin_theme'),
-        'edit form' => $entity_type,
       );
+
+      // Interpret a TRUE value for the 'edit form' key as the default value.
+      $et_info = &$entity_info[$entity_type]['translation']['entity_translation'];
+      if (!isset($et_info['edit form']) || $et_info['edit form'] === TRUE) {
+        $et_info['edit form'] = $entity_type;
+      }
 
       $entity_info[$entity_type]['entity keys'] += array(
         'translations' => 'translations',
@@ -212,17 +217,26 @@ function entity_translation_menu_alter(&$items) {
       $edit_path = $et_info['edit path'];
 
       if (isset($items[$edit_path])) {
-        if (isset($items[$edit_path]['weight'])) {
-          $items["$path/translate"]['weight'] = $items[$edit_path]['weight'] + 1;
+        // If the edit path is a default local task we need to find parent item.
+        $edit_path_split = explode('/', $edit_path);
+        do {
+          $edit_form_item = &$items[implode('/', $edit_path_split)];
+          array_pop($edit_path_split);
+        }
+        while (!empty($edit_form_item['type']) && $edit_form_item['type'] == MENU_DEFAULT_LOCAL_TASK);
+
+        // Make the "Translate" local task follow the "Edit" one when possibile.
+        if (isset($edit_form_item['weight'])) {
+          $items["$path/translate"]['weight'] = $edit_form_item['weight'] + 1;
         }
 
         // Replace the main edit callback with our proxy implementation to set
         // form language to the current language.
-        $edit_form_item = $items[$edit_path];
         $entity_position = count(explode('/', $et_info['base path'])) - 1;
         $edit_position = count(explode('/', $edit_path)) - 1;
-        $items[$edit_path]['page callback'] = 'entity_translation_edit_page';
-        $items[$edit_path]['page arguments'] = array_merge(array($entity_type, $entity_position, FALSE, $edit_form_item), $edit_form_item['page arguments']);
+        $original_item = $edit_form_item;
+        $edit_form_item['page callback'] = 'entity_translation_edit_page';
+        $edit_form_item['page arguments'] = array_merge(array($entity_type, $entity_position, FALSE, $original_item), $original_item['page arguments']);
 
         // Edit translation callback.
         $translation_position = $edit_position + 1;
@@ -231,14 +245,14 @@ function entity_translation_menu_alter(&$items) {
           'title callback' => 'entity_translation_edit_title',
           'title arguments' => array($translation_position),
           'page callback' => 'entity_translation_edit_page',
-          'page arguments' => array_merge(array($entity_type, $entity_position, $translation_position, $edit_form_item), $edit_form_item['page arguments']),
+          'page arguments' => array_merge(array($entity_type, $entity_position, $translation_position, $original_item), $original_item['page arguments']),
           'access callback' => 'entity_translation_edit_access',
-          'access arguments' => array_merge(array($entity_type, $entity_position, $translation_position, $edit_form_item), $edit_form_item['access arguments']),
+          'access arguments' => array_merge(array($entity_type, $entity_position, $translation_position, $original_item), $original_item['access arguments']),
         )
         // We need to inherit the remaining menu item keys, mostly 'module' and
         // 'file' to keep ajax callbacks working (see drupal_retrieve_form() and
         // form_get_cache()).
-        + $edit_form_item;
+        + $original_item;
 
         // Add translation callback.
         $add_path = "$edit_path/add/%entity_translation_language/%entity_translation_language";
@@ -246,14 +260,14 @@ function entity_translation_menu_alter(&$items) {
         $items[$add_path] = array(
           'title callback' => 'Add translation',
           'page callback' => 'entity_translation_add_page',
-          'page arguments' => array_merge(array($entity_type, $entity_position, $source_position, $source_position + 1, $edit_form_item), $edit_form_item['page arguments']),
+          'page arguments' => array_merge(array($entity_type, $entity_position, $source_position, $source_position + 1, $original_item), $original_item['page arguments']),
           'type' => MENU_LOCAL_TASK,
           'access callback' => 'entity_translation_add_access',
-          'access arguments' => array_merge(array($entity_type, $entity_position, $source_position, $source_position + 1, $edit_form_item), $edit_form_item['access arguments']),
-        ) + $edit_form_item;
+          'access arguments' => array_merge(array($entity_type, $entity_position, $source_position, $source_position + 1, $original_item), $original_item['access arguments']),
+        ) + $original_item;
 
         // Delete translation callback.
-        $items["$edit_path/delete/%entity_translation_language"] = array(
+        $items["$path/translate/delete/%entity_translation_language"] = array(
           'title' => 'Delete',
           'page callback' => 'drupal_get_form',
           'page arguments' => array('entity_translation_delete_confirm', $entity_type, $entity_position, $language_position),
@@ -722,17 +736,15 @@ function entity_translation_entity_form_source_language_submit($form, &$form_sta
  */
 function entity_translation_entity_form_delete_translation_submit($form, &$form_state) {
   $handler = entity_translation_entity_form_get_handler($form, $form_state);
-  $form_state['redirect'] = "{$handler->getEditPath()}/delete/{$handler->getFormLanguage()}";
+  $form_state['redirect'] = "{$handler->getBasePath()}/translate/delete/{$handler->getFormLanguage()}";
 }
 
 /**
  * Validation handler for the entity edit form.
  */
 function entity_translation_entity_form_validate($form, &$form_state) {
-  if (isset($form_state['values']['language']) && empty($form['language']['#attributes']['disabled'])) {
-    $handler = entity_translation_entity_form_get_handler($form, $form_state);
-    $handler->entityFormValidate($form, $form_state);
-  }
+  $handler = entity_translation_entity_form_get_handler($form, $form_state);
+  $handler->entityFormValidate($form, $form_state);
 }
 
 /**
@@ -768,7 +780,7 @@ function entity_translation_menu_local_tasks_alter(&$data, $router_item, $root_p
   // When displaying the main edit form, we need to craft an additional level of
   // local tasks for each available translation.
   $handler = entity_translation_get_handler();
-  if (!empty($handler) && ($form_langcode = $handler->getFormLanguage()) && drupal_multilingual()) {
+  if (!empty($handler) && $handler->getLanguage() != LANGUAGE_NONE && ($form_langcode = $handler->getFormLanguage()) && drupal_multilingual()) {
     $handler->localTasksAlter($data, $router_item, $root_path);
   }
 }

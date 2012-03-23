@@ -593,10 +593,26 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       }
     }
 
+    // Disable languages for existing translations, so it is not possible to
+    // switch this node to some language which is already in the translation
+    // set.
+    $language_widget = isset($form['language']) && $form['language']['#type'] == 'select';
+    if ($language_widget) {
+      $translations = $this->getTranslations();
+      foreach ($translations->data as $langcode => $translation) {
+        if ($langcode != $translations->original) {
+          unset($form['language']['#options'][$langcode]);
+        }
+      }
+      if (count($translations->data) > 1) {
+        unset($form['language']['#options'][LANGUAGE_NONE]);
+      }
+    }
+
     if ($is_translation) {
       $languages = language_list();
 
-      if (isset($form['language'])) {
+      if ($language_widget) {
         // If we are editing a translation set the correct value in the language
         // widget and not current one.
         // @todo Consider supporting the ability to change translation language.
@@ -607,10 +623,17 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
       // Replace the delete button with the delete translation one.
       if (!$new_translation) {
+        $weight = 100;
+        foreach (array('delete', 'submit') as $key) {
+          if (isset($form['actions'][$key]['weight'])) {
+            $weight = $form['actions'][$key]['weight'];
+            break;
+          }
+        }
         $form['actions']['delete_translation'] = array(
           '#type' => 'submit',
           '#value' => t('Delete translation'),
-          '#weight' => isset($form['actions']['delete']['weight']) ? $form['actions']['delete']['weight'] : 100,
+          '#weight' => $weight,
           '#submit' => array('entity_translation_entity_form_delete_translation_submit'),
         );
       }
@@ -619,8 +642,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       unset($form['actions']['delete']);
 
       // Set page title.
-      $args = array('@label' => $this->getLabel(), '@language' => t($languages[$form_langcode]->name));
-      drupal_set_title(t('@label [@language translation]', $args));
+      $args = array('@language' => t($languages[$form_langcode]->name));
+      drupal_set_title($this->entityFormTitle() . ' ' . t('[@language translation]', $args), PASS_THROUGH);
     }
 
     // We need to display the translation tab only when there is at least one
@@ -706,7 +729,13 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $form['#submit'][] = 'entity_translation_entity_form_submit';
   }
 
-  public function entityFormValidate($form, &$form_state) {}
+  public function entityFormValidate($form, &$form_state) {
+    // Update the form language as it might have changed. We exploit the
+    // validation phase to be sure to act as early as possible.
+    if (isset($form_state['values']['language']) && !$this->isTranslationForm()) {
+      $this->setFormLanguage($form_state['values']['language']);
+    }
+  }
 
   public function entityFormSubmit($form, &$form_state) {
     $langcode = $this->getLanguage();
@@ -748,7 +777,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
     // If no redirect has been explicitly set, go to the edit form for the
     // current form language.
-    if ($new_translation && empty($form_state['redirect'])) {
+    if ($new_translation && empty($form_state['redirect']) && !$this->isNewEntity()) {
       $form_state['redirect'] = $this->getEditPath($form_langcode);
     }
   }
@@ -784,7 +813,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         $tab['#language_tab'] = TRUE;
         $tab['#link'] = array(
           'href' => $link['href'],
-          'title' => $languages[$langcode]->name,
+          'title' => t($languages[$langcode]->name),
           'weight' => $languages[$langcode]->weight,
           'localized_options' => $link,
         ) + $router_item;
@@ -795,8 +824,13 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       usort($language_tabs, array($this, 'translationTabSort'));
 
       // Merge the reordered language tabs into the second level tabs.
-      $data['tabs'][1]['output'] = array_merge($data['tabs'][1]['output'], $language_tabs);
-      $data['tabs'][1]['count'] = count($data['tabs'][1]['output']);
+      if (count($language_tabs) > 1) {
+        if (empty($data['tabs'][1])) {
+          $data['tabs'][1] = array('output' => array());
+        }
+        $data['tabs'][1]['output'] = array_merge($data['tabs'][1]['output'], $language_tabs);
+        $data['tabs'][1]['count'] = count($data['tabs'][1]['output']);
+      }
     }
   }
 
@@ -805,6 +839,13 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   protected function translationTabSort($a, $b) {
     return $a['#link']['weight'] > $b['#link']['weight'];
+  }
+
+  /**
+   * TODO
+   */
+  protected function entityFormTitle() {
+    return $this->getLabel();
   }
 
   /**
