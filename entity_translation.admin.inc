@@ -150,6 +150,10 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
 
   drupal_set_title(t('Translations of %label', array('%label' => $handler->getLabel())), PASS_THROUGH);
 
+  // Add metadata to the build render allow to let other modules know about
+  // which entity this is.
+  $build['#entity_type'] = $entity_type;
+  $build['#entity'] = $entity;
   $build['entity_translation_overview'] = array(
     '#theme' => 'table',
     '#header' => $header,
