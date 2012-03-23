@@ -728,8 +728,11 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     // form language value.
     array_unshift($form['#validate'], 'entity_translation_entity_form_validate');
 
-    // Process entity form submission. This allows to intercept deletions.
+    // Process entity form submission.
     $form['#submit'][] = 'entity_translation_entity_form_submit';
+
+    // This allows to intercept deletions.
+    $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_submit';
   }
 
   public function entityFormValidate($form, &$form_state) {
