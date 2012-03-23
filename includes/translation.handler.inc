@@ -564,10 +564,19 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $langcode = $this->getLanguage();
     $is_translation = $langcode != $form_langcode;
     $new_translation = !isset($translations->data[$form_langcode]);
+    $source_language = $this->getSourceLanguage();
+    $no_translations = count($translations->data) < 2;
+    $languages = language_list();
+
+    // Adjust page title to specify the current language being edited, if
+    // we have at least one translation.
+    if (!$no_translations || $new_translation) {
+      drupal_set_title($this->entityFormTitle() . ' [' . t($languages[$form_langcode]->name) . ']', PASS_THROUGH);
+    }
 
     // Display source language selector only if we are creating a new
     // translation and there are at least two translations available.
-    if ($new_translation && count($translations->data) > 1) {
+    if (!$no_translations && $new_translation) {
       $form['source_language'] = array(
         '#type' => 'fieldset',
         '#title' => t('Source language'),
@@ -610,12 +619,10 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
 
     if ($is_translation) {
-      $languages = language_list();
-
+      // If we are editing a translation set the correct value in the language
+      // widget and not current one.
+      // @todo Consider supporting the ability to change translation language.
       if ($language_widget) {
-        // If we are editing a translation set the correct value in the language
-        // widget and not current one.
-        // @todo Consider supporting the ability to change translation language.
         $form['language']['#options'][$langcode] = $languages[$langcode]->name;
         $form['language']['#default_value'] = $langcode;
         $form['language']['#disabled'] = TRUE;
@@ -640,10 +647,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
       // Always remove the delete button on translation forms.
       unset($form['actions']['delete']);
-
-      // Set page title.
-      $args = array('@language' => t($languages[$form_langcode]->name));
-      drupal_set_title($this->entityFormTitle() . ' ' . t('[@language translation]', $args), PASS_THROUGH);
     }
 
     // We need to display the translation tab only when there is at least one
