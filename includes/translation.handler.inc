@@ -334,9 +334,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
       foreach ($translations->data as $langcode => $translation) {
         $translation = $overrides + $translation + $defaults;
-        if ($this->outdated && $langcode != $translations->original) {
-          $translation['translate'] = 1;
-        }
         $query->values($translation);
       }
 
@@ -505,7 +502,14 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   public function setOutdated($outdated) {
-    $this->outdated = $outdated;
+    if ($outdated) {
+      $translations = $this->getTranslations();
+      foreach ($translations->data as $langcode => &$translation) {
+        if ($langcode != $this->getFormLanguage()) {
+          $translation['translate'] = 1;
+        }
+      }
+    }
   }
 
   public function getBasePath() {
@@ -562,7 +566,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $translations = $this->getTranslations();
     $form_langcode = $this->getFormLanguage();
     $langcode = $this->getLanguage();
-    $is_translation = $langcode != $form_langcode;
+    $is_translation = $this->isTranslationForm();
     $new_translation = !isset($translations->data[$form_langcode]);
     $source_language = $this->getSourceLanguage();
     $no_translations = count($translations->data) < 2;
@@ -607,10 +611,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     // set.
     $language_widget = isset($form['language']) && $form['language']['#type'] == 'select';
     if ($language_widget) {
-      $translations = $this->getTranslations();
-      foreach ($translations->data as $langcode => $translation) {
-        if ($langcode != $translations->original) {
-          unset($form['language']['#options'][$langcode]);
+      foreach ($translations->data as $translation) {
+        if (!empty($translation['source'])) {
+          unset($form['language']['#options'][$translation['language']]);
         }
       }
       if (count($translations->data) > 1) {
@@ -685,7 +688,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         '#disabled' => !$enabled,
       );
 
-      if (!$is_translation) {
+      $translate = !$new_translation && $translations->data[$form_langcode]['translate'];
+      if (!$translate) {
         $form['translation']['retranslate'] = array(
           '#type' => 'checkbox',
           '#title' => t('Flag translations as outdated'),
@@ -694,7 +698,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         );
       }
       else {
-        $translate = !$new_translation && $translations->data[$form_langcode]['translate'];
         $form['translation']['translate'] = array(
           '#type' => 'checkbox',
           '#title' => t('This translation needs to be updated'),
@@ -702,26 +705,26 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
           '#description' => t('When this option is checked, this translation needs to be updated because the source post has changed. Uncheck when the translation is up to date again.'),
           '#disabled' => !$translate,
         );
-
-        $name = $new_translation ? '' : user_load($translations->data[$form_langcode]['uid'])->name;
-        $form['translation']['name'] = array(
-          '#type' => 'textfield',
-          '#title' => t('Authored by'),
-          '#maxlength' => 60,
-          '#autocomplete_path' => 'user/autocomplete',
-          '#default_value' => $name,
-          '#description' => t('Leave blank for %anonymous.', array('%anonymous' => variable_get('anonymous', t('Anonymous')))),
-        );
-
-        $date = $new_translation ? REQUEST_TIME : $translations->data[$form_langcode]['created'];
-        $form['translation']['created'] = array(
-          '#type' => 'textfield',
-          '#title' => t('Authored on'),
-          '#maxlength' => 25,
-          '#description' => t('Format: %time. The date format is YYYY-MM-DD and %timezone is the time zone offset from UTC. Leave blank to use the time of form submission.', array('%time' => format_date($date, 'custom', 'Y-m-d H:i:s O'), '%timezone' => format_date($date, 'custom', 'O'))),
-          '#default_value' => $new_translation ? '' : format_date($date, 'custom', 'Y-m-d H:i:s O'),
-        );
       }
+
+      $name = $new_translation ? $GLOBALS['user']->name : user_load($translations->data[$form_langcode]['uid'])->name;
+      $form['translation']['name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Authored by'),
+        '#maxlength' => 60,
+        '#autocomplete_path' => 'user/autocomplete',
+        '#default_value' => $name,
+        '#description' => t('Leave blank for %anonymous.', array('%anonymous' => variable_get('anonymous', t('Anonymous')))),
+      );
+
+      $date = $new_translation ? REQUEST_TIME : $translations->data[$form_langcode]['created'];
+      $form['translation']['created'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Authored on'),
+        '#maxlength' => 25,
+        '#description' => t('Format: %time. The date format is YYYY-MM-DD and %timezone is the time zone offset from UTC. Leave blank to use the time of form submission.', array('%time' => format_date($date, 'custom', 'Y-m-d H:i:s O'), '%timezone' => format_date($date, 'custom', 'O'))),
+        '#default_value' => $new_translation ? '' : format_date($date, 'custom', 'Y-m-d H:i:s O'),
+      );
     }
 
     // We need to process the posted form as early as possible to update the
@@ -768,12 +771,16 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       $translation = $translations->data[$form_langcode];
     }
 
-    if ($is_translation) {
+    if (isset($values['translate'])) {
       $translation['translate'] = intval($values['translate']);
     }
     else {
-      $this->setOriginalLanguage($langcode);
       $this->setOutdated($values['retranslate']);
+    }
+
+    // Handle possible language changes for the original values.
+    if (!$is_translation) {
+      $this->setOriginalLanguage($langcode);
     }
 
     $translation['status'] = intval($values['status']);

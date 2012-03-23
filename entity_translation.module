@@ -5,7 +5,6 @@
  * Allows entities to be translated into different languages.
  *
  * @todo
- * - core entities
  * - comments/php docs
  */
 

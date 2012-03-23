@@ -40,6 +40,11 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
           'js' => array(drupal_get_path('module', 'entity_translation') . '/entity_translation.node-form.js'),
         ),
       );
+
+      if (!$this->isTranslationForm()) {
+        $form['translation']['name']['#access'] = FALSE;
+        $form['translation']['created']['#access'] = FALSE;
+      }
     }
   }
 
