@@ -280,7 +280,7 @@ function entity_translation_menu_alter(&$items) {
 }
 
 /**
- * Title callback. 
+ * Title callback.
  */
 function entity_translation_edit_title($langcode) {
   $languages = entity_translation_languages();
