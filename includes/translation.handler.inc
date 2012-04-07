@@ -820,17 +820,20 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       foreach ($translations->data as $langcode => $translation) {
         $links = $this->languageSwitchLinks($this->getEditPath($langcode));
         $link = $links->links[$langcode];
-        $tab = array();
-        $tab['#theme'] = 'menu_local_task';
-        $tab['#active'] = $langcode == $form_langcode;
-        $tab['#language_tab'] = TRUE;
-        $tab['#link'] = array(
-          'href' => $link['href'],
-          'title' => t($languages[$langcode]->name),
-          'weight' => $languages[$langcode]->weight,
-          'localized_options' => $link,
-        ) + $router_item;
-        $language_tabs[] = $tab;
+
+        if (isset($link['href'])) {
+          $tab = array();
+          $tab['#theme'] = 'menu_local_task';
+          $tab['#active'] = $langcode == $form_langcode;
+          $tab['#language_tab'] = TRUE;
+          $tab['#link'] = array(
+            'href' => $link['href'],
+            'title' => t($languages[$langcode]->name),
+            'weight' => $languages[$langcode]->weight,
+            'localized_options' => $link,
+          ) + $router_item;
+          $language_tabs[] = $tab;
+        }
       }
 
       // Reorder tabs to make the add tab respect language weights.
