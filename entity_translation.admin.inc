@@ -590,7 +590,7 @@ function entity_translation_translatable_form_submit($form, $form_state) {
   $operations = $translatable ? $operations : array_reverse($operations);
 
   $t_args = array('%field' => $field_name);
-  $title = !$translatable ? t('Enabling translation for the %field field .', $t_args) : t('Disabling translation for the %field field .', $t_args);
+  $title = !$translatable ? t('Enabling translation for the %field field', $t_args) : t('Disabling translation for the %field field', $t_args);
 
   $batch = array(
     'title' => $title,
@@ -647,10 +647,12 @@ function entity_translation_translatable_batch($translatable, $field_name, &$con
   // Number of entities to be processed for each step.
   $limit = variable_get('entity_translation_translatable_batch_limit', 10);
 
+  $offset = $context['sandbox']['progress'];
   $query = new EntityFieldQuery();
   $result = $query
     ->fieldCondition($field_name)
-    ->range($context['sandbox']['progress'], $limit)
+    ->entityOrderBy('entity_id')
+    ->range($offset, $limit)
     ->execute();
 
   foreach ($result as $entity_type => $entities) {
@@ -709,13 +711,22 @@ function entity_translation_translatable_batch($translatable, $field_name, &$con
  * Stores the given field translations.
  */
 function _entity_translation_update_field($entity_type, $entity, $field_name) {
+  $empty = 0;
   $field = field_info_field($field_name);
+
   // Ensure that we are trying to store only valid data.
   foreach ($entity->{$field_name} as $langcode => $items) {
     $entity->{$field_name}[$langcode] = _field_filter_items($field, $entity->{$field_name}[$langcode]);
+    $empty += empty($entity->{$field_name}[$langcode]);
   }
-  field_attach_presave($entity_type, $entity);
-  field_attach_update($entity_type, $entity);
+
+  // Save the field value only if there is at least one item available,
+  // otherwise any stored empty field value would be deleted. If this happens
+  // the range queries would be messed up.
+  if ($empty < count($entity->{$field_name})) {
+    field_attach_presave($entity_type, $entity);
+    field_attach_update($entity_type, $entity);
+  }
 }
 
 /**
