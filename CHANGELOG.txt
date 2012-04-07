@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1519894 by plach: Fixed Entity translation upgrade migration incomplete.
 #1432206 by bforchhammer: Fixed Loss of field content during translatability
   switch operation.
 #1279372 by getgood, loganfsmyth, evolvingweb, plach, Kristen Pol: Enable bulk
