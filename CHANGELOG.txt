@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1519906 by plach: Migrate aliases when upgrading nodes.
 #1519898 by plach: Fixed The upgrade process may freeze.
 #1519894 by plach: Fixed Entity translation upgrade migration incomplete.
 #1432206 by bforchhammer: Fixed Loss of field content during translatability

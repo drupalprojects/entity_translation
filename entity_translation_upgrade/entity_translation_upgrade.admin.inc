@@ -194,6 +194,12 @@ function entity_translation_upgrade_complete(&$context) {
  * Implements hook_entity_translation_upgrade_translation().
  */
 function entity_translation_upgrade_entity_translation_upgrade($node, $translation) {
+  // Update URL aliases.
+  db_update('url_alias')
+    ->fields(array('source' => 'node/' . $node->nid))
+    ->condition('source', 'node/' . $translation->nid)
+    ->execute();
+
   // Attach comments to the original node.
   db_update('comment')
     ->fields(array('nid' => $node->nid, 'language' => $translation->language))
