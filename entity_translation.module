@@ -19,10 +19,7 @@ function entity_translation_language($entity_type, $entity) {
   // translation handler is stored there. This is mainly needed when responding
   // to an AJAX request where the form language cannot be set from the page
   // callback.
-  if (!empty($_POST['form_build_id'])) {
-    list($form, $form_state) = _entity_translation_entity_form();
-    $handler = entity_translation_entity_form_get_handler($form, $form_state);
-  }
+  $handler = entity_translation_current_form_get_handler();
 
   // Make sure we always have a translation handler instance available.
   if (empty($handler)) {
@@ -36,16 +33,16 @@ function entity_translation_language($entity_type, $entity) {
 /**
  * TODO
  */
-function _entity_translation_entity_form() {
-  $form = FALSE;
-  $form_state = FALSE;
+function entity_translation_current_form_get_handler() {
+  $handler = FALSE;
 
   if (!empty($_POST['form_build_id'])) {
     $form_state = form_state_defaults();
     $form = form_get_cache($_POST['form_build_id'], $form_state);
+    $handler = entity_translation_entity_form_get_handler($form, $form_state);
   }
 
-  return array($form, $form_state);
+  return $handler;
 }
 
 /**
