@@ -473,6 +473,10 @@ function entity_translation_permission() {
       'title' => t('Translate any entity'),
       'description' => t('Translate field content for any fieldable entity.'),
     ),
+    'edit translation shared fields' => array(
+      'title' => t('Edit shared fields'),
+      'description' => t('Edit fields shared between translations on the translation form.'),
+    ),
     'administer entity translation' => array(
       'title' => t('Administer entity translation'),
       'description' => t('Select which entities can be translated.'),
@@ -487,7 +491,7 @@ function entity_translation_permission() {
       $label = t($info['label']);
       $permission["translate $entity_type entities"] = array(
         'title' => t('Translate entities of type @type', array('@type' => $label)),
-        'description' => t('Translate field content for entities of type @type', array('@type' => $label)),
+        'description' => t('Translate field content for entities of type @type.', array('@type' => $label)),
       );
     }
   }
@@ -648,6 +652,7 @@ function entity_translation_field_attach_form($entity_type, $entity, &$form, &$f
     $translations = $handler->getTranslations();
     $update_langcode = $form_langcode && ($form_langcode != $langcode);
     $source = $handler->getSourceLanguage();
+    $new_translation = !isset($translations->data[$form_langcode]);
 
     // If we are creating a new translation we need to retrieve form elements
     // populated with the source language values, but only if form is not being
@@ -688,6 +693,35 @@ function entity_translation_field_attach_form($entity_type, $entity, &$form, &$f
             $form[$field_name]['#process'] = array();
           }
           array_unshift($form[$field_name]['#process'], 'entity_translation_prepare_element');
+        }
+      }
+    }
+
+    // Handle fields shared between translations when there is at least one
+    // translation available or a new one is being created.
+    if (!$handler->isNewEntity() && ($new_translation || count($translations->data) > 1)) {
+      list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+
+      // Shared fields are visible if we are either editing the source node, or
+      // if the user has the respective permission.
+      $is_source = $langcode == $handler->getLanguage();
+      $shared_fields_visible = $is_source || user_access('edit translation shared fields');
+
+      foreach (field_info_instances($entity_type, $bundle) as $instance) {
+        $field_name = $instance['field_name'];
+        $field = field_info_field($field_name);
+
+        if ($shared_fields_visible) {
+          // Add visual clues about translatability.
+          if (!isset($form[$field_name]['#process'])) {
+            $form[$field_name]['#process'] = array();
+          }
+          $form[$field_name]['#field_name'] = $field_name;
+          array_unshift($form[$field_name]['#process'], 'entity_translation_element_translatability_clue');
+        }
+        // Hide shared fields.
+        elseif (!$field['translatable']) {
+          $form[$field_name]['#access'] = FALSE;
         }
       }
     }
@@ -732,6 +766,71 @@ function entity_translation_prepare_element($element, &$form_state) {
 function _entity_translation_form_language_callback(&$item, $key, $langcode) {
   if ($key === '#language') {
     $item = $langcode;
+  }
+}
+
+/**
+ * Adds visual clues about the translatability of a field to the given element.
+ *
+ * Field titles are appended with the string "Shared" for fields which are
+ * shared between different translations. Moreover fields receive a CSS class to
+ * distinguish between translatable and shared fields.
+ */
+function entity_translation_element_translatability_clue($element, &$form_state, $form) {
+  $languages = language_list();
+
+  $field_name = $element['#field_name'];
+  $field = field_info_field($field_name);
+  $field_language = $element['#language'];
+
+  // Append language to element title.
+  if (variable_get('entity_translation_shared_labels', TRUE)) {
+    $suffix = $field['translatable'] ? '' : ' (' . t('shared field') . ')';
+    _entity_translation_element_title_append($element, $suffix);
+  }
+
+  // Add CSS class names.
+  if (!isset($element['#attributes'])) {
+    $element['#attributes'] = array();
+  }
+  if (!isset($element['#attributes']['class'])) {
+    $element['#attributes']['class'] = array();
+  }
+  $element['#attributes']['class'][] = 'entity-translation-' . ($field['translatable'] ? 'field-translatable' : 'field-shared');
+
+  return $element;
+}
+
+/**
+ * Helper function which appends the given $suffix string to the title of the
+ * given form element. If the given element does not have a #title attribute,
+ * the function is recursively applied to child elements.
+ */
+function _entity_translation_element_title_append(&$element, $suffix) {
+  static $fapi_title_elements;
+
+  // Elements which can have a #title attribute according to FAPI Reference.
+  if (!isset($fapi_title_elements)) {
+    $fapi_title_elements = array_flip(array('checkbox', 'checkboxes', 'date', 'fieldset', 'file', 'item', 'password', 'password_confirm', 'radio', 'radios', 'select', 'text_format', 'textarea', 'textfield', 'weight'));
+  }
+
+  // Update #title attribute for all elements that are allowed to have a #title
+  // attribute according to the Form API Reference. The reason for this check
+  // is because some elements have a #title attribute even though it is not
+  // rendered, e.g. field containers.
+  if (isset($element['#type']) && isset($fapi_title_elements[$element['#type']]) && isset($element['#title'])) {
+    $element['#title'] .= $suffix;
+  }
+  // If the current element does not have a (valid) title, try child elements.
+  elseif ($children = element_children($element)) {
+    foreach ($children as $delta) {
+      _entity_translation_element_title_append($element[$delta], $suffix);
+    }
+  }
+  // If there are no children, fall back to the current #title attribute if it
+  // exists.
+  elseif (isset($element['#title'])) {
+    $element['#title'] .= $suffix;
   }
 }
 

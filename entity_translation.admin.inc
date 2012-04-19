@@ -18,6 +18,13 @@ function entity_translation_admin_form($form, $form_state) {
     '#default_value' => variable_get('locale_field_language_fallback', TRUE),
   );
 
+  $form['entity_translation_shared_labels'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display shared labels'),
+    '#description' => t('Append a "Shared field" hint to entity form widgets shared accross translations.'),
+    '#default_value' => variable_get('entity_translation_shared_labels', TRUE),
+  );
+
   foreach (entity_get_info() as $entity_type => $info) {
     if ($info['fieldable']) {
       $options[$entity_type] = $info['label'];
