@@ -122,7 +122,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
           $row_title = $is_original ? $label : t('n/a');
         }
 
-        if ($edit_path && $handler->getAccess('update')) {
+        if ($edit_path && $handler->getAccess('update') && $handler->getTranslationAccess($langcode)) {
           $link = isset($edit_links->links[$langcode]['href']) ? $edit_links->links[$langcode] : array('href' => $path, 'language' => $language);
           $options[] = l(t('edit'), $link['href'], $link);
         }

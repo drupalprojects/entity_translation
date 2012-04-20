@@ -161,6 +161,11 @@ interface EntityTranslationHandlerInterface {
   public function getAccess($op);
 
   /**
+   * TODO
+   */
+  public function getTranslationAccess($langcode);
+
+  /**
    * Return TRUE if the entity supports URL aliasing.
    */
   public function isAliasEnabled();
@@ -537,6 +542,10 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     return TRUE;
   }
 
+  public function getTranslationAccess($langcode) {
+    return $langcode != $this->getLanguage() || user_access('edit original values');
+  }
+
   public function isAliasEnabled() {
     return !empty($this->entityInfo['translation']['entity_translation']['alias']);
   }
@@ -818,21 +827,23 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       }
 
       foreach ($translations->data as $langcode => $translation) {
-        $links = $this->languageSwitchLinks($this->getEditPath($langcode));
-        $link = $links->links[$langcode];
+        if ($this->getTranslationAccess($langcode)) {
+          $links = $this->languageSwitchLinks($this->getEditPath($langcode));
+          $link = $links->links[$langcode];
 
-        if (isset($link['href'])) {
-          $tab = array();
-          $tab['#theme'] = 'menu_local_task';
-          $tab['#active'] = $langcode == $form_langcode;
-          $tab['#language_tab'] = TRUE;
-          $tab['#link'] = array(
-            'href' => $link['href'],
-            'title' => t($languages[$langcode]->name),
-            'weight' => $languages[$langcode]->weight,
-            'localized_options' => $link,
-          ) + $router_item;
-          $language_tabs[] = $tab;
+          if (isset($link['href'])) {
+            $tab = array();
+            $tab['#theme'] = 'menu_local_task';
+            $tab['#active'] = $langcode == $form_langcode;
+            $tab['#language_tab'] = TRUE;
+            $tab['#link'] = array(
+              'href' => $link['href'],
+              'title' => t($languages[$langcode]->name),
+              'weight' => $languages[$langcode]->weight,
+              'localized_options' => $link,
+            ) + $router_item;
+            $language_tabs[] = $tab;
+          }
         }
       }
 

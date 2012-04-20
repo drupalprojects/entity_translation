@@ -242,7 +242,8 @@ function entity_translation_menu_alter(&$items) {
       $edit_path = $et_info['edit path'];
 
       if (isset($items[$edit_path])) {
-        // If the edit path is a default local task we need to find parent item.
+        // If the edit path is a default local task we need to find the parent
+        // item.
         $edit_path_split = explode('/', $edit_path);
         do {
           $edit_form_item = &$items[implode('/', $edit_path_split)];
@@ -256,23 +257,27 @@ function entity_translation_menu_alter(&$items) {
         }
 
         // Replace the main edit callback with our proxy implementation to set
-        // form language to the current language.
+        // form language to the current language and check access.
         $entity_position = count(explode('/', $et_info['base path'])) - 1;
         $edit_position = count(explode('/', $edit_path)) - 1;
         $original_item = $edit_form_item;
+        $args = array($entity_type, $entity_position, FALSE, $original_item);
         $edit_form_item['page callback'] = 'entity_translation_edit_page';
-        $edit_form_item['page arguments'] = array_merge(array($entity_type, $entity_position, FALSE, $original_item), $original_item['page arguments']);
+        $edit_form_item['page arguments'] = array_merge($args, $original_item['page arguments']);
+        $edit_form_item['access callback'] = 'entity_translation_edit_access';
+        $edit_form_item['access arguments'] = array_merge($args, $original_item['access arguments']);
 
         // Edit translation callback.
         $translation_position = $edit_position + 1;
+        $args = array($entity_type, $entity_position, $translation_position, $original_item);
         $items["$edit_path/%entity_translation_language"] = array(
           'type' => MENU_DEFAULT_LOCAL_TASK,
           'title callback' => 'entity_translation_edit_title',
           'title arguments' => array($translation_position),
           'page callback' => 'entity_translation_edit_page',
-          'page arguments' => array_merge(array($entity_type, $entity_position, $translation_position, $original_item), $original_item['page arguments']),
+          'page arguments' => array_merge($args, $original_item['page arguments']),
           'access callback' => 'entity_translation_edit_access',
-          'access arguments' => array_merge(array($entity_type, $entity_position, $translation_position, $original_item), $original_item['access arguments']),
+          'access arguments' => array_merge($args, $original_item['access arguments']),
         )
         // We need to inherit the remaining menu item keys, mostly 'module' and
         // 'file' to keep ajax callbacks working (see drupal_retrieve_form() and
@@ -343,6 +348,15 @@ function entity_translation_edit_access() {
 
   $handler = entity_translation_get_handler($entity_type, $entity);
   $translations = $handler->getTranslations();
+
+  if (empty($langcode)) {
+    $langcode = $GLOBALS['language_content']->language;
+  }
+
+  // The user must be explicitly allowed to access the original values.
+  if (!$handler->getTranslationAccess($langcode)) {
+    return FALSE;
+  }
 
   // If the translation exists, we can show the corresponding local task.
   if (isset($translations->data[$langcode])) {
@@ -469,14 +483,6 @@ function entity_translation_menu_entity_load($entity_id, $entity_type) {
  */
 function entity_translation_permission() {
   $permission = array(
-    'translate any entity' => array(
-      'title' => t('Translate any entity'),
-      'description' => t('Translate field content for any fieldable entity.'),
-    ),
-    'edit translation shared fields' => array(
-      'title' => t('Edit shared fields'),
-      'description' => t('Edit fields shared between translations on the translation form.'),
-    ),
     'administer entity translation' => array(
       'title' => t('Administer entity translation'),
       'description' => t('Select which entities can be translated.'),
@@ -485,7 +491,20 @@ function entity_translation_permission() {
       'title' => t('Toggle field translatability'),
       'description' => t('Toggle translatability of fields performing a bulk update.'),
     ),
+    'edit translation shared fields' => array(
+      'title' => t('Edit shared fields'),
+      'description' => t('Edit fields shared between translations on the translation form.'),
+    ),
+    'edit original values' => array(
+      'title' => t('Edit original values'),
+      'description' => t('Access the entity edit form in the original language.'),
+    ),
+    'translate any entity' => array(
+      'title' => t('Translate any entity'),
+      'description' => t('Translate field content for any fieldable entity.'),
+    ),
   );
+
   foreach (entity_get_info() as $entity_type => $info) {
     if ($info['fieldable']) {
       $label = t($info['label']);
@@ -495,6 +514,7 @@ function entity_translation_permission() {
       );
     }
   }
+
   return $permission;
 }
 
