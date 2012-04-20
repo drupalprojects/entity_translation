@@ -671,6 +671,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         '#collapsed' => TRUE,
         '#tree' => TRUE,
         '#weight' => 10,
+        '#access' => user_access('translate any entity') || user_access("translate $this->entityType entities"),
       );
 
       $status = $new_translation || $translations->data[$form_langcode]['status'];
