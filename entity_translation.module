@@ -31,7 +31,10 @@ function entity_translation_language($entity_type, $entity) {
 }
 
 /**
- * TODO
+ * Returns the translation handler associated to the currently submitted form.
+ *
+ * @return EntityTranslationHandlerInterface
+ *   A translation handler instance if available, FALSE oterwise.
  */
 function entity_translation_current_form_get_handler() {
   $handler = FALSE;
@@ -329,8 +332,9 @@ function entity_translation_edit_page() {
   $edit_form_item = array_shift($args);
 
   // Set the current form language.
-  $langcode = entity_translation_form_language($entity_type, $entity, $langcode);
   $handler = entity_translation_get_handler($entity_type, $entity);
+  $translations = $handler->getTranslations();
+  $langcode = entity_translation_form_language($langcode, $translations);
   $handler->setFormLanguage($langcode);
 
   // Display the entity edit form.
@@ -348,17 +352,15 @@ function entity_translation_edit_access() {
 
   $handler = entity_translation_get_handler($entity_type, $entity);
   $translations = $handler->getTranslations();
-
-  if (empty($langcode)) {
-    $langcode = $GLOBALS['language_content']->language;
-  }
+  $langcode = entity_translation_form_language($langcode, $translations);
 
   // The user must be explicitly allowed to access the original values.
   if (!$handler->getTranslationAccess($langcode)) {
     return FALSE;
   }
 
-  // If the translation exists, we can show the corresponding local task.
+  // If the translation exists or no translation was specfied, we can show the
+  // corresponding local task.
   if (isset($translations->data[$langcode])) {
     // Check that the requested language is actually accessible.
     $enabled_languages = entity_translation_languages($entity_type, $entity);
@@ -369,6 +371,20 @@ function entity_translation_edit_access() {
   }
 
   return FALSE;
+}
+
+/**
+ * TODO
+ */
+function entity_translation_form_language($langcode, $translations) {
+  if (empty($langcode)) {
+    $fallback = language_fallback_get_candidates();
+    $langcode = $GLOBALS['language_content']->language;
+    while (!isset($translations->data[$langcode])) {
+      $langcode = array_shift($fallback);
+    }
+  }
+  return $langcode;
 }
 
 /**
@@ -414,18 +430,6 @@ function entity_translation_add_page() {
 
   // Display the entity edit form.
   return _entity_translation_callback($edit_form_item['page callback'], $args, $edit_form_item);
-}
-
-/**
- * TODO
- */
-function entity_translation_form_language($entity_type, $entity, $langcode = NULL) {
-  if (empty($langcode)) {
-    $langcode = $GLOBALS['language_content']->language;
-  }
-  $handler = entity_translation_get_handler($entity_type, $entity);
-  $translations = $handler->getTranslations();
-  return isset($translations->data[$langcode]) ? $langcode : $handler->getLanguage();
 }
 
 /**
