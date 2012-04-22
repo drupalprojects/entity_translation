@@ -15,20 +15,32 @@ class EntityTranslationCommentHandler extends EntityTranslationDefaultHandler {
     parent::__construct('comment', $entity_info, $entity, $entity_id);
   }
 
+  /**
+   * @see EntityTranslationDefaultHandler::getLanguage()
+   */
   public function getLanguage() {
     return $this->entity->language;
   }
 
+  /**
+   * @see EntityTranslationDefaultHandler::entityForm()
+   */
   public function entityForm(&$form, &$form_state) {
     parent::entityForm($form, $form_state);
     // Adjust the translation fieldset weight to move it below the admin one.
     $form['translation']['#weight'] = 1;
   }
 
+  /**
+   * @see EntityTranslationDefaultHandler::entityFormTitle()
+   */
   protected function entityFormTitle() {
     return t('Edit comment @subject', array('@subject' => $this->getLabel()));
   }
 
+  /**
+   * @see EntityTranslationDefaultHandler::getStatus()
+   */
   protected function getStatus() {
     return (boolean) $this->entity->status;
   }

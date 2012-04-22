@@ -17,10 +17,16 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
     parent::__construct('node', $entity_info, $entity, $entity_id);
   }
 
+  /**
+   * @see EntityTranslationDefaultHandler::isRevision()
+   */
   public function isRevision() {
     return !empty($this->entity->revision);
   }
 
+  /**
+   * @see EntityTranslationDefaultHandler::getAccess()
+   */
   public function getAccess($op) {
     return node_access($op, $this->entity);
   }
@@ -48,6 +54,9 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
     }
   }
 
+  /**
+   * @see EntityTranslationDefaultHandler::entityFormSubmit()
+   */
   public function entityFormSubmit($form, &$form_state) {
     if (!isset($form_state['values']['translation'])) {
       $form_state['values']['translation'] = array('status' => $form_state['values']['status']);
@@ -65,11 +74,17 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
     parent::entityFormSubmit($form, $form_state);
   }
 
+  /**
+   * @see EntityTranslationDefaultHandler::entityFormTitle()
+   */
   protected function entityFormTitle() {
     $type_name = node_type_get_name($this->entity);
     return t('<em>Edit @type</em> @title', array('@type' => $type_name, '@title' => $this->getLabel()));
   }
 
+  /**
+   * @see EntityTranslationDefaultHandler::getStatus()
+   */
   protected function getStatus() {
     return (boolean) $this->entity->status;
   }

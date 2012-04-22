@@ -3,16 +3,33 @@
 /**
  * @file
  * Allows entities to be translated into different languages.
- *
- * @todo
- * - comments/php docs
  */
 
 module_load_include('inc', 'entity_translation', 'entity_translation.node');
 
 
 /**
- * TODO
+ * Entity language callback.
+ *
+ * This callback changes the entity language from the actual one to the active
+ * form language. This overriding allows to obtain language dependent form
+ * widgets where multilingual values are supported (e.g. field or path alias
+ * widgets) even if the code was not originally written with supporting multiple
+ * values per language in mind.
+ *
+ * The main drawback of this approach is that code needing to access the actual
+ * language in the entity form build/validation/submit workflow cannot rely on
+ * the entity_language() function. On the other hand in these scenarios assuming
+ * the presence of Entity translation should be safe, thus being able to rely on
+ * the EntityTranslationHandlerInterface::getLanguage() method.
+ *
+ * @param $entity_type
+ *    The the type of the entity.
+ * @param $entity
+ *    The entity whose language has to be returned.
+ *
+ * @return
+ *   A valid language code.
  */
 function entity_translation_language($entity_type, $entity) {
   // If a form has been post, we need to check its state to verify if any form
@@ -49,7 +66,7 @@ function entity_translation_current_form_get_handler() {
 }
 
 /**
- * Helper function to determine if the given entity type is translatable.
+ * Helper function. Determines whether the given entity type is translatable.
  */
 function entity_translation_enabled($entity_type, $skip_handler = FALSE) {
   $enabled_types = variable_get('entity_translation_entity_types', array());
@@ -374,7 +391,21 @@ function entity_translation_edit_access() {
 }
 
 /**
- * TODO
+ * Determines the current form language.
+ *
+ * Based on the requested language and the translations available for the entity
+ * being edited, determines the active form language. This takes into account
+ * language fallback rules so that the translation being edited matches the one
+ * being viewed.
+ *
+ * @param $langcode
+ *   The requested language code.
+ * @param $translations
+ *   A translation data structure as returned by
+ *   EntityTranslationHandlerInterface::getTranslations().
+ *
+ * @return
+ *   A valid language code.
  */
 function entity_translation_form_language($langcode, $translations) {
   if (empty($langcode)) {
@@ -433,7 +464,7 @@ function entity_translation_add_page() {
 }
 
 /**
- * TODO
+ * Helper function. Proxies a callback call including any needed file.
  */
 function _entity_translation_callback($callback, $args, $info = array()) {
   if (isset($info['file'])) {
@@ -785,7 +816,7 @@ function entity_translation_prepare_element($element, &$form_state) {
 }
 
 /**
- * Helper callback: replace the source language with the given one.
+ * Helper callback. Replaces the source language with the given one.
  */
 function _entity_translation_form_language_callback(&$item, $key, $langcode) {
   if ($key === '#language') {
@@ -826,9 +857,10 @@ function entity_translation_element_translatability_clue($element, &$form_state,
 }
 
 /**
- * Helper function which appends the given $suffix string to the title of the
- * given form element. If the given element does not have a #title attribute,
- * the function is recursively applied to child elements.
+ * Appends the given $suffix string to the title of the given form element.
+ *
+ * If the given element does not have a #title attribute, the function is
+ * recursively applied to child elements.
  */
 function _entity_translation_element_title_append(&$element, $suffix) {
   static $fapi_title_elements;
@@ -964,7 +996,7 @@ function entity_translation_preprocess_page(&$variables) {
 /**
  * Pre render callback.
  *
- * TODO
+ * Appends the language tabs to the current local tasks area.
  */
 function entity_translation_language_tabs_render($element) {
   $build = array(
@@ -1032,11 +1064,11 @@ function entity_translation_form_field_ui_field_edit_form_alter(&$form, $form_st
  * Translation handler factory.
  *
  * @param $entity_type
- *   Optional. The type of $entity; e.g. 'node' or 'user'.
+ *   (optional) The type of $entity; e.g. 'node' or 'user'.
  * @param $entity
- *   Optional. The entity to be translated.
+ *   (optional) The entity to be translated.
  * @param $update
- *   Optional. Instances are statically cached: if this is TRUE the wrapped
+ *   (optional) Instances are statically cached: if this is TRUE the wrapped
  *   entity will be replaced by the passed one.
  *
  * @return EntityTranslationHandlerInterface
@@ -1116,7 +1148,7 @@ function entity_translation_entity_form_get_handler($form, &$form_state) {
 }
 
 /**
- * Return an array of edit form info as defined in hook_translation_info().
+ * Returns an array of edit form info as defined in hook_translation_info().
  *
  * @param $form
  *   The entity edit form.
@@ -1147,7 +1179,7 @@ function entity_translation_edit_form_info($form, $form_state) {
 }
 
 /**
- * Check if an entity translation is accessible.
+ * Checks whether an entity translation is accessible.
  *
  * @param $translation
  *   An array representing an entity translation.
@@ -1160,7 +1192,7 @@ function entity_translation_access($entity_type, $translation) {
 }
 
 /**
- * TODO
+ * Returns the set of langauges available for translation.
  */
 function entity_translation_languages($entity_type = NULL, $entity = NULL) {
   if (isset($entity) && $entity_type == 'node' && module_exists('i18n_node')) {

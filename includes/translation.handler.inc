@@ -15,32 +15,32 @@
 interface EntityTranslationHandlerInterface {
 
   /**
-   * Load the translation data into the wrapped entity.
+   * Loads the translation data into the wrapped entity.
    */
   public function loadTranslations();
 
   /**
-   * Write the translation status to the storage.
+   * Writes the translation status to the storage.
    */
   public function saveTranslations();
 
   /**
-   * Return the translation data for the current (wrapped) entity.
+   * Returns the translation data for the current (wrapped) entity.
    */
   public function getTranslations();
 
   /**
-   * Add/edit an entity translation.
+   * Adds/updates an entity translation.
    *
    * @param $translation
    *   A translation array as defined by the translation table's schema.
    * @param $values
-   *   Optional. the values that should be assigned to the field translations.
+   *   (optional) the values that should be assigned to the field translations.
    */
   public function setTranslation($translation, $values = NULL);
 
   /**
-   * Remove a translation from the translation set.
+   * Removes a translation from the translation set.
    *
    * @param $langcode
    *   The language code of the translation to be removed.
@@ -48,17 +48,17 @@ interface EntityTranslationHandlerInterface {
   public function removeTranslation($langcode);
 
   /**
-   * Initialize the translation set by creating the original translation.
+   * Initializes the translation set by creating the original translation.
    */
   public function initTranslations();
 
   /**
-   * Update the translation set from the current entity status.
+   * Updates the translation set from the current entity status.
    */
   public function updateTranslations();
 
   /**
-   * Remove all translations from the translation set.
+   * Removes all translations from the translation set.
    */
   public function removeTranslations();
 
@@ -74,12 +74,12 @@ interface EntityTranslationHandlerInterface {
   public function initOriginalTranslation();
 
   /**
-   * Return the entity language.
+   * Returns the entity language.
    */
   public function getLanguage();
 
   /**
-   * Set the language of the orginal translation.
+   * Sets the language of the orginal translation.
    *
    * @param $langcode
    *   The language code of the original content values.
@@ -87,12 +87,12 @@ interface EntityTranslationHandlerInterface {
   public function setOriginalLanguage($langcode);
 
   /**
-   * Return TRUE if the entity is currently being translated.
+   * Returns TRUE if the entity is currently being translated.
    */
   public function isTranslating();
 
   /**
-   * Notify the translation handler that its wrapped entity is being translated.
+   * Notifies the translation handler that its entity is being translated.
    *
    * @param $translating
    *   A boolean value.
@@ -105,7 +105,7 @@ interface EntityTranslationHandlerInterface {
   public function isRevision();
 
   /**
-   * Replace the wrapped entity.
+   * Replaces the wrapped entity.
    *
    * @param $entity
    *   The entity to be translated.
@@ -113,7 +113,7 @@ interface EntityTranslationHandlerInterface {
   public function setEntity($entity);
 
   /**
-   * Set the translation update status.
+   * Sets the translation update status.
    *
    * @param $outdated
    *   A boolean value.
@@ -121,7 +121,7 @@ interface EntityTranslationHandlerInterface {
   public function setOutdated($outdated);
 
   /**
-   * Return the base path for the current entity.
+   * Returns the base path for the current entity.
    *
    * This path will be prepended to the URL of any administration page.
    *
@@ -131,7 +131,7 @@ interface EntityTranslationHandlerInterface {
   public function getBasePath();
 
   /**
-   * Return the path of the entity edit form.
+   * Returns the path of the entity edit form.
    *
    * @param $langcode
    *   (optional) The language the edit form should be presented in.
@@ -139,7 +139,7 @@ interface EntityTranslationHandlerInterface {
   public function getEditPath($langcode = NULL);
 
   /**
-   * Return the path of the entity view page.
+   * Returns the path of the entity view page.
    */
   public function getViewPath();
 
@@ -149,7 +149,7 @@ interface EntityTranslationHandlerInterface {
   public function getLabel();
 
   /**
-   * Check if the user can perform the given operation on the wrapped entity.
+   * Checks if the user can perform the given operation on the wrapped entity.
    *
    * @param $op
    *   The operation to be performed.
@@ -161,7 +161,7 @@ interface EntityTranslationHandlerInterface {
   public function getAccess($op);
 
   /**
-   * TODO
+   * Checks if a user is allowed to edit the given translation.
    */
   public function getTranslationAccess($langcode);
 
@@ -171,47 +171,47 @@ interface EntityTranslationHandlerInterface {
   public function isAliasEnabled();
 
   /**
-   * TODO
+   * Sets the active form language.
    */
   public function setFormLanguage($langcode);
 
   /**
-   * TODO
+   * Retrieves the active form language.
    */
   public function getFormLanguage();
 
   /**
-   * TODO
+   * Sets the source language for the translation being created.
    */
   public function setSourceLanguage($langcode);
 
   /**
-   * TODO
+   * Retrieves the source language for the translation being created.
    */
   public function getSourceLanguage();
 
   /**
-   * TODO
+   * Returns TRUE if a new entity is currently wrapped.
    */
   public function isNewEntity();
 
   /**
-   * TODO
+   * Performs the needed alterations to the entity form.
    */
   public function entityForm(&$form, &$form_state);
 
   /**
-   * TODO
+   * Performs validation tasks on the submitted entity forms.
    */
   public function entityFormValidate($form, &$form_state);
 
   /**
-   * TODO
+   * Performs submission tasks on the submitted entity forms.
    */
   public function entityFormSubmit($form, &$form_state);
 
   /**
-   * TODO
+   * Alters the local tasks render array to populate the language tabs.
    */
   public function localTasksAlter(&$data, $router_item, $root_path);
 }
@@ -235,6 +235,18 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   private $editPath;
   private $viewPath;
 
+  /**
+   * Initializes an instance of the translation handler.
+   *
+   * @param $entity_type
+   *   The type of the entity being wrapped.
+   * @param $entity_info
+   *   The entity information for the entity being wrapped.
+   * @param $entity
+   *   The entity being wrapped.
+   * @param $entity_id
+   *   The identifier of the entity being wrapped.
+   */
   public function __construct($entity_type, $entity_info, $entity, $entity_id) {
     $this->entityType = $entity_type;
     $this->entityInfo = $entity_info;
@@ -283,7 +295,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   /**
-   * TODO
+   * Returns the localized links for the given path.
    */
   public static function languageSwitchLinks($path) {
     $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $path);
@@ -296,6 +308,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     return $links;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::loadTranslations()
+   */
   public function loadTranslations() {
     if (isset($this->entityId)) {
       $this->loadMultiple($this->entityType, array($this->entityId => $this->entity));
@@ -305,6 +320,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::saveTranslations()
+   */
   public function saveTranslations() {
     // Delete and insert, rather than update, in case a value was added.
     db_delete('entity_translation')
@@ -346,6 +364,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::getTranslations()
+   */
   public function getTranslations() {
     $translations_key = $this->getTranslationsKey();
 
@@ -358,6 +379,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     return $this->entity->{$translations_key};
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::setTranslation()
+   */
   public function setTranslation($translation, $values = NULL) {
     if (isset($translation['source']) && $translation['language'] == $translation['source']) {
       throw new Exception('Invalid translation language');
@@ -388,6 +412,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::removeTranslation()
+   */
   public function removeTranslation($langcode) {
     $translations_key = $this->getTranslationsKey();
 
@@ -416,6 +443,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::initTranslations()
+   */
   public function initTranslations() {
     $langcode = $this->getLanguage();
 
@@ -426,6 +456,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::updateTranslations()
+   */
   public function updateTranslations() {
     $langcode = $this->getLanguage();
 
@@ -440,10 +473,16 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::removeTranslations()
+   */
   public function removeTranslations() {
     $this->removeTranslation(NULL);
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::initOriginalTranslation()
+   */
   public function initOriginalTranslation() {
     $fixed = FALSE;
     $translations = $this->getTranslations();
@@ -464,6 +503,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     return $fixed;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::getLanguage()
+   */
   public function getLanguage() {
     if (!empty($this->entityInfo['entity keys']['language'])) {
       $language_key = $this->entityInfo['entity keys']['language'];
@@ -478,6 +520,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $this->language = $langcode;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::setOriginalLanguage()
+   */
   public function setOriginalLanguage($langcode) {
     $translations = $this->getTranslations();
 
@@ -490,22 +535,37 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $translations->original = $langcode;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::isTranslating()
+   */
   public function isTranslating() {
     return $this->translating;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::setTranslating()
+   */
   public function setTranslating($translating) {
     $this->translating = $translating;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::isRevision()
+   */
   public function isRevision() {
     return FALSE;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::setEntity()
+   */
   public function setEntity($entity) {
     $this->entity = $entity;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::setOutdated()
+   */
   public function setOutdated($outdated) {
     if ($outdated) {
       $translations = $this->getTranslations();
@@ -517,18 +577,30 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::getBasePath()
+   */
   public function getBasePath() {
     return $this->basePath;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::getEditPath()
+   */
   public function getEditPath($langcode = NULL) {
     return empty($langcode) ? $this->editPath : $this->editPath . '/' . $langcode;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::getViewPath()
+   */
   public function getViewPath() {
     return $this->viewPath;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::getLabel()
+   */
   public function getLabel() {
     if (($label = entity_label($this->entityType, $this->entity)) !== FALSE) {
       return $label;
@@ -538,39 +610,66 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::getAccess()
+   */
   public function getAccess($op) {
     return TRUE;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::getTranslationAccess()
+   */
   public function getTranslationAccess($langcode) {
     return $langcode != $this->getLanguage() || user_access('edit original values');
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::isAliasEnabled()
+   */
   public function isAliasEnabled() {
     return !empty($this->entityInfo['translation']['entity_translation']['alias']);
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::setFormLanguage()
+   */
   public function setFormLanguage($langcode) {
     $this->formLanguage = $langcode;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::getFormLanguage()
+   */
   public function getFormLanguage() {
     return $this->formLanguage;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::setSourceLanguage()
+   */
   public function setSourceLanguage($langcode) {
     $this->sourceLanguage = $langcode;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::getSourceLanguage()
+   */
   public function getSourceLanguage() {
     return $this->sourceLanguage;
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::isNewEntity()
+   */
   public function isNewEntity() {
     $id = $this->getEntityId();
     return empty($id);
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::entityForm()
+   */
   public function entityForm(&$form, &$form_state) {
     $translations = $this->getTranslations();
     $form_langcode = $this->getFormLanguage();
@@ -748,6 +847,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_submit';
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::entityFormValidate()
+   */
   public function entityFormValidate($form, &$form_state) {
     // Update the form language as it might have changed. We exploit the
     // validation phase to be sure to act as early as possible.
@@ -756,6 +858,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::entityFormSubmit()
+   */
   public function entityFormSubmit($form, &$form_state) {
     $langcode = $this->getLanguage();
     $form_langcode = $this->getFormLanguage();
@@ -805,6 +910,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
   }
 
+  /**
+   * @see EntityTranslationHandlerInterface::localTasksAlter()
+   */
   public function localTasksAlter(&$data, $router_item, $root_path) {
     $translations = $this->getTranslations();
 
@@ -863,49 +971,49 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   /**
-   * TODO
+   * Helper callback. Sorts language tabs by weight.
    */
   protected function translationTabSort($a, $b) {
     return $a['#link']['weight'] > $b['#link']['weight'];
   }
 
   /**
-   * TODO
+   * Returns the title to be used for the entity form page.
    */
   protected function entityFormTitle() {
     return $this->getLabel();
   }
 
   /**
-   * Return TRUE if an entity translation is being edited.
+   * Returns TRUE if an entity translation is being edited.
    */
   protected function isTranslationForm() {
     return !$this->isNewEntity() && $this->getFormLanguage() != $this->getLanguage();
   }
 
   /**
-   * Return the translation object key for the wrapped entity type.
+   * Returns the translation object key for the wrapped entity type.
    */
   protected function getTranslationsKey() {
     return $this->entityInfo['entity keys']['translations'];
   }
 
   /**
-   * Return the entity accessibility.
+   * Returns the entity accessibility.
    */
   protected function getStatus() {
     return TRUE;
   }
 
   /**
-   * Return the entity identifier.
+   * Returns the entity identifier.
    */
   protected function getEntityId() {
     return $this->entityId;
   }
 
   /**
-   * Return an instance of the given path.
+   * Returns an instance of the given path.
    *
    * @param $path
    *   An internal path containing the entity id wildcard.
@@ -919,7 +1027,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   /**
-   * Return an empty translations data structure.
+   * Returns an empty translations data structure.
    */
   protected static function emptyTranslations() {
     return (object) array('original' => NULL, 'data' => array());

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Provide permanent redirects for unavailable node translations.
+ * Provides permanent redirects for unavailable node translations.
  */
 
 /**
@@ -34,7 +34,7 @@ function entity_translation_upgrade_menu_alter(&$items) {
 /**
  * Access callback.
  *
- * Perform a redirect to the corresponding field-based translation if the
+ * Performs a redirect to the corresponding field-based translation if the
  * current user has not the permission to access the requested node translation.
  */
 function entity_translation_upgrade_access($node) {
@@ -92,7 +92,7 @@ function entity_translation_upgrade_submit($form, &$form_state) {
 }
 
 /**
- * Perform the redirect to original node with the given language.
+ * Performs the redirect to original node with the given language.
  */
 function entity_translation_upgrade_redirect($nid, $langcode) {
   $languages = language_list();
@@ -100,7 +100,7 @@ function entity_translation_upgrade_redirect($nid, $langcode) {
 }
 
 /**
- * Check that the requested path might belong to an upgraded translation.
+ * Checks wether the requested path belongs to an upgraded translation.
  */
 function entity_translation_upgrade_check_path() {
   $result = arg(0) == 'node' && ($nid = arg(1)) && is_int($nid) && !node_load($nid);
@@ -108,7 +108,7 @@ function entity_translation_upgrade_check_path() {
 }
 
 /**
- * Load the upgrade history entry for the given nid.
+ * Loads the upgrade history entry for the given nid.
  */
 function entity_translation_upgrade_load($nid) {
   return db_select('entity_translation_upgrade_history', 'etu')

@@ -15,6 +15,9 @@ class EntityTranslationTaxonomyTermHandler extends EntityTranslationDefaultHandl
     parent::__construct('taxonomy_term', $entity_info, $entity, $entity_id);
   }
 
+  /**
+   * @see EntityTranslationDefaultHandler::entityForm()
+   */
   public function entityForm(&$form, &$form_state) {
     parent::entityForm($form, $form_state);
 

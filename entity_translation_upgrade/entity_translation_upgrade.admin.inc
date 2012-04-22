@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Convert node translations into field-based translations.
+ * Converts node translations into field-based translations.
  */
 
 /**
@@ -11,7 +11,7 @@
 define('ENTITY_TRANSLATION_UPGRADE_BATCH_SIZE', 10);
 
 /**
- * Start the batch process to perform the upgrade.
+ * Starts the batch process to perform the upgrade.
  */
 function entity_translation_upgrade_start() {
   $batch = array(
@@ -184,7 +184,7 @@ function entity_translation_upgrade_do(&$context) {
 }
 
 /**
- * Remove the translation sets for all the upgraded nodes.
+ * Removes the translation sets for all the upgraded nodes.
  */
 function entity_translation_upgrade_complete(&$context) {
   db_query('UPDATE {node} SET tnid = 0 WHERE nid IN (SELECT DISTINCT etuh.tnid FROM {entity_translation_upgrade_history} etuh)');

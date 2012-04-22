@@ -11,22 +11,22 @@
 define('ENTITY_TRANSLATION_ENABLED', 4);
 
 /**
- * Do not show translation metadata.
+ * Hides translation metadata.
  */
 define('ENTITY_TRANSLATION_METADATA_HIDE', 0);
 
 /**
- * Add translation metadata to the original authoring information.
+ * Adds translation metadata to the original authoring information.
  */
 define('ENTITY_TRANSLATION_METADATA_SHOW', 1);
 
 /**
- * Replace the original authoring information with translation metadata.
+ * Replaces the original authoring information with translation metadata.
  */
 define('ENTITY_TRANSLATION_METADATA_REPLACE', 2);
 
 /**
- * Check if the given entity has node translation enabled.
+ * Checks if the given entity has node translation enabled.
  */
 function entity_translation_node($entity_type, $node) {
   return $entity_type == 'node' && function_exists('translation_supported_type') && translation_supported_type($node->type);
@@ -88,7 +88,7 @@ function entity_translation_node_supported_type($type) {
 /**
  * Implements hook_node_view().
  *
- * Provide content language switcher links to navigate among node translations.
+ * Provides content language switcher links to navigate among node translations.
  */
 function entity_translation_node_view($node, $build_mode) {
   if (!empty($node->translations) && drupal_multilingual() && entity_translation_node_supported_type($node->type)) {
@@ -121,7 +121,7 @@ function entity_translation_node_view($node, $build_mode) {
 /**
  * Implements hook_form_FORM_ID_alter().
  *
- * Provide settings into the node content type form to choose for entity
+ * Provides settings into the node content type form to choose for entity
  * translation metadata and comment filtering.
  */
 function entity_translation_form_node_type_form_alter(&$form, &$form_state) {
@@ -151,7 +151,7 @@ function entity_translation_form_node_type_form_alter(&$form, &$form_state) {
 /**
  * Implements hook_preprocess_node().
  *
- * Alter node template variables to show/replace entity translation metadata.
+ * Alters node template variables to show/replace entity translation metadata.
  */
 function entity_translation_preprocess_node(&$variables) {
   $node = $variables['node'];
@@ -197,7 +197,7 @@ function entity_translation_preprocess_node(&$variables) {
 /**
  * Implements hook_query_TAG_alter().
  *
- * Filter out node comments by content language.
+ * Filters out node comments by content language.
  *
  * @todo Find a way to track node comment statistics per language.
  */

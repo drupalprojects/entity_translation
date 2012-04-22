@@ -6,7 +6,7 @@
  */
 
 /**
- * The entity translation settings form.
+ * Builder function for the entity translation settings form.
  */
 function entity_translation_admin_form($form, $form_state) {
   $options = array();
@@ -57,7 +57,7 @@ function entity_translation_admin_form_submit($form, $form_state) {
 }
 
 /**
- * Translations overview menu callback.
+ * Translations overview page callback.
  */
 function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   // Entity translation and node translation share the same system path.
@@ -181,7 +181,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
 }
 
 /**
- * Call the appropriate translation overview callback.
+ * Calls the appropriate translation overview callback.
  */
 function entity_translation_overview_callback($callback, $entity) {
   if (module_exists($callback['module'])) {
@@ -194,7 +194,7 @@ function entity_translation_overview_callback($callback, $entity) {
 }
 
 /**
- * Return the appropriate entity label for the given language.
+ * Returns the appropriate entity label for the given language.
  */
 function _entity_translation_label($entity_type, $entity, $langcode = NULL) {
   if (function_exists('title_entity_label')) {
@@ -371,7 +371,7 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
 }
 
 /**
- * Helper function: recursively replace the source language with the given one.
+ * Helper function. Recursively replaces the source language with the given one.
  */
 function _entity_translation_form_language(&$element, $source, $langcode) {
   // Iterate through the form structure recursively.
