@@ -516,10 +516,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     return language_default()->language;
   }
 
-  public function setLanguage($langcode) {
-    $this->language = $langcode;
-  }
-
   /**
    * @see EntityTranslationHandlerInterface::setOriginalLanguage()
    */
