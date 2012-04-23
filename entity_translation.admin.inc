@@ -84,7 +84,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
 
   $header = array(t('Language'), t('Source language'), t('Translation'), t('Status'), t('Operations'));
   $languages = entity_translation_languages();
-  $source = isset($_SESSION['entity_translation_source_language']) ? $_SESSION['entity_translation_source_language'] : $translations->original;
+  $source = $translations->original;
   $base_path = $handler->getBasePath();
   $path = $handler->getViewPath();
   $rows = array();
@@ -240,10 +240,6 @@ function entity_translation_delete_confirm_submit($form, &$form_state) {
 
   $handler->removeTranslation($form['#language']);
   field_attach_update($form['#entity_type'], $form['#entity']);
-
-  if (isset($_SESSION['entity_translation_source_language']) && $form['#language'] == $_SESSION['entity_translation_source_language']) {
-    unset($_SESSION['entity_translation_source_language']);
-  }
 
   $form_state['redirect'] = "{$handler->getBasePath()}/translate";
 }
