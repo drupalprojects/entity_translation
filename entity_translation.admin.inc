@@ -123,7 +123,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
         }
 
         if ($edit_path && $handler->getAccess('update') && $handler->getTranslationAccess($langcode)) {
-          $link = isset($edit_links->links[$langcode]['href']) ? $edit_links->links[$langcode] : array('href' => $path, 'language' => $language);
+          $link = isset($edit_links->links[$langcode]['href']) ? $edit_links->links[$langcode] : array('href' => $edit_path, 'language' => $language);
           $options[] = l(t('edit'), $link['href'], $link);
         }
 
@@ -156,7 +156,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
             }
           }
 
-          $link = isset($add_links->links[$langcode]['href']) ? $add_links->links[$langcode] : array('href' => $path, 'language' => $language);
+          $link = isset($add_links->links[$langcode]['href']) ? $add_links->links[$langcode] : array('href' => $add_path, 'language' => $language);
           $options[] = $translatable ? l(t('add'), $link['href'], $link) : t('No translatable fields');
         }
         $status = t('Not translated');
