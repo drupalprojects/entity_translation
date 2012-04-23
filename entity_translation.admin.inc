@@ -237,9 +237,16 @@ function entity_translation_delete_confirm($form, $form_state, $entity_type, $en
  */
 function entity_translation_delete_confirm_submit($form, &$form_state) {
   $handler = $form['#handler'];
+  $entity_type = $form['#entity_type'];
+  $entity = $form['#entity'];
+  $langcode = $form['#language'];
 
-  $handler->removeTranslation($form['#language']);
-  field_attach_update($form['#entity_type'], $form['#entity']);
+  // Remove the translation entry and the related fields.
+  $handler->removeTranslation($langcode);
+  field_attach_update($entity_type, $entity);
+
+  // Remove any existing path alias for the removed translation.
+  path_delete(array('source' => $handler->getViewPath(), 'language' => $langcode));
 
   $form_state['redirect'] = "{$handler->getBasePath()}/translate";
 }
