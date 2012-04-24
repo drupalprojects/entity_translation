@@ -1214,7 +1214,7 @@ function entity_translation_access($entity_type, $translation) {
 }
 
 /**
- * Returns the set of langauges available for translation.
+ * Returns the set of languages available for translations.
  */
 function entity_translation_languages($entity_type = NULL, $entity = NULL) {
   if (isset($entity) && $entity_type == 'node' && module_exists('i18n_node')) {
@@ -1222,7 +1222,10 @@ function entity_translation_languages($entity_type = NULL, $entity = NULL) {
   }
   elseif (variable_get('entity_translation_languages_enabled', FALSE)) {
     $languages = language_list('enabled');
-    return $languages[1];
+    $languages = $languages[1];
   }
-  return language_list();
+  else {
+    $languages = language_list();
+  }
+  return $languages + array(LANGUAGE_NONE => (object) array('language' => LANGUAGE_NONE));
 }
