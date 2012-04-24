@@ -384,9 +384,10 @@ function entity_translation_edit_access() {
   // If the translation exists or no translation was specfied, we can show the
   // corresponding local task.
   if (isset($translations->data[$langcode])) {
-    // Check that the requested language is actually accessible.
+    // Check that the requested language is actually accessible. If the entity
+    // is language neutral we need to let editors access it.
     $enabled_languages = entity_translation_languages($entity_type, $entity);
-    if (isset($enabled_languages[$langcode])) {
+    if (isset($enabled_languages[$langcode]) || $langcode == LANGUAGE_NONE) {
       $edit_form_item = array_shift($args);
       return _entity_translation_callback($edit_form_item['access callback'], $args, $edit_form_item);
     }
@@ -1227,5 +1228,5 @@ function entity_translation_languages($entity_type = NULL, $entity = NULL) {
   else {
     $languages = language_list();
   }
-  return $languages + array(LANGUAGE_NONE => (object) array('language' => LANGUAGE_NONE));
+  return $languages;
 }
