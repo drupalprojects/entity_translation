@@ -1223,10 +1223,7 @@ function entity_translation_languages($entity_type = NULL, $entity = NULL) {
   }
   elseif (variable_get('entity_translation_languages_enabled', FALSE)) {
     $languages = language_list('enabled');
-    $languages = $languages[1];
+    return $languages[1];
   }
-  else {
-    $languages = language_list();
-  }
-  return $languages;
+  return language_list();
 }
