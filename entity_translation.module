@@ -364,7 +364,7 @@ function entity_translation_edit_page() {
   // Set the current form language.
   $handler = entity_translation_get_handler($entity_type, $entity);
   $translations = $handler->getTranslations();
-  $langcode = entity_translation_form_language($langcode, $translations);
+  $langcode = entity_translation_form_language($langcode, $handler);
   $handler->setFormLanguage($langcode);
 
   // Display the entity edit form.
@@ -382,16 +382,17 @@ function entity_translation_edit_access() {
 
   $handler = entity_translation_get_handler($entity_type, $entity);
   $translations = $handler->getTranslations();
-  $langcode = entity_translation_form_language($langcode, $translations);
+  $langcode = entity_translation_form_language($langcode, $handler);
 
   // The user must be explicitly allowed to access the original values.
   if (!$handler->getTranslationAccess($langcode)) {
     return FALSE;
   }
 
-  // If the translation exists or no translation was specfied, we can show the
-  // corresponding local task.
-  if (isset($translations->data[$langcode])) {
+  // If the translation exists or no translation was specified, we can show the
+  // corresponding local task. If translations have not been initialized yet, we
+  // need to grant access to the user.
+  if (empty($translations->data) || isset($translations->data[$langcode])) {
     // Check that the requested language is actually accessible. If the entity
     // is language neutral we need to let editors access it.
     $enabled_languages = entity_translation_languages($entity_type, $entity);
@@ -414,22 +415,25 @@ function entity_translation_edit_access() {
  *
  * @param $langcode
  *   The requested language code.
- * @param $translations
- *   A translation data structure as returned by
- *   EntityTranslationHandlerInterface::getTranslations().
+ * @param EntityTranslationHandlerInterface $handler
+ *   A translation handler instance.
  *
  * @return
  *   A valid language code.
  */
-function entity_translation_form_language($langcode, $translations) {
+function entity_translation_form_language($langcode, $handler) {
   if (empty($langcode)) {
-    $fallback = language_fallback_get_candidates();
     $langcode = $GLOBALS['language_content']->language;
-    while (!isset($translations->data[$langcode])) {
-      $langcode = array_shift($fallback);
-    }
   }
-  return $langcode;
+
+  $translations = $handler->getTranslations();
+  $fallback = language_fallback_get_candidates();
+  while (!empty($langcode) && !isset($translations->data[$langcode])) {
+    $langcode = array_shift($fallback);
+  }
+
+  // If no translation is available fall back to the entity language.
+  return !empty($langcode) ? $langcode : $handler->getLanguage();
 }
 
 /**
