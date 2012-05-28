@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1095390 by plach | klonos: Capitalize first letters in project's name.
 #1599568 by torpy: Fixed No content is displayed if fallback is disabled and
   entity is set to 'Language Neutral'.
 #1341314 by plach, donquixote | derhasi: Fixed Nested call of entity_get_info()
