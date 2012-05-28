@@ -20,7 +20,7 @@ The Entity translation component maintainers oversee the development of its
 subsystems. This role maps pretty closely to the one of core maintainer for the
 Drupal core project (see http://drupal.org/contribute/core-maintainers for more
 information on their responsibilities), with the exception that here component
-maintainers are granted commit access for their specific subsystem. See
+maintainers are granted commit access for their specific subsystems. See
 http://drupal.org/node/363367 to find out how to become a component maintainer.
 Current component maintainers for Entity translation:
 
@@ -31,7 +31,7 @@ Menu integration
 - Benedikt Forchhammer 'bforchhammer' <http://drupal.org/user/216396>
 
 Views integration
-- ?
+- Fabian Sörqvist 'fabsor' <http://drupal.org/user/255704>
 
 Node translation upgrade
 - Francesco Placella 'plach' <http://drupal.org/user/183211>
