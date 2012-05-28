@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1599568 by torpy: Fixed No content is displayed if fallback is disabled and
+  entity is set to 'Language Neutral'.
 #1341314 by plach, donquixote | derhasi: Fixed Nested call of entity_get_info()
   due to menu_get_router() in entity_translation_entity_info_alter().
 #1519912 by plach: Fixed Empty stored values may mess up the translatable switch
