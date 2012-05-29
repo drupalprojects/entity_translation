@@ -102,6 +102,16 @@ function entity_translation_entity_info_alter(&$entity_info) {
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function entity_translation_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'entity_translation') . '/views',
+  );
+}
+
+/**
  * Helper function to determine if the given entity type is translatable.
  */
 function entity_translation_enabled($entity_type, $skip_handler = FALSE) {
