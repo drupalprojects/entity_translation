@@ -1229,3 +1229,13 @@ function entity_translation_languages($entity_type = NULL, $entity = NULL) {
   }
   return language_list();
 }
+
+/**
+ * Implements hook_views_api().
+ */
+function entity_translation_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'entity_translation') . '/views',
+  );
+}
