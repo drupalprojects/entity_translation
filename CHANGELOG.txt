@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1587108 by plach | divined: Error: The entities of type Taxonomy term do not
+  define a valid base path: it will not be possible to translate them.
 #1524210 by fabsor, plach: Expose entity translation table to views.
 #1095390 by plach | klonos: Capitalize first letters in project's name.
 #1599568 by torpy: Fixed No content is displayed if fallback is disabled and
