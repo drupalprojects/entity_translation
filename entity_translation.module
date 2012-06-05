@@ -221,6 +221,16 @@ function entity_translation_menu_alter(&$items) {
   $backup = array();
   $languages = entity_translation_languages();
 
+  // Some menu loaders in the item paths might have been altered: we need to
+  // replace any menu loader with a plain % to check if base paths are still
+  // compatible.
+  $paths = array();
+  $regex = '|%[^/]+|';
+  foreach ($items as $path => $item) {
+    $path = preg_replace($regex, '%', $path);
+    $paths[$path] = $path;
+  }
+
   // Create tabs for all possible entity types.
   foreach (entity_get_info() as $entity_type => $info) {
     // Menu is rebuilt while determining entity translation base paths and
@@ -229,9 +239,9 @@ function entity_translation_menu_alter(&$items) {
       // Extract informations from the bundle description.
       $path = $info['translation']['entity_translation']['base path'];
 
-      // If the base path is not defined we cannot provide the translation UI
-      // for this entity type.
-      if (!isset($items[$path])) {
+      // If the base path is not defined or is not compatible with any defined
+      // one we cannot provide the translation UI for this entity type.
+      if (!isset($paths[preg_replace($regex, '%', $path)])) {
         drupal_set_message(t('The entities of type %entity_type do not define a valid base path: it will not be possible to translate them.', array('%entity_type' => $info['label'])), 'warning');
         continue;
       }
