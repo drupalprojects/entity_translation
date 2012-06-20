@@ -676,9 +676,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $no_translations = count($translations->data) < 2;
     $languages = language_list();
 
-    // Adjust page title to specify the current language being edited, if
-    // we have at least one translation.
-    if (!$no_translations || $new_translation) {
+    // Adjust page title to specify the current language being edited, if we
+    // have at least one translation.
+    if ($form_langcode != LANGUAGE_NONE && (!$no_translations || $new_translation)) {
       drupal_set_title($this->entityFormTitle() . ' [' . t($languages[$form_langcode]->name) . ']', PASS_THROUGH);
     }
 
