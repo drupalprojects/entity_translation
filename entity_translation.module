@@ -798,6 +798,14 @@ function entity_translation_field_attach_form($entity_type, $entity, &$form, &$f
         }
       }
     }
+
+    // If a translation is being created and no path alias exists for its
+    // language, by default an alias needs to be generated. The standard
+    // behavior is defaulting to FALSE when an entity already exists, hence we
+    // need to override it here.
+    if (module_exists('pathauto') && $handler->getSourceLanguage()) {
+      $entity->path['pathauto'] = TRUE;
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+Issue #1155134 by das-peter, plach, GiorgosK, zambrey: Added Integrate pathauto.
 
 
 Entity translation 7.x-1.0-alpha2, 2012-06-16
