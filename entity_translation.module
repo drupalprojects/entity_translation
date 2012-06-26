@@ -648,7 +648,7 @@ function entity_translation_field_attach_view_alter(&$output, $context) {
 
     // If fallback is disabled we need to notify the user that the translation
     // is unavailable (missing or unpublished).
-    if ((!isset($translations->data[$langcode]) && !isset($translations->data[LANGUAGE_NONE])) || ((isset($translations->data[$langcode]) && !entity_translation_access($context['entity_type'], $translations->data[$langcode])))) {
+    if (!empty($translations->data) && ((!isset($translations->data[$langcode]) && !isset($translations->data[LANGUAGE_NONE])) || ((isset($translations->data[$langcode]) && !entity_translation_access($context['entity_type'], $translations->data[$langcode]))))) {
       // Provide context for rendering.
       $output['#entity'] = $context['entity'];
       $output['#entity_type'] = $context['entity_type'];

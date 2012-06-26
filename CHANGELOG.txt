@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+Issue #1658424 by torpy: Fixed Non-multilingual taxonomy terms attached to
+  multilingual nodes do not display.
 Issue #1643394 by plach: Allow repeating the upgrade process.
 Issue #1643414 by plach: Added Allow to select which content types to upgrade.
 Issue #1643390 by plach: Implement hook_entity_translation_upgrade_translation()
