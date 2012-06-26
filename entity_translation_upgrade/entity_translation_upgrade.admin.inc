@@ -48,8 +48,11 @@ function entity_translation_upgrade_end($success, $results, $operations, $elapse
  * Batch process to convert node translations to field-based translations.
  */
 function entity_translation_upgrade_do($types, &$context) {
-  $query = db_select('node', 'n')
+  $query = db_select('node', 'n');
+  $query->addJoin('LEFT', 'entity_translation_upgrade_history', 'etuh', 'n.nid = etuh.nid');
+  $query
     ->fields('n', array('nid', 'tnid'))
+    ->where('etuh.complete IS NULL OR etuh.complete = 0')
     ->condition('tnid', 0, '<>')
     ->condition('tnid <> nid', array(), '')
     ->condition('n.type', $types)
@@ -187,7 +190,10 @@ function entity_translation_upgrade_do($types, &$context) {
  * Removes the translation sets for all the upgraded nodes.
  */
 function entity_translation_upgrade_complete(&$context) {
-  db_query('UPDATE {node} SET tnid = 0 WHERE nid IN (SELECT DISTINCT etuh.tnid FROM {entity_translation_upgrade_history} etuh)');
+  // Remove translation sets for migrated nodes.
+  db_query('UPDATE {node} SET tnid = 0 WHERE nid IN (SELECT DISTINCT etuh.tnid FROM {entity_translation_upgrade_history} etuh WHERE etuh.complete = 0)');
+  // Mark nodes as migrated.
+  db_query('UPDATE {entity_translation_upgrade_history} SET complete = 1 WHERE complete = 0');
 }
 
 
