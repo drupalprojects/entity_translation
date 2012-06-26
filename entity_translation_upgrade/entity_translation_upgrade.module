@@ -76,11 +76,33 @@ function entity_translation_upgrade_form_entity_translation_admin_form_alter(&$f
     '#collapsed' => TRUE,
   );
 
+  $options = array();
+  foreach (node_type_get_types() as $type) {
+    $options[$type->type] = $type->name;
+  }
+
+  $form['entity_translation_upgrade']['types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Node types'),
+    '#description' => t('Select which node types will be upgraded.'),
+    '#options' => $options,
+  );
+
   $form['entity_translation_upgrade']['upgrade'] = array(
     '#type' => 'submit',
     '#value' => t('Upgrade'),
+    '#validate' => array('entity_translation_upgrade_validate'),
     '#submit' => array('entity_translation_upgrade_submit'),
   );
+}
+
+/**
+ * Validation handler for the entity_translation_admin_form() form.
+ */
+function entity_translation_upgrade_validate($form, &$form_state) {
+  if (!count(array_filter($form_state['values']['types']))) {
+    form_set_error('types', t('Please specify at least one node type.'));
+  }
 }
 
 /**
@@ -88,7 +110,7 @@ function entity_translation_upgrade_form_entity_translation_admin_form_alter(&$f
  */
 function entity_translation_upgrade_submit($form, &$form_state) {
   module_load_include('inc', 'entity_translation_upgrade', 'entity_translation_upgrade.admin');
-  entity_translation_upgrade_start();
+  entity_translation_upgrade_start(array_filter($form_state['values']['types']));
 }
 
 /**

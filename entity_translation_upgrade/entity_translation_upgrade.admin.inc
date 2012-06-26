@@ -13,10 +13,10 @@ define('ENTITY_TRANSLATION_UPGRADE_BATCH_SIZE', 10);
 /**
  * Starts the batch process to perform the upgrade.
  */
-function entity_translation_upgrade_start() {
+function entity_translation_upgrade_start($types) {
   $batch = array(
     'operations' => array(
-      array('entity_translation_upgrade_do', array()),
+      array('entity_translation_upgrade_do', array($types)),
       array('entity_translation_upgrade_complete', array()),
     ),
     'finished' => 'entity_translation_upgrade_end',
@@ -47,12 +47,12 @@ function entity_translation_upgrade_end($success, $results, $operations, $elapse
 /**
  * Batch process to convert node translations to field-based translations.
  */
-function entity_translation_upgrade_do(&$context) {
-  // @todo Exclude previously migrated nodes.
+function entity_translation_upgrade_do($types, &$context) {
   $query = db_select('node', 'n')
     ->fields('n', array('nid', 'tnid'))
-    ->condition('tnid', 0, '!=')
-    ->condition('tnid != nid', array(), '')
+    ->condition('tnid', 0, '<>')
+    ->condition('tnid <> nid', array(), '')
+    ->condition('n.type', $types)
     ->orderBy('nid');
 
   // Initialize the batch process.
@@ -67,8 +67,9 @@ function entity_translation_upgrade_do(&$context) {
     $context['finished'] = $total == 0;
   }
   else {
+    $batch_size = variable_get('entity_translation_upgrade_batch_size', ENTITY_TRANSLATION_UPGRADE_BATCH_SIZE);
     $result = $query
-      ->range($context['sandbox']['count'], ENTITY_TRANSLATION_UPGRADE_BATCH_SIZE)
+      ->range($context['sandbox']['count'], $batch_size)
       ->execute()
       ->fetchAllKeyed();
 
@@ -109,15 +110,14 @@ function entity_translation_upgrade_do(&$context) {
 
       // Add the new translation.
       $handler->setTranslation(array(
-          'translate' => $node->translate,
-          'status' => $node->status,
-          'language' => $node->language,
-          'source' => $original->language,
-          'uid' => $node->uid,
-          'created' => $node->created,
-          'changed' => $node->changed,
-        )
-      );
+        'translate' => $node->translate,
+        'status' => $node->status,
+        'language' => $node->language,
+        'source' => $original->language,
+        'uid' => $node->uid,
+        'created' => $node->created,
+        'changed' => $node->changed,
+      ));
 
       // Build a list of updated nodes. They will be saved after all the node
       // translation conversions.
@@ -177,7 +177,7 @@ function entity_translation_upgrade_do(&$context) {
 
     $context['finished'] = $context['sandbox']['count'] / $context['sandbox']['total'];
 
-    if ($context['finished']) {
+    if ($context['finished'] >= 1) {
       $context['results'] = $context['sandbox']['total'];
     }
   }
