@@ -190,16 +190,27 @@ function entity_translation_upgrade_complete(&$context) {
   db_query('UPDATE {node} SET tnid = 0 WHERE nid IN (SELECT DISTINCT etuh.tnid FROM {entity_translation_upgrade_history} etuh)');
 }
 
+
+/**
+ * Implementations of hook_entity_translation_upgrade_translation() on behalf of
+ * core modules.
+ */
+
 /**
  * Implements hook_entity_translation_upgrade_translation().
  */
-function entity_translation_upgrade_entity_translation_upgrade($node, $translation) {
+function path_entity_translation_upgrade($node, $translation) {
   // Update URL aliases.
   db_update('url_alias')
     ->fields(array('source' => 'node/' . $node->nid))
     ->condition('source', 'node/' . $translation->nid)
     ->execute();
+}
 
+/**
+ * Implements hook_entity_translation_upgrade_translation().
+ */
+function comment_entity_translation_upgrade($node, $translation) {
   // Attach comments to the original node.
   db_update('comment')
     ->fields(array('nid' => $node->nid, 'language' => $translation->language))

@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+Issue #1643390 by plach: Implement hook_entity_translation_upgrade_translation()
+  on behalf of core modules.
 Issue #1155134 by das-peter, plach, GiorgosK, zambrey: Added Integrate pathauto.
 
 
