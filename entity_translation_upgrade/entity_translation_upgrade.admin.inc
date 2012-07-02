@@ -53,10 +53,10 @@ function entity_translation_upgrade_do($types, &$context) {
   $query
     ->fields('n', array('nid', 'tnid'))
     ->where('etuh.complete IS NULL OR etuh.complete = 0')
-    ->condition('tnid', 0, '<>')
-    ->condition('tnid <> nid', array(), '')
+    ->condition('n.tnid', 0, '<>')
+    ->condition('n.tnid <> n.nid', array(), '')
     ->condition('n.type', $types)
-    ->orderBy('nid');
+    ->orderBy('n.nid');
 
   // Initialize the batch process.
   if (empty($context['sandbox'])) {
