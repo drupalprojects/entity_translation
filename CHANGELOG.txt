@@ -1,16 +1,16 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
-Issue #1667582 by peximo: Fixed PDOException (ambiguous tnid field) on upgrade.
-Issue #1658424 by torpy: Fixed Non-multilingual taxonomy terms attached to
+#1667582 by peximo: Fixed PDOException (ambiguous tnid field) on upgrade.
+#1658424 by torpy: Fixed Non-multilingual taxonomy terms attached to
   multilingual nodes do not display.
-Issue #1643394 by plach: Allow repeating the upgrade process.
-Issue #1643414 by plach: Added Allow to select which content types to upgrade.
-Issue #1643390 by plach: Implement hook_entity_translation_upgrade_translation()
-  on behalf of core modules.
-Issue #1155134 by das-peter, plach, GiorgosK, zambrey: Added Integrate pathauto.
-Issue #1282018 by plach, Gábor Hojtsy, webchick, bforchhammer: Drop the
-  translation form in favor of a language-aware edit form.
+#1643394 by plach: Allow repeating the upgrade process.
+#1643414 by plach: Added Allow to select which content types to upgrade.
+#1643390 by plach: Implement hook_entity_translation_upgrade_translation() on
+  behalf of core modules.
+#1155134 by das-peter, plach, GiorgosK, zambrey: Added Integrate pathauto.
+#1282018 by plach, Gábor Hojtsy, webchick, bforchhammer: Drop the translation
+  form in favor of a language-aware edit form.
 
 
 Entity translation 7.x-1.0-alpha2, 2012-06-16
