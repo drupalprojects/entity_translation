@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1528624 by plach | phm: Fixed error on user translations overview.
 #1667582 by peximo: Fixed PDOException (ambiguous tnid field) on upgrade.
 #1658424 by torpy: Fixed Non-multilingual taxonomy terms attached to
   multilingual nodes do not display.

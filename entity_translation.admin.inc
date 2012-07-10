@@ -200,9 +200,11 @@ function _entity_translation_label($entity_type, $entity, $langcode = NULL) {
   if (function_exists('title_entity_label')) {
     list (, , $bundle) = entity_extract_ids($entity_type, $entity);
     $entity_info = entity_get_info($entity_type);
-    $legacy_field = $entity_info['entity keys']['label'];
-    if (title_field_replacement_enabled($entity_type, $bundle, $legacy_field)) {
-      return title_entity_label($entity, $entity_type, $langcode);
+    if (!empty($entity_info['entity keys']['label'])) {
+      $legacy_field = $entity_info['entity keys']['label'];
+      if (title_field_replacement_enabled($entity_type, $bundle, $legacy_field)) {
+        return title_entity_label($entity, $entity_type, $langcode);
+      }
     }
   }
   return t('view');
