@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1444866 by bforchhammer, plach, peximo: Added UI for translation of menu items
+  for entity-translated nodes.
 #1133038 by plach: Added support for field column synchronization.
 #1528624 by plach | phm: Fixed error on user translations overview.
 #1667582 by peximo: Fixed PDOException (ambiguous tnid field) on upgrade.

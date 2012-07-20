@@ -832,6 +832,11 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       );
     }
 
+    // If Menu translation is available translate the menu strings.
+    if (module_exists('entity_translation_i18n_menu')) {
+      $this->menuForm($form, $form_state);
+    }
+
     // We need to process the posted form as early as possible to update the
     // form language value.
     array_unshift($form['#validate'], 'entity_translation_entity_form_validate');
@@ -841,6 +846,13 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
     // This allows to intercept deletions.
     $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_submit';
+  }
+
+  /**
+   * Performs alterations to the menu widget if available.
+   */
+  protected function menuForm(&$form, &$form_state) {
+    // By default do nothing: only nodes are currently supported.
   }
 
   /**
@@ -899,11 +911,23 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $translation['created'] = empty($values['created']) ? REQUEST_TIME : strtotime($values['created']);
     $this->setTranslation($translation);
 
+    // Save menu translation if i18n_menu is available.
+    if (module_exists('entity_translation_i18n_menu')) {
+      $this->menuFormSubmit($form, $form_state);
+    }
+
     // If no redirect has been explicitly set, go to the edit form for the
     // current form language.
     if ($new_translation && empty($form_state['redirect']) && !$this->isNewEntity()) {
       $form_state['redirect'] = $this->getEditPath($form_langcode);
     }
+  }
+
+  /**
+   * Performs alterations to the menu widget if available.
+   */
+  protected function menuFormSubmit($form, &$form_state) {
+    // By default do nothing: only nodes are currently supported.
   }
 
   /**
@@ -934,7 +958,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       foreach ($translations->data as $langcode => $translation) {
         if ($this->getTranslationAccess($langcode)) {
           $links = $this->languageSwitchLinks($this->getEditPath($langcode));
-          $link = $links->links[$langcode];
+          $link = is_object($links) ? $links->links[$langcode] : array();
 
           if (isset($link['href'])) {
             $tab = array();
