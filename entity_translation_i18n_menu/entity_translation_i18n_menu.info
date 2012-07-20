@@ -1,6 +1,6 @@
 name = Entity Translation Menu
 description = Allows menu items to be translated on the entity form.
-package = Multilingual
+package = Multilingual - Entity Translation
 core = 7.x
 dependencies[] = entity_translation
 dependencies[] = i18n

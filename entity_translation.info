@@ -1,6 +1,6 @@
 name = Entity Translation
 description = Allows entities to be translated into different languages.
-package = Multilingual
+package = Multilingual - Entity Translation
 core = 7.x
 configure = admin/config/regional/entity_translation
 dependencies[] = locale
