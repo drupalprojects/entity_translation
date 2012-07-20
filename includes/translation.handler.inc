@@ -395,6 +395,10 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     if (isset($translations->data[$langcode])) {
       $translation = array_merge($translations->data[$langcode], $translation);
       $translation['changed'] = REQUEST_TIME;
+      $op = 'update';
+    }
+    else {
+      $op = 'insert';
     }
 
     $translations->data[$langcode] = $translation;
@@ -410,6 +414,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         }
       }
     }
+
+    module_invoke_all('entity_translation_' . $op, $this->entityType, $this->entity, $translation, $values);
   }
 
   /**
@@ -441,6 +447,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         }
       }
     }
+
+    module_invoke_all('entity_translation_delete', $this->entityType, $this->entity, $langcode);
   }
 
   /**

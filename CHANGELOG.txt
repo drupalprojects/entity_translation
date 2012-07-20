@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1224590 by bforchhammer: Added entity translation CRUD hooks.
 #1694472 by bforchhammer: Change module package names to 'Multilingual - Entity
   Translation'.
 #1444866 by bforchhammer, plach, peximo: Added UI for translation of menu items

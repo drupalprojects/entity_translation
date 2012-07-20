@@ -55,3 +55,46 @@ function hook_translation_info($types = NULL) {
 
   return $info;
 }
+
+/**
+ * Allows modules to act when a new translation is added.
+ *
+ * @param $entity_type
+ *   The entity type.
+ * @param $entity
+ *   The entity.
+ * @param $translation
+ *   The inserted translation array.
+ * @param $values
+ *   The translated set of values, if any.
+ */
+function hook_entity_translation_insert($entity_type, $entity, $translation, $values = array()) {
+}
+
+/**
+ * Allows modules to act when a translation is updated.
+ *
+ * @param $entity_type
+ *   The entity type.
+ * @param $entity
+ *   The entity.
+ * @param $translation
+ *   The updated translation array.
+ * @param $values
+ *   The translated set of values, if any.
+ */
+function hook_entity_translation_update($entity_type, $entity, $translation, $values = array()) {
+}
+
+/**
+ * Allows modules to act when a translation is deleted.
+ *
+ * @param $entity_type
+ *   The entity type.
+ * @param $entity
+ *   The entity.
+ * @param $langcode
+ *   The langcode of the translation which was deleted.
+ */
+function hook_entity_translation_delete($entity_type, $entity, $langcode) {
+}

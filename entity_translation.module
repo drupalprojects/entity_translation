@@ -406,6 +406,22 @@ function entity_translation_edit_access() {
 }
 
 /**
+ * Implements hook_hook_info().
+ */
+function entity_translation_hook_info() {
+  $hooks['entity_translation_insert'] = array(
+    'group' => 'entity_translation',
+  );
+  $hooks['entity_translation_update'] = array(
+    'group' => 'entity_translation',
+  );
+  $hooks['entity_translation_delete'] = array(
+    'group' => 'entity_translation',
+  );
+  return $hooks;
+}
+
+/**
  * Determines the current form language.
  *
  * Based on the requested language and the translations available for the entity
