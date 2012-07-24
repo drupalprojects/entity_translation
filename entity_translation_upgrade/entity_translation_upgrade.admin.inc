@@ -199,12 +199,12 @@ function entity_translation_upgrade_complete(&$context) {
 
 
 /**
- * Implementations of hook_entity_translation_upgrade_translation() on behalf of
- * core modules.
+ * Implementations of hook_entity_translation_upgrade() on behalf of core
+ * modules.
  */
 
 /**
- * Implements hook_entity_translation_upgrade_translation().
+ * Implements hook_entity_translation_upgrade().
  */
 function path_entity_translation_upgrade($node, $translation) {
   // Update URL aliases.
@@ -215,7 +215,7 @@ function path_entity_translation_upgrade($node, $translation) {
 }
 
 /**
- * Implements hook_entity_translation_upgrade_translation().
+ * Implements hook_entity_translation_upgrade().
  */
 function comment_entity_translation_upgrade($node, $translation) {
   // Attach comments to the original node.
