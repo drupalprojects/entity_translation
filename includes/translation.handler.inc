@@ -732,6 +732,10 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         unset($form['language']['#options'][LANGUAGE_NONE]);
       }
     }
+    // If there is a language value associated to the form ensure it is correct.
+    elseif (isset($form['language'])) {
+      $form['language']['#value'] = $form_langcode;
+    }
 
     if ($is_translation) {
       // If we are editing a translation set the correct value in the language
