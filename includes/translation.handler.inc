@@ -856,8 +856,11 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     // Process entity form submission.
     $form['#submit'][] = 'entity_translation_entity_form_submit';
 
-    // This allows to intercept deletions.
-    $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_submit';
+    // This allows to intercept deletions. The check is needed because
+    // action-specific submit handlers prevent global ones from being called.
+    if (!empty($form['actions']['delete']['#submit'])) {
+      $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_submit';
+    }
   }
 
   /**
