@@ -27,15 +27,19 @@ function entity_translation_i18n_menu_node_prepare($node) {
 
 /**
  * Implements hook_module_implements_alter().
- *
- * Move our implementation of hook_node_prepare() to end of list. Required so
- * that the 'menu' key is populated when our implementation gets called.
  */
 function entity_translation_i18n_menu_module_implements_alter(&$implementations, $hook) {
-  if ($hook == 'node_prepare') {
-    $group = $implementations['entity_translation_i18n_menu'];
-    unset($implementations['entity_translation_i18n_menu']);
-    $implementations['entity_translation_i18n_menu'] = $group;
+  switch ($hook) {
+    case 'node_prepare':
+    case 'node_presave':
+    case 'i18n_menu_menu_link_alter':
+      // Move some of our hook implementations to end of list. Required so that
+      // the 'menu' key is populated when our implementation gets called. This
+      // also prevents our changes from being overridden.
+      $group = $implementations['entity_translation_i18n_menu'];
+      unset($implementations['entity_translation_i18n_menu']);
+      $implementations['entity_translation_i18n_menu'] = $group;
+      break;
   }
 }
 
@@ -239,6 +243,9 @@ function entity_translation_i18n_menu_item($item) {
           ->execute()->fetchField();
         $cache[$item['link_path']] = entity_translation_node_supported_type($type);
       }
+    }
+    else {
+      $cache[$item['link_path']] = FALSE;
     }
   }
 

@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1444866 by plach: Fixed the invocation order on presave and menu alteration
+  (follow-up).
 #1691026 by plach | FrancescoQ: Fixed Fatal error when enabling ET with just one
   language installed.
 #1698622 by plach: Fixed Field data is not properly massaged before being stored
