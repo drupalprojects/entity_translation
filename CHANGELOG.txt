@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1699060 by plach: Fixed Bogus form elements on the taxonomy delete confirm
+  form.
 #1699052 by plach: Fixed Global entity form submit handlers are not invoked on
   delete except for node.
 #1661348 by plach | liquidcms: Fixed minimal i18n Taxonomy integration.
