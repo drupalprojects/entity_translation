@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1698622 by plach: Fixed Field data is not properly massaged before being stored
+  during an upgrade.
 #1224590 by bforchhammer: Added entity translation CRUD hooks.
 #1694472 by bforchhammer: Change module package names to 'Multilingual - Entity
   Translation'.

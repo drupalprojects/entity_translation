@@ -144,6 +144,7 @@ function entity_translation_upgrade_do($types, &$context) {
 
     // Save field data and translations for the updated nodes.
     foreach ($updated_nodes as $nid => $node) {
+      field_attach_presave('node', $node);
       field_attach_update('node', $node);
       entity_translation_get_handler('node', $node)->saveTranslations();
 
