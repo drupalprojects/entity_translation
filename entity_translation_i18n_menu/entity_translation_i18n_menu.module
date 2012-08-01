@@ -32,7 +32,6 @@ function entity_translation_i18n_menu_module_implements_alter(&$implementations,
   switch ($hook) {
     case 'node_prepare':
     case 'node_presave':
-    case 'i18n_menu_menu_link_alter':
       // Move some of our hook implementations to end of list. Required so that
       // the 'menu' key is populated when our implementation gets called. This
       // also prevents our changes from being overridden.

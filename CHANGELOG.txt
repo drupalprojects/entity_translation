@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1444866 by plach: Removed bogus hook menu link alteration (follow-up).
 #1699060 by plach: Fixed Bogus form elements on the taxonomy delete confirm
   form.
 #1699052 by plach: Fixed Global entity form submit handlers are not invoked on
