@@ -335,3 +335,20 @@ function entity_translation_i18n_menu_item_tset_prepare($entity, $langcode) {
     'customized' => 1,
   );
 }
+
+/**
+ * Implements hook_entity_translation_upgrade().
+ */
+function entity_translation_i18n_menu_entity_translation_upgrade($node, $translation) {
+  menu_node_prepare($node);
+  menu_node_prepare($translation);
+
+  if (!empty($node->menu['mlid']) && !empty($translation->menu['mlid'])) {
+    $link = $node->menu;
+    $link['link_title'] = $translation->menu['link_title'];
+    $link['description'] = $translation->menu['description'];
+    $link['entity_language'] = $translation->language;
+    $link['language'] = LANGUAGE_NONE;
+    menu_link_save($link, $node->menu);
+  }
+}
