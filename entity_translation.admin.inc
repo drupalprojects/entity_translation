@@ -27,7 +27,7 @@ function entity_translation_admin_form($form, $form_state) {
 
   foreach (entity_get_info() as $entity_type => $info) {
     if ($info['fieldable']) {
-      $options[$entity_type] = $info['label'];
+      $options[$entity_type] = !empty($info['label']) ? t($info['label']) : $entity_type;
     }
   }
 

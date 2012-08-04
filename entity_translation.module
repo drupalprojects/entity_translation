@@ -578,7 +578,7 @@ function entity_translation_permission() {
 
   foreach (entity_get_info() as $entity_type => $info) {
     if ($info['fieldable']) {
-      $label = t($info['label']);
+      $label = !empty($info['label']) ? t($info['label']) : $entity_type;
       $permission["translate $entity_type entities"] = array(
         'title' => t('Translate entities of type @type', array('@type' => $label)),
         'description' => t('Translate field content for entities of type @type.', array('@type' => $label)),
