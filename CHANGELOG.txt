@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1224590 by plach: Made entity translation CRUD hooks fire only after storing
+  the translation data (follow-up).
 #1643578 by plach: Added Support menu translation upgrade.
 #1713196 by plach: Fixed Entity type labels may not be defined in entity info.
 #1444866 by plach: Removed bogus hook menu link alteration (follow-up).

@@ -362,6 +362,25 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
       $query->execute();
     }
+
+    // The translation handler interface decouples operations on translations at
+    // data structure level from CRUD operations. Hence hooks must be fired
+    // after changes are actually persisted.
+    if (!empty($translations->hook)) {
+      // Hook info is keyed by language code so that subsequent operations at
+      // data structure level do not cause multiple hooks for the same data to
+      // be fired. For instance if a translation is first updated and then
+      // deleted, only the 'delete' hook should be fired, because it is the only
+      // change that has actually been persisted.
+      foreach ($translations->hook as $langcode => $info) {
+        $translation = isset($translations->data[$langcode]) ? $translations->data[$langcode] : $langcode;
+        $data = isset($info['data']) ? $info['data'] : NULL;
+        module_invoke_all('entity_translation_' . $info['hook'], $this->entityType, $this->entity, $translation, $data);
+      }
+
+      // Avoid firing hooks more than once for the same changes.
+      $translations->hook = array();
+    }
   }
 
   /**
@@ -395,13 +414,18 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     if (isset($translations->data[$langcode])) {
       $translation = array_merge($translations->data[$langcode], $translation);
       $translation['changed'] = REQUEST_TIME;
-      $op = 'update';
+      // If a newly inserted translation has not been stored yet do not fire an
+      // update hook.
+      $hook = empty($translations->hook[$langcode]['hook']) ? 'update' : $translations->hook[$langcode]['hook'];
     }
     else {
-      $op = 'insert';
+      $hook = 'insert';
     }
 
+    // Store the translation data.
     $translations->data[$langcode] = $translation;
+    // Keep track that the translation has been inserted or updated.
+    $translations->hook[$langcode] = array('hook' => $hook, 'data' => $values);
 
     if (is_array($values)) {
       // Update field translations.
@@ -414,8 +438,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         }
       }
     }
-
-    module_invoke_all('entity_translation_' . $op, $this->entityType, $this->entity, $translation, $values);
   }
 
   /**
@@ -423,11 +445,19 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public function removeTranslation($langcode) {
     $translations_key = $this->getTranslationsKey();
+    $hook_info = array('hook' => 'delete');
 
     if (!empty($langcode)) {
       unset($this->entity->{$translations_key}->data[$langcode]);
+      // Keep track that the current translation has been removed.
+      $this->entity->{$translations_key}->hook[$langcode] = $hook_info;
     }
     else {
+      $keys = array_keys($this->entity->{$translations_key}->data);
+      $values = array_fill(0, count($keys), $hook_info);
+      // Keep track that the all translations have been removed.
+      $this->entity->{$translations_key}->hook = array_combine($keys, $values);
+      // Actually remove translations.
       $this->entity->{$translations_key}->data = array();
     }
 
@@ -447,8 +477,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         }
       }
     }
-
-    module_invoke_all('entity_translation_delete', $this->entityType, $this->entity, $langcode);
   }
 
   /**

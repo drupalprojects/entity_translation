@@ -76,6 +76,7 @@ class EntityTranslationTestCase extends DrupalWebTestCase {
       $this->translator_user = $this->drupalCreateUser(array_merge(array(
         'create page content',
         'edit own page content',
+        'delete own page content',
         'edit original values', // @todo required for "edit own page content"
         'translate any entity',
       ), $permissions));
@@ -221,8 +222,8 @@ class EntityTranslationTestCase extends DrupalWebTestCase {
    * @param $langcode
    *   The language code to be assigned to the specified values.
    */
-  function createTranslation($node, $title, $body, $langcode) {
-    $this->drupalGet('node/' . $node->nid . '/edit/add/en/es');
+  function createTranslation($node, $title, $body, $langcode, $source_langcode = 'en') {
+    $this->drupalGet('node/' . $node->nid . '/edit/add/' . $source_langcode . '/' . $langcode);
 
     $body_key = "body[$langcode][0][value]";
     $this->assertFieldByXPath("//textarea[@name='$body_key']", $node->body[$node->language][0]['value'], 'Original body value correctly populated.');
@@ -281,5 +282,119 @@ class EntityTranslationTranslationTestCase extends EntityTranslationTestCase {
     $node_translation_title = $this->randomName();
     $node_translation_body = $this->randomName();
     $node_translation = $this->createTranslation($node, $node_translation_title, $node_translation_body, 'es');
+  }
+}
+
+/**
+ * Test CRUD hook invocation.
+ */
+class EntityTranslationHookTestCase extends EntityTranslationTestCase {
+
+  /**
+   * Return the test information.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Entity translation hooks',
+      'description' => 'Test that entity translation hooks are properly fired.',
+      'group' => 'Entity translation',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale', 'entity_translation', 'entity_translation_test');
+    $this->login($this->getAdminUser());
+    $this->addLanguage('it');
+    $this->addLanguage('es');
+    $this->configureContentType();
+    $this->login($this->getTranslatorUser());
+  }
+
+  /**
+   * Test whether hooks are properly fired in the regular form workflow.
+   */
+  function testFormWorkflow() {
+    // Create Basic page in English.
+    $node_title = $this->randomName();
+    $node_body = $this->randomName();
+    $node = $this->createPage($node_title, $node_body, 'en');
+
+    // Submit translation in Italian.
+    $node_translation_body = $this->randomName();
+    $this->createTranslation($node, NULL, $node_translation_body, 'it');
+    $info = $this->getHookInfo();
+    $this->assertTrue(!empty($info['insert']), t('Insert hook has been properly fired.'));
+
+    // Edit translation in Italian.
+    $edit = array("body[it][0][value]" => $this->randomName());
+    $this->drupalPost('node/' . $node->nid . '/edit/it', $edit, t('Save'));
+    $info = $this->getHookInfo();
+    $this->assertTrue(!empty($info['update']), t('Update hook has been properly fired.'));
+
+    // Delete the Basic page.
+    $edit = array();
+    $this->drupalPost('node/' . $node->nid . '/delete', $edit, t('Delete'));
+    $info = $this->getHookInfo('delete');
+    $this->assertTrue(count($info) == 2 && !empty($info['en']) && !empty($info['it']), t('Delete hook has been properly fired.'));
+  }
+
+  /**
+   * Test whether hooks are properly fired when using the API.
+   */
+  function testAPI() {
+    // Create Basic page in English.
+    $node = $this->createPage($this->randomName(), $this->randomName(), 'en');
+    $handler = entity_translation_get_handler('node', $node);
+
+    // Create a translation in Italian.
+    $translation = array('source' => 'en', 'language' => 'it');
+    $handler->setTranslation($translation);
+    $handler->saveTranslations();
+    $node = node_load($node->nid, NULL, TRUE);
+    $handler = entity_translation_get_handler('node', $node, TRUE);
+    $translations = $handler->getTranslations();
+    $this->assertTrue(!empty($translations->data['it']), t('An Italian translation has been created'));
+    $info = $this->getHookInfo();
+    $this->assertTrue(!empty($info['insert']), t('Insert hook has been properly fired.'));
+
+    // Check that the update hook is properly fired.
+    $translation['status'] = 1;
+    $handler->setTranslation($translation);
+    $handler->saveTranslations();
+    $info = $this->getHookInfo();
+    $this->assertTrue(!empty($info['update']), t('Update hook has been properly fired.'));
+
+    // Create a Spanish translation and update it before saving it.
+    $translation = array('source' => 'it', 'language' => 'es');
+    $handler->setTranslation($translation);
+    $translation['status'] = 1;
+    $handler->setTranslation($translation);
+    $handler->saveTranslations();
+    $node = node_load($node->nid, NULL, TRUE);
+    $handler = entity_translation_get_handler('node', $node, TRUE);
+    $translations = $handler->getTranslations();
+    $this->assertTrue(!empty($translations->data['es']), t('A Spanish translation has been created'));
+    $info = $this->getHookInfo();
+    $this->assertTrue(!empty($info['insert']), t('Insert hook has been properly fired.'));
+
+    // Delete a translation after updating it without saving.
+    $translation['status'] = 0;
+    $handler->setTranslation($translation);
+    $handler->removeTranslation('es');
+    $handler->saveTranslations();
+    $info = $this->getHookInfo();
+    $this->assertTrue(empty($info['update']), t('Update hook has not been fired.'));
+    $info = $this->getHookInfo('delete');
+    $this->assertTrue(!empty($info['es']), t('Delete hook has been properly fired.'));
+  }
+
+  /**
+   * Retrieve the information stored by hook implementations.
+   */
+  protected function getHookInfo($op = 'save') {
+    $name = 'entity_translation_test_' . $op;
+    $info = variable_get($name);
+    variable_del($name);
+    return $info;
   }
 }
