@@ -957,23 +957,11 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $translation['created'] = empty($values['created']) ? REQUEST_TIME : strtotime($values['created']);
     $this->setTranslation($translation);
 
-    // Save menu translation if i18n_menu is available.
-    if (module_exists('entity_translation_i18n_menu')) {
-      $this->menuFormSubmit($form, $form_state);
-    }
-
     // If no redirect has been explicitly set, go to the edit form for the
     // current form language.
     if ($new_translation && empty($form_state['redirect']) && !$this->isNewEntity()) {
       $form_state['redirect'] = $this->getEditPath($form_langcode);
     }
-  }
-
-  /**
-   * Performs alterations to the menu widget if available.
-   */
-  protected function menuFormSubmit($form, &$form_state) {
-    // By default do nothing: only nodes are currently supported.
   }
 
   /**

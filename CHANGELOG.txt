@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1694480 by plach | bforchhammer: Implement hook_module_implements() instead of
+  relying on the module weight.
 #1434574 by das-peter, plach | cjoy: Added events for rules.
 #1224590 by plach: Made entity translation CRUD hooks fire only after storing
   the translation data (follow-up).

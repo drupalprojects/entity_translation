@@ -58,7 +58,6 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
    * @see EntityTranslationDefaultHandler::menuForm()
    */
   protected function menuForm(&$form, &$form_state) {
-    module_load_include('module', 'entity_translation_i18n_menu');
     entity_translation_i18n_menu_form($form, $form_state);
   }
 
@@ -80,15 +79,6 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
     }
 
     parent::entityFormSubmit($form, $form_state);
-  }
-
-  /**
-   * @see EntityTranslationDefaultHandler::menuFormSubmit()
-   */
-  protected function menuFormSubmit($form, &$form_state) {
-    // Ensure that the menu property has the 'menu_name' and 'plid' keys.
-    // @todo Remove this once hook implementation calling order is fixed.
-    menu_node_submit($this->entity, $form, $form_state);
   }
 
   /**

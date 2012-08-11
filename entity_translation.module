@@ -9,81 +9,34 @@ module_load_include('inc', 'entity_translation', 'entity_translation.node');
 
 
 /**
- * Entity language callback.
- *
- * This callback changes the entity language from the actual one to the active
- * form language. This overriding allows to obtain language dependent form
- * widgets where multilingual values are supported (e.g. field or path alias
- * widgets) even if the code was not originally written with supporting multiple
- * values per language in mind.
- *
- * The main drawback of this approach is that code needing to access the actual
- * language in the entity form build/validation/submit workflow cannot rely on
- * the entity_language() function. On the other hand in these scenarios assuming
- * the presence of Entity translation should be safe, thus being able to rely on
- * the EntityTranslationHandlerInterface::getLanguage() method.
- *
- * @param $entity_type
- *    The the type of the entity.
- * @param $entity
- *    The entity whose language has to be returned.
- *
- * @return
- *   A valid language code.
+ * Implements hook_hook_info().
  */
-function entity_translation_language($entity_type, $entity) {
-  // If a form has been post, we need to check its state to verify if any form
-  // translation handler is stored there. This is mainly needed when responding
-  // to an AJAX request where the form language cannot be set from the page
-  // callback.
-  $handler = entity_translation_current_form_get_handler();
-
-  // Make sure we always have a translation handler instance available.
-  if (empty($handler)) {
-    $handler = entity_translation_get_handler($entity_type, $entity);
-  }
-  // If a translation handler associated to the current form is found, we need
-  // to update the wrapped entity. This way submitted values will be picked up.
-  else {
-    $langcode = $handler->getLanguage();
-    $handler->setEntity($entity);
-    $submitted_langcode = $handler->getLanguage();
-    // If the entity language has changed we are editing tha original values. In
-    // this case we need to update the current form language with the submitted
-    // one.
-    if ($submitted_langcode != $langcode) {
-      $handler->setFormLanguage($submitted_langcode);
-    }
-  }
-
-  $langcode = $handler->getFormLanguage();
-  return !empty($langcode) ? $langcode : $handler->getLanguage();
+function entity_translation_hook_info() {
+  $hooks['entity_translation_insert'] = array(
+    'group' => 'entity_translation',
+  );
+  $hooks['entity_translation_update'] = array(
+    'group' => 'entity_translation',
+  );
+  $hooks['entity_translation_delete'] = array(
+    'group' => 'entity_translation',
+  );
+  return $hooks;
 }
 
 /**
- * Returns the translation handler associated to the currently submitted form.
- *
- * @return EntityTranslationHandlerInterface
- *   A translation handler instance if available, FALSE oterwise.
+ * Implements hook_module_implements_alter().
  */
-function entity_translation_current_form_get_handler() {
-  $handler = FALSE;
-
-  if (!empty($_POST['form_build_id'])) {
-    $form_state = form_state_defaults();
-    $form = form_get_cache($_POST['form_build_id'], $form_state);
-    $handler = entity_translation_entity_form_get_handler($form, $form_state);
+function entity_translation_module_implements_alter(&$implementations, $hook) {
+  switch ($hook) {
+    case 'menu_alter':
+    case 'entity_info_alter':
+      // Move some of our hook implementations to the end of the list.
+      $group = $implementations['entity_translation'];
+      unset($implementations['entity_translation']);
+      $implementations['entity_translation'] = $group;
+      break;
   }
-
-  return $handler;
-}
-
-/**
- * Helper function. Determines whether the given entity type is translatable.
- */
-function entity_translation_enabled($entity_type, $skip_handler = FALSE) {
-  $enabled_types = variable_get('entity_translation_entity_types', array());
-  return !empty($enabled_types[$entity_type]) && ($skip_handler || field_has_translation_handler($entity_type, 'entity_translation'));
 }
 
 /**
@@ -403,22 +356,6 @@ function entity_translation_edit_access() {
   }
 
   return FALSE;
-}
-
-/**
- * Implements hook_hook_info().
- */
-function entity_translation_hook_info() {
-  $hooks['entity_translation_insert'] = array(
-    'group' => 'entity_translation',
-  );
-  $hooks['entity_translation_update'] = array(
-    'group' => 'entity_translation',
-  );
-  $hooks['entity_translation_delete'] = array(
-    'group' => 'entity_translation',
-  );
-  return $hooks;
 }
 
 /**
@@ -1274,6 +1211,66 @@ function entity_translation_form_field_ui_field_edit_form_alter(&$form, $form_st
 }
 
 /**
+ * Helper function. Determines whether the given entity type is translatable.
+ */
+function entity_translation_enabled($entity_type, $skip_handler = FALSE) {
+  $enabled_types = variable_get('entity_translation_entity_types', array());
+  return !empty($enabled_types[$entity_type]) && ($skip_handler || field_has_translation_handler($entity_type, 'entity_translation'));
+}
+
+/**
+ * Entity language callback.
+ *
+ * This callback changes the entity language from the actual one to the active
+ * form language. This overriding allows to obtain language dependent form
+ * widgets where multilingual values are supported (e.g. field or path alias
+ * widgets) even if the code was not originally written with supporting multiple
+ * values per language in mind.
+ *
+ * The main drawback of this approach is that code needing to access the actual
+ * language in the entity form build/validation/submit workflow cannot rely on
+ * the entity_language() function. On the other hand in these scenarios assuming
+ * the presence of Entity translation should be safe, thus being able to rely on
+ * the EntityTranslationHandlerInterface::getLanguage() method.
+ *
+ * @param $entity_type
+ *    The the type of the entity.
+ * @param $entity
+ *    The entity whose language has to be returned.
+ *
+ * @return
+ *   A valid language code.
+ */
+function entity_translation_language($entity_type, $entity) {
+  // If a form has been post, we need to check its state to verify if any form
+  // translation handler is stored there. This is mainly needed when responding
+  // to an AJAX request where the form language cannot be set from the page
+  // callback.
+  $handler = entity_translation_current_form_get_handler();
+
+  // Make sure we always have a translation handler instance available.
+  if (empty($handler)) {
+    $handler = entity_translation_get_handler($entity_type, $entity);
+  }
+  // If a translation handler associated to the current form is found, we need
+  // to update the wrapped entity. This way submitted values will be picked up.
+  else {
+    $langcode = $handler->getLanguage();
+    $handler->setEntity($entity);
+    $submitted_langcode = $handler->getLanguage();
+    // If the entity language has changed we are editing tha original values. In
+    // this case we need to update the current form language with the submitted
+    // one.
+    if ($submitted_langcode != $langcode) {
+      $handler->setFormLanguage($submitted_langcode);
+    }
+  }
+
+  $langcode = $handler->getFormLanguage();
+  return !empty($langcode) ? $langcode : $handler->getLanguage();
+}
+
+/**
  * Translation handler factory.
  *
  * @param $entity_type
@@ -1355,6 +1352,24 @@ function entity_translation_entity_form_get_handler($form, &$form_state) {
   }
   else {
     $handler = $form_state['storage']['entity_translation']['handler'];
+  }
+
+  return $handler;
+}
+
+/**
+ * Returns the translation handler associated to the currently submitted form.
+ *
+ * @return EntityTranslationHandlerInterface
+ *   A translation handler instance if available, FALSE oterwise.
+ */
+function entity_translation_current_form_get_handler() {
+  $handler = FALSE;
+
+  if (!empty($_POST['form_build_id'])) {
+    $form_state = form_state_defaults();
+    $form = form_get_cache($_POST['form_build_id'], $form_state);
+    $handler = entity_translation_entity_form_get_handler($form, $form_state);
   }
 
   return $handler;
