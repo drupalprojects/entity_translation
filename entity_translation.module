@@ -47,27 +47,33 @@ function entity_translation_language_types_info_alter(array &$language_types) {
 }
 
 /**
- * Implements hook_translation_info().
+ * Implements hook_entity_info().
  */
-function entity_translation_translation_info($types = NULL) {
-  $info = array(
-    'comment' => array(
+function entity_translation_entity_info() {
+  $info = array();
+
+  $info['node'] = array(
+    'translation' => array(
+      'entity_translation' => array(
+        'class' => 'EntityTranslationNodeHandler',
+        'access callback' => 'entity_translation_node_tab_access',
+        'access arguments' => array(1),
+      ),
+    ),
+  );
+
+  if (module_exists('comment')) {
+    $info['comment'] = array(
       'translation' => array(
         'entity_translation' => array(
           'class' => 'EntityTranslationCommentHandler',
         ),
       ),
-    ),
-    'node' => array(
-      'translation' => array(
-        'entity_translation' => array(
-          'class' => 'EntityTranslationNodeHandler',
-          'access callback' => 'entity_translation_node_tab_access',
-          'access arguments' => array(1),
-        ),
-      ),
-    ),
-    'taxonomy_term' => array(
+    );
+  }
+
+  if (module_exists('taxonomy')) {
+    $info['taxonomy_term'] = array(
       'translation' => array(
         'entity_translation' => array(
           'class' => 'EntityTranslationTaxonomyTermHandler',
@@ -75,21 +81,16 @@ function entity_translation_translation_info($types = NULL) {
           'edit form' => 'term',
         ),
       ),
-    ),
-    'user' => array(),
-  );
+    );
+  }
 
-  return isset($types) ? array_intersect_key($info, $types) : $info;
+  return $info;
 }
 
 /**
  * Implements hook_entity_info_alter().
  */
 function entity_translation_entity_info_alter(&$entity_info) {
-  // Collect entity-specific translation information.
-  $types = array_flip(array_keys($entity_info));
-  $translation_info = module_invoke_all('translation_info', $types);
-  $entity_info = array_merge_recursive($entity_info, $translation_info);
   $edit_form_info = array();
 
   // Provide defaults for translation info.

@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1114410 by plach: Replace hook_translation_info() with hook_entity_info().
 #1694480 by plach | bforchhammer: Implement hook_module_implements() instead of
   relying on the module weight.
 #1434574 by das-peter, plach | cjoy: Added events for rules.
