@@ -250,8 +250,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   public function __construct($entity_type, $entity_info, $entity, $entity_id) {
     $this->entityType = $entity_type;
     $this->entityInfo = $entity_info;
-    $this->entity = $entity;
     $this->entityId = $entity_id;
+    $this->setEntity($entity);
 
     $this->translating = FALSE;
     $this->outdated = FALSE;
@@ -272,7 +272,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $translations_key = $entity_info['entity keys']['translations'];
 
     foreach ($entities as $id => $entity) {
-      $entities[$id]->{$translations_key} = EntityTranslationDefaultHandler::emptyTranslations();
+      $entities[$id]->{$translations_key} = self::emptyTranslations();
     }
 
     $results = db_select('entity_translation', 'et')
@@ -455,7 +455,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       // Keep track that the current translation has been removed.
       $this->entity->{$translations_key}->hook[$langcode] = $hook_info;
     }
-    else {
+    elseif (!empty($this->entity->{$translations_key}->data)) {
       $keys = array_keys($this->entity->{$translations_key}->data);
       $values = array_fill(0, count($keys), $hook_info);
       // Keep track that the all translations have been removed.
@@ -596,6 +596,12 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public function setEntity($entity) {
     $this->entity = $entity;
+
+    // Ensure translations data is populated.
+    $translations_key = $this->getTranslationsKey();
+    if (!isset($this->entity->{$translations_key})) {
+      $this->entity->{$translations_key} = self::emptyTranslations();
+    }
   }
 
   /**
