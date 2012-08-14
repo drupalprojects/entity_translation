@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1728674 by Dave Reid, plach: Fixed PHP notice when formLanguage is FALSE in
+  EntityTranslationDefaultHandler.
 #1114410 by plach: Replace hook_translation_info() with hook_entity_info().
 #1694480 by plach | bforchhammer: Implement hook_module_implements() instead of
   relying on the module weight.

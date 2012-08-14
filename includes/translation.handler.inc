@@ -677,7 +677,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::getFormLanguage()
    */
   public function getFormLanguage() {
-    return $this->formLanguage;
+    return !empty($this->formLanguage) ? $this->formLanguage : $this->getLanguage();
   }
 
   /**
