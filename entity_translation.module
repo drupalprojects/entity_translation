@@ -1505,7 +1505,8 @@ function entity_translation_entity_uuid_presave(&$entity, $entity_type) {
  * translation.
  */
 function entity_translation_pathauto_alias_alter(&$alias, array &$context) {
-  if ($context['module'] == 'node' && $context['op'] == 'bulkupdate' && entity_translation_enabled('node')) {
+  // Ensure that we are dealing with a node having entity translation enabled.
+  if ($context['module'] == 'node' && $context['op'] == 'bulkupdate' && entity_translation_enabled('node') && !entity_translation_node('node', $context['data']['node'])) {
     $translations = entity_translation_get_handler('node', $context['data']['node'])->getTranslations();
     // Only create extra aliases if we are working on the original language to
     // avoid infinite recursion.
