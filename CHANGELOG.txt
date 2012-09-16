@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1770202 by bforchhammer: Fixed Local tasks (language tabs) visible on node view
+  page.
 #1701212 by guillaumev: Added Export entity translations using UUID.
 #1728648 by plach, Dave Reid: Fixed Ensure that empty translation data is
   handled properly.
