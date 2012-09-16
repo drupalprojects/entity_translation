@@ -1497,3 +1497,27 @@ function entity_translation_entity_uuid_presave(&$entity, $entity_type) {
     }
   }
 }
+
+/**
+ * Implement hook_pathauto_alias_alter().
+ *
+ * When bulk-updating aliases for nodes automatically create a path for every
+ * translation.
+ */
+function entity_translation_pathauto_alias_alter(&$alias, array &$context) {
+  if ($context['module'] == 'node' && $context['op'] == 'bulkupdate' && entity_translation_enabled('node')) {
+    $translations = entity_translation_get_handler('node', $context['data']['node'])->getTranslations();
+    // Only create extra aliases if we are working on the original language to
+    // avoid infinite recursion.
+    if ($context['language'] == $translations->original) {
+      foreach ($translations->data as $language => $translation) {
+        // We already have an alias for the original language, so let's not
+        // create another one.
+        if ($language == $translations->original) {
+          continue;
+        }
+        pathauto_create_alias($context['module'], $context['op'], $context['source'], $context['data'], $context['type'], $language);
+      }
+    }
+  }
+}
