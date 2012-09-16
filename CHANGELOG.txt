@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1694478 by bforchhammer: Delete menu items when translation is deleted.
 #1770250 by bforchhammer, plach: Fixed Translatable fields disappear when
   editing default language (entities other than node).
 #1377542 by bforchhammer | Daemon_Byte: Fixed Do not always use the admin theme.

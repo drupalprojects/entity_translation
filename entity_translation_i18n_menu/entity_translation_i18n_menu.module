@@ -3,9 +3,6 @@
 /**
  * @file
  * The menu specific translation functions and hook implementations.
- *
- * @todo
- * - translation deletion
  */
 
 /**
@@ -350,5 +347,42 @@ function entity_translation_i18n_menu_entity_translation_upgrade($node, $transla
     $link['entity_language'] = $translation->language;
     $link['language'] = LANGUAGE_NONE;
     menu_link_save($link, $node->menu);
+  }
+}
+
+/**
+ * Implements hook_entity_translation_delete().
+ */
+function entity_translation_i18n_menu_entity_translation_delete($entity_type, $entity, $langcode) {
+  list($entity_id, , ) = entity_extract_ids($entity_type, $entity);
+
+  // Clean-up all menu module links that point to this node.
+  $result = db_select('menu_links', 'ml')
+    ->fields('ml', array('mlid', 'language'))
+    ->condition('link_path', 'node/' . $entity_id)
+    ->condition('module', 'menu')
+    ->execute()
+    ->fetchAllAssoc('mlid');
+
+  foreach ($result as $link) {
+    // Delete all menu links matching the deleted language.
+    if ($link->language == $langcode) {
+      menu_link_delete($link->mlid);
+    }
+
+    // Delete string translations for all language-neutral menu items.
+    if ($link->language == LANGUAGE_NONE) {
+      $name = array('menu', 'item', $link->mlid);
+      foreach (array('title', 'description') as $key) {
+        $name[] = $key;
+        $source = i18n_string_get_source($name);
+        if(!empty($source->lid)) {
+          db_delete('locales_target')
+            ->condition('lid', $source->lid)
+            ->condition('language', $langcode)
+            ->execute();
+        }
+      }
+    }
   }
 }

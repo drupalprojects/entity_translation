@@ -90,6 +90,18 @@ class EntityTranslationMenuTranslationTestCase extends EntityTranslationTestCase
   }
 
   /**
+   * Remove translation in given langcode from node.
+   */
+  function removeTranslation($node, $langcode) {
+    $this->drupalGet('node/' . $node->nid . '/translate/delete/' . $langcode);
+    $this->drupalPost(NULL, array(), t('Delete'));
+
+    // Check to make sure translation was deleted.
+    $this->drupalGet('node/' . $node->nid . '/edit/add/' . $node->language . '/' . $langcode);
+    $this->assertResponse(200, 'Translation add page found. Old translation deleted.');
+  }
+
+  /**
    * Edit a page menu item.
    *
    * Check that node form contains old menu link title, then replace with given
@@ -143,6 +155,12 @@ class EntityTranslationMenuTranslationTestCase extends EntityTranslationTestCase
     // Check that English menu link has not changed.
     $this->get('en', '<front>');
     $this->assertText($link_title_en2);
+
+    // Delete Spanish translation and check that the respective menu item has
+    // been deleted as well.
+    $this->removeTranslation($node, 'es');
+    $this->get('es', '<front>');
+    $this->assertNoText($link_title_es2);
   }
 
   /**
@@ -213,5 +231,11 @@ class EntityTranslationMenuTranslationTestCase extends EntityTranslationTestCase
     // Check that English menu link has not changed.
     $this->get('en', '<front>');
     $this->assertText($link_title_en2);
+
+    // Delete Spanish translation and check that the respective menu item has
+    // been deleted as well.
+    $this->removeTranslation($node, 'es');
+    $this->get('es', '<front>');
+    $this->assertNoText($link_title_es2);
   }
 }
