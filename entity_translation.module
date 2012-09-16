@@ -821,6 +821,7 @@ function entity_translation_field_attach_delete($entity_type, $entity) {
 function entity_translation_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
   // Skip recursing into the source form.
   if (empty($form['#entity_translation_source_form']) && ($handler = entity_translation_entity_form_get_handler($form, $form_state))) {
+    $langcode = !empty($langcode) ? $langcode : $handler->getLanguage();
     $form_langcode = $handler->getFormLanguage();
     $translations = $handler->getTranslations();
     $update_langcode = $form_langcode && ($form_langcode != $langcode);

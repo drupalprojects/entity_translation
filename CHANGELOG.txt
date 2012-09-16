@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1770250 by bforchhammer, plach: Fixed Translatable fields disappear when
+  editing default language (entities other than node).
 #1377542 by bforchhammer | Daemon_Byte: Fixed Do not always use the admin theme.
 #1772874 by bforchhammer | webdrips: Fixed Wrong query alteration for comment
   language filtering.
