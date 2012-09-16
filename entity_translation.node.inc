@@ -204,6 +204,20 @@ function entity_translation_preprocess_node(&$variables) {
 function entity_translation_query_comment_filter_alter(QueryAlterableInterface $query) {
   $node = $query->getMetaData('node');
   if (variable_get("entity_translation_comment_filter_{$node->type}", FALSE)) {
-    $query->where("language = :language OR language = :language_none", array(':language' => $GLOBALS['language_content']->language, ':language_none' => LANGUAGE_NONE));
+    // Determine alias for "comment" table.
+    $comment_alias = FALSE;
+    foreach ($query->getTables() as $table) {
+      if (is_string($table['table']) && $table['table'] == 'comment') {
+        $comment_alias = $table['alias'];
+        break;
+      }
+    }
+    // Only show comments without language or matching the current content language.
+    if ($comment_alias) {
+      $query->condition(db_or()
+        ->condition($comment_alias . '.language', $GLOBALS['language_content']->language)
+        ->condition($comment_alias . '.language', LANGUAGE_NONE)
+      );
+    }
   }
 }

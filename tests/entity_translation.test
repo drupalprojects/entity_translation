@@ -35,6 +35,14 @@ class EntityTranslationTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Posts to a Drupal path with language.
+   */
+  function post($language, $path, $edit, $submit, array $options = array(), array $headers = array(), $form_html_id = NULL, $extra_post = NULL) {
+    $options['language'] = $this->getLanguage($language);
+    $this->drupalPost($path, $edit, $submit, $options, $headers, $form_html_id, $extra_post);
+  }
+
+  /**
    * Login the given user only if she has not changed.
    */
   function login($user) {
@@ -282,6 +290,124 @@ class EntityTranslationTranslationTestCase extends EntityTranslationTestCase {
     $node_translation_title = $this->randomName();
     $node_translation_body = $this->randomName();
     $node_translation = $this->createTranslation($node, $node_translation_title, $node_translation_body, 'es');
+  }
+}
+
+/**
+ * Basic tests for comment related things.
+ *
+ * @todo Add tests for comment translation workflow.
+ */
+class EntityTranslationCommentTestCase extends EntityTranslationTestCase {
+
+  protected $comment_user;
+
+  /**
+   * Return the test information.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Comment translation',
+      'description' => 'Basic tests for comment translation/filtering.',
+      'group' => 'Entity translation',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale', 'entity_translation', 'comment');
+    $this->login($this->getAdminUser());
+    $this->addLanguage('en');
+    $this->addLanguage('es');
+    $this->enableUrlLanguageDetection();
+    $this->configureContentType();
+    $this->configureComments(FALSE);
+    $this->login($this->getTranslatorUser());
+  }
+
+  function tearDown() {
+    unset($this->comment_user);
+    parent::tearDown();
+  }
+
+  function getCommentUser() {
+    if (empty($this->comment_user)) {
+      $this->comment_user = $this->drupalCreateUser(array(
+        'access comments',
+        'post comments',
+        'edit own comments',
+      ));
+    }
+    return $this->comment_user;
+  }
+
+  /**
+   * Enable comments and comment filtering by language.
+   */
+  function configureComments($filter_by_language = TRUE) {
+    $edit = array();
+    $edit['comment'] = COMMENT_NODE_OPEN;
+    $edit['entity_translation_comment_filter'] = $filter_by_language;
+    $this->drupalPost('admin/structure/types/manage/page', $edit, t('Save content type'));
+    $this->assertRaw(t('The content type %type has been updated.', array('%type' => 'Basic page')));
+
+    $this->drupalGet('admin/structure/types/manage/page');
+    if ($filter_by_language) {
+      $this->assertFieldChecked('edit-entity-translation-comment-filter', 'Comment filtering is enabled.');
+    }
+    else {
+      $this->assertNoFieldChecked('edit-entity-translation-comment-filter', 'Comment filtering is disabled.');
+    }
+  }
+
+  /**
+   * Add a comment for the given node.
+   *
+   * @param $node
+   *   The node for which to add the comment.
+   * @param $comment_body
+   *   The comment body text.
+   * @param $language
+   *   The comment language.
+   */
+  function postComment($node, $comment_body, $language) {
+    $edit = array();
+    $edit['comment_body[' . LANGUAGE_NONE . '][0][value]'] = $comment_body;
+    $this->post($language, 'comment/reply/' . $node->nid, $edit, t('Save'));
+  }
+
+  /**
+   * Test comment filtering by language.
+   */
+  function testCommentLanguageFiltering() {
+    $node = $this->createPage($this->randomName(), $this->randomName(), 'en');
+    $this->login($this->getCommentUser());
+
+    // Create comments in different languages.
+    $comment_en = $this->randomName();
+    $this->postComment($node, $comment_en, 'en');
+    $comment_es = $this->randomName();
+    $this->postComment($node, $comment_es, 'es');
+
+    // Check that ALL comments are being displayed when comment language filter
+    // is disabled (default behavior).
+    $this->get('en', 'node/' . $node->nid);
+    $this->assertText($comment_en, 'English comment found.');
+    $this->assertText($comment_es, 'Spanish comment found.');
+
+    // Enable comment filtering by language.
+    $this->login($this->getAdminUser());
+    $this->configureComments(TRUE);
+    $this->login($this->getCommentUser());
+
+    // Load page in different languages. Check that only comments matching
+    // current language are being displayed.
+    $this->get('en', 'node/' . $node->nid);
+    $this->assertText($comment_en, 'English comment found.');
+    $this->assertNoText($comment_es, 'Spanish comment not found.');
+
+    $this->get('es', 'node/' . $node->nid);
+    $this->assertNoText($comment_en, 'English comment not found.');
+    $this->assertText($comment_es, 'Spanish comment found.');
   }
 }
 
