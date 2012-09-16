@@ -1443,3 +1443,42 @@ function entity_translation_views_api() {
     'path' => drupal_get_path('module', 'entity_translation') . '/views',
   );
 }
+
+/**
+ * Implements hook_uuid_entities_features_export_entity_alter().
+ */
+function entity_translation_uuid_entities_features_export_entity_alter($entity, $entity_type) {
+  // We do not need to export most of the keys:
+  // - The entity type is determined from the entity the translations are
+  //   attached to.
+  // - The entity id will change from one site to another.
+  // - The user id needs to be removed because it will change as well.
+  // - Created and changed could be left but the UUID module removes created and
+  //   changed values from the entities it exports, hence we do the same for
+  //   consistency.
+  $fields = array('entity_type', 'entity_id', 'uid', 'created', 'changed');
+  $handler = entity_translation_get_handler($entity_type, $entity);
+  $translations = $handler->getTranslations();
+  if ($translations && isset($translations->data)) {
+    foreach ($translations->data as $key => &$translation) {
+      foreach ($fields as $field) {
+        unset($translation[$field]);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_uuid_presave().
+ */
+function entity_translation_entity_uuid_presave(&$entity, $entity_type) {
+  // UUID exports entities as arrays, therefore we need to cast the translations
+  // array back into an object.
+  $entity_info = entity_get_info($entity_type);
+  if (isset($entity_info['entity keys']) && isset($entity_info['entity keys']['translations'])) {
+    $key = $entity_info['entity keys']['translations'];
+    if (isset($entity->{$key})) {
+      $entity->{$key} = (object) $entity->{$key};
+    }
+  }
+}
