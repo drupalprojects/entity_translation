@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1778662 by jherencia: Fixed Add compability with field widgets that uses
+  limit_validation_errors().
 #1770202 by bforchhammer: Fixed Local tasks (language tabs) visible on node view
   page.
 #1701212 by guillaumev: Added Export entity translations using UUID.

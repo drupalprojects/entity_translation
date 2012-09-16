@@ -950,11 +950,19 @@ function entity_translation_form_element_language_replace(&$element, $source, $l
     if ($key === '#language') {
       $element[$key] = $langcode;
     }
-
-    if ($key === '#parents' || $key === '#field_parents') {
+    elseif ($key === '#parents' || $key === '#field_parents') {
       foreach ($element[$key] as $delta => $value) {
         if ($value === $source) {
           $element[$key][$delta] = $langcode;
+        }
+      }
+    }
+    elseif ($key === '#limit_validation_errors') {
+      foreach ($element[$key] as $section => $section_value) {
+        foreach ($element[$key][$section] as $delta => $value) {
+          if ($value === $source) {
+            $element[$key][$section][$delta] = $langcode;
+          }
         }
       }
     }
