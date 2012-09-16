@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1377542 by bforchhammer | Daemon_Byte: Fixed Do not always use the admin theme.
 #1772874 by bforchhammer | webdrips: Fixed Wrong query alteration for comment
   language filtering.
 #1778662 by jherencia: Fixed Add compability with field widgets that uses

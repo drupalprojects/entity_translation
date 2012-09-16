@@ -123,8 +123,6 @@ function entity_translation_entity_info_alter(&$entity_info) {
         'path wildcard' => "%$entity_type",
         'access callback' => 'entity_translation_tab_access',
         'access arguments' => array($entity_type),
-        'theme callback' => 'variable_get',
-        'theme arguments' => array('admin_theme'),
       );
 
       // Interpret a TRUE value for the 'edit form' key as the default value.
@@ -454,11 +452,19 @@ function _entity_translation_callback($callback, $args, $info = array()) {
 function entity_translation_admin_paths() {
   $paths = array();
   foreach (entity_get_info() as $entity_type => $info) {
+    // Only mark node related paths as admin paths, if the user has
+    // configured Drupal to use the administration theme when editing or
+    // creating content.
+    if ($entity_type == 'node' && !variable_get('node_admin_theme')) {
+      continue;
+    }
     if (entity_translation_enabled($entity_type, TRUE) && isset($info['translation']['entity_translation']['base path'])) {
       $base_path = preg_replace('|%[^/]*|', '*', $info['translation']['entity_translation']['base path']);
       $paths["$base_path/translate"] = TRUE;
       $paths["$base_path/translate/*"] = TRUE;
-      $paths["$base_path/edit/*"] = TRUE;
+
+      $edit_path = preg_replace('|%[^/]*|', '*', $info['translation']['entity_translation']['edit path']);
+      $paths["$edit_path/*"] = TRUE;
     }
   }
   return $paths;
