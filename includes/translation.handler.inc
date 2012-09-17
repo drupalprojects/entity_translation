@@ -779,6 +779,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       // widget and not current one.
       // @todo Consider supporting the ability to change translation language.
       if ($language_widget) {
+        $form['language']['#title'] = t('Original language');
         $form['language']['#options'][$langcode] = $languages[$langcode]->name;
         $form['language']['#default_value'] = $langcode;
         $form['language']['#disabled'] = TRUE;

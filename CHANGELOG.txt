@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1701460 by bforchhammer: Fixed title of original language dropdown.
 #1155134 by bforchhammer, plach: Integrated pathauto bulk generation.
 #1694478 by bforchhammer: Delete menu items when translation is deleted.
 #1770250 by bforchhammer, plach: Fixed Translatable fields disappear when
