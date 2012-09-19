@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1701212 by jonhattan: Fixed fatal error for entities with ET disabled (UUID
+  follow-up).
 #1701460 by bforchhammer: Fixed title of original language dropdown.
 #1155134 by bforchhammer, plach: Integrated pathauto bulk generation.
 #1694478 by bforchhammer: Delete menu items when translation is deleted.
