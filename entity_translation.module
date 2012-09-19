@@ -1471,13 +1471,15 @@ function entity_translation_uuid_entities_features_export_entity_alter($entity, 
   // - Created and changed could be left but the UUID module removes created and
   //   changed values from the entities it exports, hence we do the same for
   //   consistency.
-  $fields = array('entity_type', 'entity_id', 'uid', 'created', 'changed');
-  $handler = entity_translation_get_handler($entity_type, $entity);
-  $translations = $handler->getTranslations();
-  if ($translations && isset($translations->data)) {
-    foreach ($translations->data as $key => &$translation) {
-      foreach ($fields as $field) {
-        unset($translation[$field]);
+  if (entity_translation_enabled($entity_type)) {
+    $fields = array('entity_type', 'entity_id', 'uid', 'created', 'changed');
+    $handler = entity_translation_get_handler($entity_type, $entity);
+    $translations = $handler->getTranslations();
+    if ($translations && isset($translations->data)) {
+      foreach ($translations->data as $key => &$translation) {
+        foreach ($fields as $field) {
+          unset($translation[$field]);
+        }
       }
     }
   }
