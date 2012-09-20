@@ -48,6 +48,8 @@
  * - edit form: The key to be used to retrieve the entity object from the form
  *   state array. An empty value prevents Entity translation from performing
  *   alterations to the entity form. Defaults to ENTITY_TYPE.
+ * - skip original values access: A flag specifying whether skipping access
+ *   control when editing original values for this entity. Defaults to FALSE.
  */
 function hook_entity_info() {
   $info['custom_entity'] = array(

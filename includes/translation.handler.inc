@@ -662,7 +662,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::getTranslationAccess()
    */
   public function getTranslationAccess($langcode) {
-    return $langcode != $this->getLanguage() || user_access('edit original values');
+    return !empty($this->entityInfo['translation']['entity_translation']['skip original values access']) || $langcode != $this->getLanguage() || user_access('edit original values') || user_access("edit {$this->entityType} original values");
   }
 
   /**

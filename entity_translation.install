@@ -93,6 +93,73 @@ function entity_translation_install() {
 
   // Make translation use the content language type.
   variable_set('translation_language_type', LANGUAGE_TYPE_CONTENT);
+
+  // Grant the 'edit original values' permission, so we don't break editing on
+  // existing sites.
+  $msg = _entity_translation_grant_original_values_permissions();
+  drupal_set_message($msg);
+}
+
+/**
+ * Grant 'edit $type original values' permission to existing roles.
+ */
+function _entity_translation_grant_original_values_permissions() {
+  $permissions = array();
+
+  // Nodes.
+  $permissions['node'][] = 'bypass node access';
+  foreach (node_permissions_get_configured_types() as $type) {
+    $permissions['node'][] = "edit own $type content";
+    $permissions['node'][] = "edit any $type content";
+  }
+
+  // Comments.
+  if (module_exists('comment')) {
+    $permissions['comment'][] = 'administer comments';
+    $permissions['comment'][] = 'edit own comments';
+  }
+
+  // Taxonomy terms.
+  if (module_exists('taxonomy')) {
+    $permissions['taxonomy_term'][] = 'administer taxonomy';
+    foreach (taxonomy_get_vocabularies() as $vocabulary) {
+      $permissions['taxonomy_term'][] = "edit terms in {$vocabulary->vid}";
+    }
+  }
+
+  $assignments = array();
+  foreach ($permissions as $entity_type => $permissions_filter) {
+    $permission = "edit $entity_type original values";
+    $assignments[] = _entity_translation_grant_permission($permission, $permissions_filter);
+  }
+  $assignments = '<ul><li>' . implode('</li><li>', $assignments) . '</li></ul>';
+
+  $t = get_t();
+  return $t('The following permissions have been assigned to existing roles: !assignments', array('!assignments' => $assignments));
+}
+
+/**
+ * Grant the given permission to all roles which already have any of the
+ * permissions specified in the $permissions_filter parameter.
+ *
+ * @param $permission
+ *   The new permission which to grant.
+ * @param $permissions_filter
+ *   List of permissions used for loading roles.
+ *
+ * @return
+ *   A message describing permission changes.
+ */
+function _entity_translation_grant_permission($permission, $permissions_filter = NULL) {
+  $roles = user_roles(FALSE, $permissions_filter);
+  foreach ($roles as $rid => $role) {
+    user_role_grant_permissions($rid, array($permission));
+  }
+  $t = get_t();
+  return $t('%permission was assigned to %roles', array(
+    '%permission' => $permission,
+    '%roles' => implode(', ', $roles)
+  ));
 }
 
 /**
@@ -166,4 +233,11 @@ function entity_translation_update_7001() {
     ->fields(array('weight' => 11))
     ->condition('name', 'entity_translation')
     ->execute();
+}
+
+/**
+ * Grant 'edit original values' permission to roles which have entity editing permissions.
+ */
+function entity_translation_update_7002() {
+  return _entity_translation_grant_original_values_permissions();
 }
