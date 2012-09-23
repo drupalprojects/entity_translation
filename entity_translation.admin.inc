@@ -243,8 +243,13 @@ function entity_translation_delete_confirm_submit($form, &$form_state) {
   $entity = $form['#entity'];
   $langcode = $form['#language'];
 
+  // Some modules expect the original values to be present when updating the
+  // field values. Since we are deleting the translation no value has changed.
+  $entity->original = $entity;
+
   // Remove the translation entry and the related fields.
   $handler->removeTranslation($langcode);
+  field_attach_presave($entity_type, $entity);
   field_attach_update($entity_type, $entity);
 
   // Remove any existing path alias for the removed translation.
