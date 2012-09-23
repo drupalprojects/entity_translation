@@ -66,6 +66,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   }
 
   $handler = entity_translation_get_handler($entity_type, $entity);
+  $handler->initPathScheme();
 
   // Initialize translations if they are empty.
   $translations = $handler->getTranslations();
@@ -85,7 +86,6 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   $header = array(t('Language'), t('Source language'), t('Translation'), t('Status'), t('Operations'));
   $languages = entity_translation_languages();
   $source = $translations->original;
-  $base_path = $handler->getBasePath();
   $path = $handler->getViewPath();
   $rows = array();
 
@@ -101,9 +101,9 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
       $language_name = $language->name;
       $langcode = $language->language;
       $edit_path = $handler->getEditPath($langcode);
-      $add_path = "$base_path/edit/add/$source/$langcode";
+      $add_path = "{$handler->getEditPath()}/add/$source/$langcode";
 
-      if ($base_path) {
+      if ($edit_path) {
         $add_links = EntityTranslationDefaultHandler::languageSwitchLinks($add_path);
         $edit_links = EntityTranslationDefaultHandler::languageSwitchLinks($edit_path);
       }
@@ -227,7 +227,7 @@ function entity_translation_delete_confirm($form, $form_state, $entity_type, $en
   return confirm_form(
     $form,
     t('Are you sure you want to delete the @language translation of %label?', array('@language' => $languages[$langcode]->name, '%label' => $handler->getLabel())),
-    "{$handler->getBasePath()}/edit/$langcode",
+    $handler->getEditPath($langcode),
     t('This action cannot be undone.'),
     t('Delete'),
     t('Cancel')
@@ -255,7 +255,7 @@ function entity_translation_delete_confirm_submit($form, &$form_state) {
   // Remove any existing path alias for the removed translation.
   path_delete(array('source' => $handler->getViewPath(), 'language' => $langcode));
 
-  $form_state['redirect'] = "{$handler->getBasePath()}/translate";
+  $form_state['redirect'] = $handler->getTranslatePath();
 }
 
 /*

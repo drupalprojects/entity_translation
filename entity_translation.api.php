@@ -16,11 +16,12 @@
  * To make Entity Translation automatically support an entity type some keys
  * may need to be defined, but none of them is required except the 'base path'
  * key if the entity path is different from ENTITY_TYPE/%ENTITY_TYPE (e.g.
- * taxonomy/term/1). The 'base path' key is used to attach the 'Translate' tab
- * and to reliably alter menu information to provide the translation UI. If the
- * entity path matches the default pattern above, and there is no need for a
- * dedicated translation handler class, Entity Translation will provide built-in
- * support for the entity.
+ * taxonomy/term/1). The 'base path' key is used to determine the view, edit and
+ * translate path if they follow the default path patterns  and to reliably
+ * alter menu information to provide the translation UI. If the entity path
+ * matches the default pattern above, and there is no need for a dedicated
+ * translation handler class, Entity Translation will provide built-in support
+ * for the entity.
  *
  * The entity translation info is an associative array that has to match the
  * following structure. Three nested sub-arrays keyed respectively by entity
@@ -39,8 +40,20 @@
  *   the base path.
  * - edit path: The menu router path to be used to edit the entity. Defaults to
  *   "$base_path/edit".
+ * - translate path: The menu router path to be used for attaching the
+ *   translation UI. Defaults to "$base_path/translate".
  * - path wildcard: The menu router path wildcard identifying the entity.
  *   Defaults to %ENTITY_TYPE.
+ * - admin theme: Whether the translation UI should use the administration
+ *   theme. Defaults to TRUE.
+ * - path schemes: An array of menu router path schemes used for attaching the
+ *   entity translation UI. This element can be used to declare additional path
+ *   schemes, if an entity type uses multiple schemes for managing entities
+ *   (e.g. different schemes for different bundles). Each path scheme can define
+ *   the following elements (descriptions see above): 'base path', 'view path',
+ *   'edit path', 'translate path', 'path wildcard' and 'admin theme'. All path
+ *   elements that are defined directly on the entity translation info array are
+ *   automatically added as a 'default' path scheme.
  * - theme callback: The callback to be used to determine the translation
  *   theme. Defaults to 'variable_get'.
  * - theme arguments: The arguments to be used to determine the translation
@@ -62,6 +75,26 @@ function hook_entity_info() {
         'edit form' => 'custom_entity_form_state_key',
       ),
     ),
+  );
+
+  // Entity type which has multiple (e.g. bundle-specific) paths.
+  $info['custom_entity_2'] = array(
+    'translation' => array(
+      'entity_translation' => array(
+        'class' => 'EntityTranslationCustomEntityHandler',
+        'path sets' => array(
+          'default' => array(
+            'base path' => 'custom_entity_2/%custom_entity',
+            'path wildcard' => '%custom_entity',
+          ),
+          'fancy' => array(
+            // Base path is not required.
+            'edit path' => 'fancy/%entity/edit',
+            'path wildcard' => '%entity',
+          ),
+        ),
+      )
+    )
   );
 
   return $info;

@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1418076 by bforchhammer, plach: Added support for multiple path schemes.
 #1792606 by plach: Fixed Notices when deleting the translation of an entity
   having a file field.
 #1770202 by plach: Fixed Language tabs not appearing when creating a new

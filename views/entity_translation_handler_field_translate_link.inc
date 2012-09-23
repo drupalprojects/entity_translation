@@ -86,10 +86,10 @@ class entity_translation_handler_field_translate_link extends views_handler_fiel
     // We use the entity info here to avoid having to call entity_load() for all
     // the entities.
     $info = entity_get_info($entity_type);
-    $path = $info['translation']['entity_translation']['base path'];
-    $path = str_replace($info['translation']['entity_translation']['path wildcard'], $entity_id, $path);
+    $path = $info['translation']['entity_translation']['path schemes']['default']['translate path'];
+    $path = str_replace($info['translation']['entity_translation']['path schemes']['default']['path wildcard'], $entity_id, $path);
     $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = $path . '/translate';
+    $this->options['alter']['path'] = $path;
     $this->options['alter']['query'] = drupal_get_destination();
     $text = !empty($this->options['text']) ? $this->options['text'] : t('translate');
     return $text;

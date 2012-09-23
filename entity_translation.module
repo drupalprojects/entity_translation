@@ -58,6 +58,7 @@ function entity_translation_entity_info() {
         'class' => 'EntityTranslationNodeHandler',
         'access callback' => 'entity_translation_node_tab_access',
         'access arguments' => array(1),
+        'admin theme' => variable_get('node_admin_theme'),
       ),
     ),
   );
@@ -67,6 +68,7 @@ function entity_translation_entity_info() {
       'translation' => array(
         'entity_translation' => array(
           'class' => 'EntityTranslationCommentHandler',
+          'admin theme' => FALSE,
         ),
       ),
     );
@@ -99,42 +101,67 @@ function entity_translation_entity_info() {
  * Implements hook_entity_info_alter().
  */
 function entity_translation_entity_info_alter(&$entity_info) {
-  $edit_form_info = array();
+  $path_scheme_keys = array_flip(array('base path', 'view path', 'edit path', 'translate path', 'path wildcard', 'admin theme'));
 
   // Provide defaults for translation info.
   foreach ($entity_info as $entity_type => $info) {
     if (!isset($entity_info[$entity_type]['translation']['entity_translation'])) {
       $entity_info[$entity_type]['translation']['entity_translation'] = array();
     }
+    $et_info = &$entity_info[$entity_type]['translation']['entity_translation'];
 
     // Every fieldable entity type must have a translation handler class, no
     // matter if it is enabled for translation or not. As a matter of fact we
     // might need it to correctly switch field translatability when a field is
     // shared accross different entities.
-    $entity_info[$entity_type]['translation']['entity_translation'] += array('class' => 'EntityTranslationDefaultHandler');
+    $et_info += array('class' => 'EntityTranslationDefaultHandler');
 
     if (entity_translation_enabled($entity_type, TRUE)) {
       $entity_info[$entity_type]['language callback'] = 'entity_translation_language';
 
-      // If no base path is provided we default to the common "node/%node"
-      // pattern.
-      if (!isset($entity_info[$entity_type]['translation']['entity_translation']['base path'])) {
-        $path = "$entity_type/%$entity_type";
-        $entity_info[$entity_type]['translation']['entity_translation']['base path'] = $path;
+      // Insert the default path scheme into the 'path schemes' array and remove
+      // respective elements from the entity_translation info array.
+      $default_scheme = array_intersect_key($et_info, $path_scheme_keys);
+      if (!empty($default_scheme)) {
+        $et_info['path schemes']['default'] = $default_scheme;
+        $et_info = array_diff_key($et_info, $path_scheme_keys);
       }
 
-      $path = $entity_info[$entity_type]['translation']['entity_translation']['base path'];
+      // If no base path is provided we default to the common "node/%node"
+      // pattern.
+      if (empty($et_info['path schemes']['default']['base path'])) {
+        $et_info['path schemes']['default']['base path'] = "$entity_type/%$entity_type";
+      }
 
-      $entity_info[$entity_type]['translation']['entity_translation'] += array(
-        'view path' => $path,
-        'edit path' => "$path/edit",
-        'path wildcard' => "%$entity_type",
+      foreach ($et_info['path schemes'] as $delta => $scheme) {
+        // If there is a base path, then we automatically create the other path
+        // elements based on the base path.
+        if (!empty($scheme['base path'])) {
+          $view_path = $scheme['base path'];
+          $edit_path = $scheme['base path'] . '/edit';
+          $translate_path = $scheme['base path'] . '/translate';
+
+          $et_info['path schemes'][$delta] += array(
+            'view path' => $view_path,
+            'edit path' => $edit_path,
+            'translate path' => $translate_path,
+          );
+        }
+
+        // Merge in default values for other scheme elements.
+        $et_info['path schemes'][$delta] += array(
+          'admin theme' => TRUE,
+          'path wildcard' => "%$entity_type",
+        );
+      }
+
+      // Merge in default values for remaining keys.
+      $et_info += array(
         'access callback' => 'entity_translation_tab_access',
         'access arguments' => array($entity_type),
       );
 
       // Interpret a TRUE value for the 'edit form' key as the default value.
-      $et_info = &$entity_info[$entity_type]['translation']['entity_translation'];
       if (!isset($et_info['edit form']) || $et_info['edit form'] === TRUE) {
         $et_info['edit form'] = $entity_type;
       }
@@ -175,129 +202,246 @@ function entity_translation_menu() {
 }
 
 /**
+ * Validate the given set of path schemes and remove invalid elements.
+ *
+ * Each path scheme needs to fulfill the following requirements:
+ * - The 'path wildcard' key needs to be specified.
+ * - Every path (base/view/edit/translate) needs to contain the path wildcard.
+ * - The following path definitions (if specified) need to match existing menu
+ *   items: 'base path', 'view path', 'edit path'.
+ * - The 'translate path' definition needs to have an existing parent menu item.
+ *
+ * This function needs to be called once with a list of menu items passed as the
+ * last parameter, before it can be used for validation.
+ *
+ * @param $schemes
+ *   The array of path schemes.
+ * @param $entity_type_label
+ *   The label of the current entity type. This is used in error messages.
+ * @param $items
+ *   A list of menu items.
+ */
+function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label, $items = FALSE) {
+  $paths = &drupal_static(__FUNCTION__);
+  static $regex = '|%[^/]+|';
+
+  if (!empty($items)) {
+    // Some menu loaders in the item paths might have been altered: we need to
+    // replace any menu loader with a plain % to check if base paths are still
+    // compatible.
+    $paths = array();
+    foreach ($items as $path => $item) {
+      $path = preg_replace($regex, '%', $path);
+      $paths[$path] = $path;
+    }
+  }
+
+  if (empty($schemes)) {
+    return;
+  }
+
+  // Make sure we have a set of paths to validate the scheme against.
+  if (empty($paths)) {
+    // This should never happen.
+    throw new Exception('The Entity Translation path scheme validation function has not been initialized properly.');
+  }
+
+  foreach ($schemes as $delta => $scheme) {
+    // Every path scheme needs to declare a path wildcard for the entity id.
+    if (empty($scheme['path wildcard'])) {
+      $t_args = array('%scheme' => $delta, '%entity_type' => $entity_type_label);
+      drupal_set_message(t('Entity Translation path scheme %scheme for entities of type %entity_type does not declare a path wildcard.', $t_args));
+      unset($schemes[$delta]);
+      continue;
+    }
+
+    $wildcard = $scheme['path wildcard'];
+    $validate_keys = array('base path' => FALSE, 'view path' => FALSE, 'edit path' => FALSE, 'translate path' => TRUE);
+
+    foreach ($validate_keys as $key => $check_parent) {
+      if (isset($scheme[$key])) {
+        $path = $scheme[$key];
+        $parts = explode('/', $path);
+        $schemes[$delta][$key . ' parts'] = $parts;
+
+        // Check that the path contains the path wildcard.
+        if (!in_array($wildcard, $parts)) {
+          $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%wildcard' => $wildcard, '%path' => $path);
+          drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: entity wildcard %wildcard not found in %path.', $t_args), 'warning');
+        }
+
+        // Check that the current element has a parent path which matches an
+        // existing menu path.
+        if ($check_parent) {
+          $parent_path = implode('/', array_slice($parts, 0, -1));
+          if (!isset($paths[preg_replace($regex, '%', $parent_path)])) {
+            $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%path' => $path);
+            drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: parent menu item not found for %path', $t_args), 'warning');
+            unset($schemes[$delta][$key]);
+          }
+        }
+        // Check that the current element matches an existing menu path.
+        elseif (!isset($paths[preg_replace($regex, '%', $path)])) {
+          $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%path' => $path);
+          drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: matching menu item not found for %path', $t_args), 'warning');
+          unset($schemes[$delta][$key]);
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_menu_alter().
  */
 function entity_translation_menu_alter(&$items) {
   $backup = array();
   $languages = entity_translation_languages();
 
-  // Some menu loaders in the item paths might have been altered: we need to
-  // replace any menu loader with a plain % to check if base paths are still
-  // compatible.
-  $paths = array();
-  $regex = '|%[^/]+|';
-  foreach ($items as $path => $item) {
-    $path = preg_replace($regex, '%', $path);
-    $paths[$path] = $path;
-  }
+  // Initialize path schemes validation function with set of current menu items.
+  $_null = NULL;
+  _entity_translation_validate_path_schemes($_null, FALSE, $items);
 
   // Create tabs for all possible entity types.
   foreach (entity_get_info() as $entity_type => $info) {
     // Menu is rebuilt while determining entity translation base paths and
     // callbacks so we might not have them available yet.
     if (entity_translation_enabled($entity_type)) {
-      // Extract informations from the bundle description.
-      $path = $info['translation']['entity_translation']['base path'];
-
-      // If the base path is not defined or is not compatible with any defined
-      // one we cannot provide the translation UI for this entity type.
-      if (!isset($paths[preg_replace($regex, '%', $path)])) {
-        drupal_set_message(t('The entities of type %entity_type do not define a valid base path: it will not be possible to translate them.', array('%entity_type' => $info['label'])), 'warning');
-        continue;
-      }
-
-      $keys = array('theme callback', 'theme arguments', 'access callback', 'access arguments', 'load arguments');
-      $item = array_intersect_key($info['translation']['entity_translation'], drupal_map_assoc($keys));
-
-      $item += array(
-        'file' => 'entity_translation.admin.inc',
-        'module' => 'entity_translation',
-      );
-
-      $entity_position = count(explode('/', $path)) - 1;
-      $source_position = $entity_position + 4;
-      $language_position = $entity_position + 3;
-
-      // Backup existing values for the translate overview page.
-      if (isset($items["$path/translate"])) {
-        $backup[$entity_type] = $items["$path/translate"];
-      }
-
-      $items["$path/translate"] = array(
-        'title' => 'Translate',
-        'page callback' => 'entity_translation_overview',
-        'page arguments' => array($entity_type, $entity_position),
-        'type' => MENU_LOCAL_TASK,
-        'weight' => 2,
-      ) + $item;
-
       $et_info = $info['translation']['entity_translation'];
-      $edit_path = $et_info['edit path'];
 
-      if (isset($items[$edit_path])) {
-        // If the edit path is a default local task we need to find the parent
-        // item.
-        $edit_path_split = explode('/', $edit_path);
-        do {
-          $edit_form_item = &$items[implode('/', $edit_path_split)];
-          array_pop($edit_path_split);
+      // Flag for tracking whether we have managed to attach the translate UI
+      // successfully at least once.
+      $translate_ui_attached = FALSE;
+
+      // Validate path schemes for current entity type. Also removes invalid
+      // ones and adds '... path parts' elements.
+      _entity_translation_validate_path_schemes($et_info['path schemes'], $info['label']);
+
+      foreach ($et_info['path schemes'] as $scheme) {
+        $translate_item = NULL;
+        $edit_item = NULL;
+
+        // If we have a translate path then attach the translation UI, and
+        // register the callback for deleting a translation.
+        if (isset($scheme['translate path'])) {
+          $translate_path = $scheme['translate path'];
+
+          $keys = array('theme callback', 'theme arguments', 'access callback', 'access arguments', 'load arguments');
+          $item = array_intersect_key($info['translation']['entity_translation'], drupal_map_assoc($keys));
+
+          $item += array(
+            'file' => 'entity_translation.admin.inc',
+            'module' => 'entity_translation',
+          );
+
+          $entity_position = array_search($scheme['path wildcard'], $scheme['translate path parts']);
+
+          // Backup existing values for the translate overview page.
+          if (isset($items[$translate_path])) {
+            $backup[$entity_type] = $items[$translate_path];
+          }
+
+          $items[$translate_path] = array(
+            'title' => 'Translate',
+            'page callback' => 'entity_translation_overview',
+            'page arguments' => array($entity_type, $entity_position),
+            'type' => MENU_LOCAL_TASK,
+            'weight' => 2,
+          ) + $item;
+
+          // Delete translation callback.
+          $language_position = count($scheme['translate path parts']) + 1;
+          $items["$translate_path/delete/%entity_translation_language"] = array(
+            'title' => 'Delete',
+            'page callback' => 'drupal_get_form',
+            'page arguments' => array('entity_translation_delete_confirm', $entity_type, $entity_position, $language_position),
+          ) + $item;
+
+          $translate_item = &$items[$translate_path];
         }
-        while (!empty($edit_form_item['type']) && $edit_form_item['type'] == MENU_DEFAULT_LOCAL_TASK);
 
-        // Make the "Translate" local task follow the "Edit" one when possibile.
-        if (isset($edit_form_item['weight'])) {
-          $items["$path/translate"]['weight'] = $edit_form_item['weight'] + 1;
+        // If we have an edit path, then replace the menu edit form with our
+        // proxy implementation, and register new callbacks for adding and
+        // editing a translation.
+        if (isset($scheme['edit path'])) {
+          $edit_path = $scheme['edit path'];
+          $edit_path_parts = $scheme['edit path parts'];
+
+          // If the edit path is a default local task we need to find the parent
+          // item.
+          do {
+            $edit_item = &$items[implode('/', $edit_path_parts)];
+            array_pop($edit_path_parts);
+          }
+          while (!empty($edit_item['type']) && $edit_item['type'] == MENU_DEFAULT_LOCAL_TASK);
+
+          // Reset edit path parts to ensure proper position calculations.
+          $edit_path_parts = $scheme['edit path parts'];
+
+          // Replace the main edit callback with our proxy implementation to set
+          // form language to the current language and check access.
+          $entity_position = array_search($scheme['path wildcard'], $edit_path_parts);
+          $original_item = $edit_item;
+          $args = array($entity_type, $entity_position, FALSE, $original_item);
+          $edit_item['page callback'] = 'entity_translation_edit_page';
+          $edit_item['page arguments'] = array_merge($args, $original_item['page arguments']);
+          $edit_item['access callback'] = 'entity_translation_edit_access';
+          $edit_item['access arguments'] = array_merge($args, $original_item['access arguments']);
+
+          // Edit translation callback.
+          $translation_position = count($edit_path_parts);
+          $args = array($entity_type, $entity_position, $translation_position, $original_item);
+          $items["$edit_path/%entity_translation_language"] = array(
+            'type' => MENU_DEFAULT_LOCAL_TASK,
+            'title callback' => 'entity_translation_edit_title',
+            'title arguments' => array($translation_position),
+            'page callback' => 'entity_translation_edit_page',
+            'page arguments' => array_merge($args, $original_item['page arguments']),
+            'access callback' => 'entity_translation_edit_access',
+            'access arguments' => array_merge($args, $original_item['access arguments']),
+          )
+          // We need to inherit the remaining menu item keys, mostly 'module'
+          // and 'file' to keep ajax callbacks working (see form_get_cache() and
+          // drupal_retrieve_form()).
+          + $original_item;
+
+          // Add translation callback.
+          $add_path = "$edit_path/add/%entity_translation_language/%entity_translation_language";
+          $source_position = count($edit_path_parts) + 1;
+          $target_position = count($edit_path_parts) + 2;
+          $args = array($entity_type, $entity_position, $source_position, $target_position, $original_item);
+          $items[$add_path] = array(
+            'title callback' => 'Add translation',
+            'page callback' => 'entity_translation_add_page',
+            'page arguments' => array_merge($args, $original_item['page arguments']),
+            'type' => MENU_LOCAL_TASK,
+            'access callback' => 'entity_translation_add_access',
+            'access arguments' => array_merge($args, $original_item['access arguments']),
+          ) + $original_item;
         }
 
-        // Replace the main edit callback with our proxy implementation to set
-        // form language to the current language and check access.
-        $entity_position = count(explode('/', $et_info['base path'])) - 1;
-        $edit_position = count(explode('/', $edit_path)) - 1;
-        $original_item = $edit_form_item;
-        $args = array($entity_type, $entity_position, FALSE, $original_item);
-        $edit_form_item['page callback'] = 'entity_translation_edit_page';
-        $edit_form_item['page arguments'] = array_merge($args, $original_item['page arguments']);
-        $edit_form_item['access callback'] = 'entity_translation_edit_access';
-        $edit_form_item['access arguments'] = array_merge($args, $original_item['access arguments']);
+        // Make the "Translate" tab follow the "Edit" tab if possible.
+        if ($translate_item && $edit_item && isset($edit_item['weight'])) {
+          $translate_item['weight'] = $edit_item['weight'] + 1;
+        }
 
-        // Edit translation callback.
-        $translation_position = $edit_position + 1;
-        $args = array($entity_type, $entity_position, $translation_position, $original_item);
-        $items["$edit_path/%entity_translation_language"] = array(
-          'type' => MENU_DEFAULT_LOCAL_TASK,
-          'title callback' => 'entity_translation_edit_title',
-          'title arguments' => array($translation_position),
-          'page callback' => 'entity_translation_edit_page',
-          'page arguments' => array_merge($args, $original_item['page arguments']),
-          'access callback' => 'entity_translation_edit_access',
-          'access arguments' => array_merge($args, $original_item['access arguments']),
-        )
-        // We need to inherit the remaining menu item keys, mostly 'module' and
-        // 'file' to keep ajax callbacks working (see drupal_retrieve_form() and
-        // form_get_cache()).
-        + $original_item;
+        // If we have both an edit item and a translate item, then we know that
+        // the translate UI has been attached properly (at least once).
+        $translate_ui_attached = $translate_ui_attached || ($translate_item && $edit_item);
 
-        // Add translation callback.
-        $add_path = "$edit_path/add/%entity_translation_language/%entity_translation_language";
-        $source_position = $edit_position + 2;
-        $items[$add_path] = array(
-          'title callback' => 'Add translation',
-          'page callback' => 'entity_translation_add_page',
-          'page arguments' => array_merge(array($entity_type, $entity_position, $source_position, $source_position + 1, $original_item), $original_item['page arguments']),
-          'type' => MENU_LOCAL_TASK,
-          'access callback' => 'entity_translation_add_access',
-          'access arguments' => array_merge(array($entity_type, $entity_position, $source_position, $source_position + 1, $original_item), $original_item['access arguments']),
-        ) + $original_item;
+        // Cleanup reference variables, so we don't accidentially overwrite
+        // something in a later iteration.
+        unset($translate_item, $edit_item);
+      }
 
-        // Delete translation callback.
-        $items["$path/translate/delete/%entity_translation_language"] = array(
-          'title' => 'Delete',
-          'page callback' => 'drupal_get_form',
-          'page arguments' => array('entity_translation_delete_confirm', $entity_type, $entity_position, $language_position),
-        ) + $item;
+      if ($translate_ui_attached == FALSE) {
+        drupal_set_message(t('The entities of type %entity_type do not define a valid path scheme: it will not be possible to translate them.', array('%entity_type' => $info['label'])), 'warning');
       }
     }
   }
+
+  // Avoid bloating memory with unused data.
+  drupal_static_reset('_entity_translation_validate_path_schemes');
 
   // Node-specific menu alterations.
   entity_translation_node_menu_alter($items, $backup);
@@ -323,6 +467,7 @@ function entity_translation_edit_page() {
 
   // Set the current form language.
   $handler = entity_translation_get_handler($entity_type, $entity);
+  $handler->initPathScheme();
   $translations = $handler->getTranslations();
   $langcode = entity_translation_form_language($langcode, $handler);
   $handler->setFormLanguage($langcode);
@@ -436,6 +581,7 @@ function entity_translation_add_page() {
   $edit_form_item = array_shift($args);
 
   $handler = entity_translation_get_handler($entity_type, $entity);
+  $handler->initPathScheme();
   $handler->setFormLanguage($langcode);
   $handler->setSourceLanguage($source);
 
@@ -460,19 +606,20 @@ function _entity_translation_callback($callback, $args, $info = array()) {
 function entity_translation_admin_paths() {
   $paths = array();
   foreach (entity_get_info() as $entity_type => $info) {
-    // Only mark node related paths as admin paths, if the user has
-    // configured Drupal to use the administration theme when editing or
-    // creating content.
-    if ($entity_type == 'node' && !variable_get('node_admin_theme')) {
-      continue;
-    }
-    if (entity_translation_enabled($entity_type, TRUE) && isset($info['translation']['entity_translation']['base path'])) {
-      $base_path = preg_replace('|%[^/]*|', '*', $info['translation']['entity_translation']['base path']);
-      $paths["$base_path/translate"] = TRUE;
-      $paths["$base_path/translate/*"] = TRUE;
-
-      $edit_path = preg_replace('|%[^/]*|', '*', $info['translation']['entity_translation']['edit path']);
-      $paths["$edit_path/*"] = TRUE;
+    if (entity_translation_enabled($entity_type, TRUE)) {
+      foreach ($info['translation']['entity_translation']['path schemes'] as $scheme) {
+        if (!empty($scheme['admin theme'])) {
+          if (isset($scheme['translate path'])) {
+            $translate_path = preg_replace('|%[^/]*|', '*', $scheme['translate path']);
+            $paths[$translate_path] = TRUE;
+            $paths["$translate_path/*"] = TRUE;
+          }
+          if (isset($scheme['edit path'])) {
+            $edit_path = preg_replace('|%[^/]*|', '*', $scheme['edit path']);
+            $paths["$edit_path/*"] = TRUE;
+          }
+        }
+      }
     }
   }
   return $paths;
@@ -1086,7 +1233,7 @@ function entity_translation_entity_form_source_language_submit($form, &$form_sta
  */
 function entity_translation_entity_form_delete_translation_submit($form, &$form_state) {
   $handler = entity_translation_entity_form_get_handler($form, $form_state);
-  $form_state['redirect'] = "{$handler->getBasePath()}/translate/delete/{$handler->getFormLanguage()}";
+  $form_state['redirect'] = "{$handler->getTranslatePath()}/delete/{$handler->getFormLanguage()}";
 }
 
 /**
