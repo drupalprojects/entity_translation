@@ -195,7 +195,6 @@ function entity_translation_disable() {
   // translation again if the module is later re-enabled, unless they have been
   // changed by the user in the meantime.
   $entity_translation_types = array();
-  $entity_translation_type_names = array();
   foreach (node_type_get_types() as $type => $object) {
     if (variable_get("language_content_type_$type", 0) == ENTITY_TRANSLATION_ENABLED) {
       $entity_translation_types[] = $type;

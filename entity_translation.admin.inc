@@ -109,7 +109,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
       }
 
       if (isset($translations->data[$langcode])) {
-        list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+        list(, , $bundle) = entity_extract_ids($entity_type, $entity);
 
         // Existing translation in the translation set: display status.
         $is_original = $langcode == $translations->original;
@@ -389,7 +389,7 @@ function entity_translation_translatable_batch($translatable, $field_name, &$con
     ->execute();
 
   foreach ($result as $entity_type => $entities) {
-    foreach (entity_load($entity_type, array_keys($entities)) as $id => $entity) {
+    foreach (entity_load($entity_type, array_keys($entities)) as $entity) {
       $context['sandbox']['progress']++;
       $handler = entity_translation_get_handler($entity_type, $entity);
       $langcode = $handler->getLanguage();

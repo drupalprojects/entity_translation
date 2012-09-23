@@ -296,7 +296,6 @@ function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label
  */
 function entity_translation_menu_alter(&$items) {
   $backup = array();
-  $languages = entity_translation_languages();
 
   // Initialize path schemes validation function with set of current menu items.
   $_null = NULL;
@@ -468,7 +467,6 @@ function entity_translation_edit_page() {
   // Set the current form language.
   $handler = entity_translation_get_handler($entity_type, $entity);
   $handler->initPathScheme();
-  $translations = $handler->getTranslations();
   $langcode = entity_translation_form_language($langcode, $handler);
   $handler->setFormLanguage($langcode);
 
@@ -850,7 +848,7 @@ function entity_translation_sync($entity_type, $entity) {
     return;
   }
 
-  list($id, $rid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, , $bundle) = entity_extract_ids($entity_type, $entity);
   $instances = field_info_instances($entity_type, $bundle);
   $entity_unchanged = isset($entity->original) ? $entity->original : entity_load_unchanged($entity_type, $id);
 
@@ -1149,11 +1147,8 @@ function entity_translation_form_element_language_replace(&$element, $source, $l
  * distinguish between translatable and shared fields.
  */
 function entity_translation_element_translatability_clue($element, &$form_state, $form) {
-  $languages = language_list();
-
   $field_name = $element['#field_name'];
   $field = field_info_field($field_name);
-  $field_language = $element['#language'];
 
   // Append language to element title.
   if (variable_get('entity_translation_shared_labels', TRUE)) {
@@ -1643,7 +1638,7 @@ function entity_translation_uuid_entities_features_export_entity_alter($entity, 
     $handler = entity_translation_get_handler($entity_type, $entity);
     $translations = $handler->getTranslations();
     if ($translations && isset($translations->data)) {
-      foreach ($translations->data as $key => &$translation) {
+      foreach ($translations->data as &$translation) {
         foreach ($fields as $field) {
           unset($translation[$field]);
         }

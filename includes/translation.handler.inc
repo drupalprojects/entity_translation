@@ -834,7 +834,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $langcode = $this->getLanguage();
     $is_translation = $this->isTranslationForm();
     $new_translation = !isset($translations->data[$form_langcode]);
-    $source_language = $this->getSourceLanguage();
     $no_translations = count($translations->data) < 2;
     $languages = language_list();
 
