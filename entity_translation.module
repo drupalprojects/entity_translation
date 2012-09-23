@@ -1128,9 +1128,11 @@ function entity_translation_field_attach_submit($entity_type, $entity, $form, &$
  */
 function entity_translation_menu_local_tasks_alter(&$data, $router_item, $root_path) {
   // When displaying the main edit form, we need to craft an additional level of
-  // local tasks for each available translation.
+  // local tasks for each available translation. If we are creating a new
+  // translation the current path will start with the canonical edit path and
+  // have the trailing segments with source and target language information.
   $handler = entity_translation_get_handler();
-  if (!empty($handler) && $handler->getLanguage() != LANGUAGE_NONE && $router_item['href'] == $handler->getEditPath() && drupal_multilingual()) {
+  if (!empty($handler) && $handler->getLanguage() != LANGUAGE_NONE && drupal_multilingual() && strpos($router_item['href'], $handler->getEditPath()) === 0) {
     $handler->localTasksAlter($data, $router_item, $root_path);
   }
 }

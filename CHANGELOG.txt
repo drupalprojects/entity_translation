@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1770202 by plach: Fixed Language tabs not appearing when creating a new
+  translation (follow-up).
 #1678614 by bforchhammer, plach | Berdir: Make access control for the entity
   form in the original language more flexible.
 #1701212 by jonhattan: Fixed fatal error for entities with ET disabled (UUID
