@@ -25,11 +25,29 @@ function entity_translation_admin_form($form, $form_state) {
     '#default_value' => variable_get('entity_translation_shared_labels', TRUE),
   );
 
+  $_null = NULL;
+  list($items, ) = menu_router_build();
+  _entity_translation_validate_path_schemes($_null, FALSE, $items);
+
   foreach (entity_get_info() as $entity_type => $info) {
     if ($info['fieldable']) {
-      $options[$entity_type] = !empty($info['label']) ? t($info['label']) : $entity_type;
+      $et_info = &$info['translation']['entity_translation'];
+      _entity_translation_process_path_schemes($entity_type, $et_info);
+      _entity_translation_validate_path_schemes($et_info['path schemes'], $info['label']);
+
+      // Translation can be enabled for the current entity only if it defines at
+      // least one valid base path.
+      foreach ($et_info['path schemes'] as $delta => $scheme) {
+        if (!empty($scheme['base path'])) {
+          $options[$entity_type] = !empty($info['label']) ? t($info['label']) : $entity_type;
+          break;
+        }
+      }
     }
   }
+
+  // Avoid bloating memory with unused data.
+  drupal_static_reset('_entity_translation_validate_path_schemes');
 
   $form['entity_translation_entity_types'] = array(
     '#type' => 'checkboxes',

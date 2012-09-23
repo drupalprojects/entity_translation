@@ -98,11 +98,52 @@ function entity_translation_entity_info() {
 }
 
 /**
+ * Processes the given path schemes and fill-in default values.
+ */
+function _entity_translation_process_path_schemes($entity_type, &$et_info) {
+  $path_scheme_keys = array_flip(array('base path', 'view path', 'edit path', 'translate path', 'path wildcard', 'admin theme'));
+
+  // Insert the default path scheme into the 'path schemes' array and remove
+  // respective elements from the entity_translation info array.
+  $default_scheme = array_intersect_key($et_info, $path_scheme_keys);
+  if (!empty($default_scheme)) {
+    $et_info['path schemes']['default'] = $default_scheme;
+    $et_info = array_diff_key($et_info, $path_scheme_keys);
+  }
+
+  // If no base path is provided we default to the common "node/%node"
+  // pattern.
+  if (empty($et_info['path schemes']['default']['base path'])) {
+    $et_info['path schemes']['default']['base path'] = "$entity_type/%$entity_type";
+  }
+
+  foreach ($et_info['path schemes'] as $delta => $scheme) {
+    // If there is a base path, then we automatically create the other path
+    // elements based on the base path.
+    if (!empty($scheme['base path'])) {
+      $view_path = $scheme['base path'];
+      $edit_path = $scheme['base path'] . '/edit';
+      $translate_path = $scheme['base path'] . '/translate';
+
+      $et_info['path schemes'][$delta] += array(
+        'view path' => $view_path,
+        'edit path' => $edit_path,
+        'translate path' => $translate_path,
+      );
+    }
+
+    // Merge in default values for other scheme elements.
+    $et_info['path schemes'][$delta] += array(
+      'admin theme' => TRUE,
+      'path wildcard' => "%$entity_type",
+    );
+  }
+}
+
+/**
  * Implements hook_entity_info_alter().
  */
 function entity_translation_entity_info_alter(&$entity_info) {
-  $path_scheme_keys = array_flip(array('base path', 'view path', 'edit path', 'translate path', 'path wildcard', 'admin theme'));
-
   // Provide defaults for translation info.
   foreach ($entity_info as $entity_type => $info) {
     if (!isset($entity_info[$entity_type]['translation']['entity_translation'])) {
@@ -119,41 +160,8 @@ function entity_translation_entity_info_alter(&$entity_info) {
     if (entity_translation_enabled($entity_type, TRUE)) {
       $entity_info[$entity_type]['language callback'] = 'entity_translation_language';
 
-      // Insert the default path scheme into the 'path schemes' array and remove
-      // respective elements from the entity_translation info array.
-      $default_scheme = array_intersect_key($et_info, $path_scheme_keys);
-      if (!empty($default_scheme)) {
-        $et_info['path schemes']['default'] = $default_scheme;
-        $et_info = array_diff_key($et_info, $path_scheme_keys);
-      }
-
-      // If no base path is provided we default to the common "node/%node"
-      // pattern.
-      if (empty($et_info['path schemes']['default']['base path'])) {
-        $et_info['path schemes']['default']['base path'] = "$entity_type/%$entity_type";
-      }
-
-      foreach ($et_info['path schemes'] as $delta => $scheme) {
-        // If there is a base path, then we automatically create the other path
-        // elements based on the base path.
-        if (!empty($scheme['base path'])) {
-          $view_path = $scheme['base path'];
-          $edit_path = $scheme['base path'] . '/edit';
-          $translate_path = $scheme['base path'] . '/translate';
-
-          $et_info['path schemes'][$delta] += array(
-            'view path' => $view_path,
-            'edit path' => $edit_path,
-            'translate path' => $translate_path,
-          );
-        }
-
-        // Merge in default values for other scheme elements.
-        $et_info['path schemes'][$delta] += array(
-          'admin theme' => TRUE,
-          'path wildcard' => "%$entity_type",
-        );
-      }
+      // Process path schemes and fill-in defaults.
+      _entity_translation_process_path_schemes($entity_type, $et_info);
 
       // Merge in default values for remaining keys.
       $et_info += array(
@@ -220,8 +228,10 @@ function entity_translation_menu() {
  *   The label of the current entity type. This is used in error messages.
  * @param $items
  *   A list of menu items.
+ * @param $warnings
+ *   (optional) Displays warnings when a path scheme does not validate.
  */
-function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label, $items = FALSE) {
+function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label, $items = FALSE, $warnings = FALSE) {
   $paths = &drupal_static(__FUNCTION__);
   static $regex = '|%[^/]+|';
 
@@ -249,8 +259,10 @@ function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label
   foreach ($schemes as $delta => $scheme) {
     // Every path scheme needs to declare a path wildcard for the entity id.
     if (empty($scheme['path wildcard'])) {
-      $t_args = array('%scheme' => $delta, '%entity_type' => $entity_type_label);
-      drupal_set_message(t('Entity Translation path scheme %scheme for entities of type %entity_type does not declare a path wildcard.', $t_args));
+      if ($warnings) {
+        $t_args = array('%scheme' => $delta, '%entity_type' => $entity_type_label);
+        drupal_set_message(t('Entity Translation path scheme %scheme for entities of type %entity_type does not declare a path wildcard.', $t_args), 'warning');
+      }
       unset($schemes[$delta]);
       continue;
     }
@@ -265,7 +277,7 @@ function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label
         $schemes[$delta][$key . ' parts'] = $parts;
 
         // Check that the path contains the path wildcard.
-        if (!in_array($wildcard, $parts)) {
+        if ($warnings && !in_array($wildcard, $parts)) {
           $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%wildcard' => $wildcard, '%path' => $path);
           drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: entity wildcard %wildcard not found in %path.', $t_args), 'warning');
         }
@@ -275,15 +287,19 @@ function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label
         if ($check_parent) {
           $parent_path = implode('/', array_slice($parts, 0, -1));
           if (!isset($paths[preg_replace($regex, '%', $parent_path)])) {
-            $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%path' => $path);
-            drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: parent menu item not found for %path', $t_args), 'warning');
+            if ($warnings) {
+              $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%path' => $path);
+              drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: parent menu item not found for %path', $t_args), 'warning');
+            }
             unset($schemes[$delta][$key]);
           }
         }
         // Check that the current element matches an existing menu path.
         elseif (!isset($paths[preg_replace($regex, '%', $path)])) {
-          $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%path' => $path);
-          drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: matching menu item not found for %path', $t_args), 'warning');
+          if ($warnings) {
+            $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%path' => $path);
+            drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: matching menu item not found for %path', $t_args), 'warning');
+          }
           unset($schemes[$delta][$key]);
         }
       }
@@ -314,7 +330,7 @@ function entity_translation_menu_alter(&$items) {
 
       // Validate path schemes for current entity type. Also removes invalid
       // ones and adds '... path parts' elements.
-      _entity_translation_validate_path_schemes($et_info['path schemes'], $info['label']);
+      _entity_translation_validate_path_schemes($et_info['path schemes'], $info['label'], FALSE, TRUE);
 
       foreach ($et_info['path schemes'] as $scheme) {
         $translate_item = NULL;

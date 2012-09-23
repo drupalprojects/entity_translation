@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1676716 by plach | quiptime: Do not list entity types that do not integrate
+  with ET in the admin page.
 #1792620 by bforchhammer: Cleanup unused variables.
 #1418076 by bforchhammer, plach: Added support for multiple path schemes.
 #1792606 by plach: Fixed Notices when deleting the translation of an entity
