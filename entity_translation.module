@@ -393,6 +393,7 @@ function entity_translation_menu_alter(&$items) {
             'page arguments' => array($entity_type, $entity_position),
             'type' => MENU_LOCAL_TASK,
             'weight' => 2,
+            'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
           ) + $item;
 
           // Delete translation callback.
