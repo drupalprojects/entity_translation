@@ -63,16 +63,13 @@ function entity_translation_node_menu_alter(&$items, $backup) {
 function entity_translation_node_tab_access() {
   $args = func_get_args();
   $node = array_shift($args);
-  if ($node->language != LANGUAGE_NONE) {
-    if (entity_translation_node_supported_type($node->type)) {
-      return entity_translation_tab_access('node');
-    }
-    elseif (entity_translation_node('node', $node)) {
-      $function = array_shift($args);
-      return call_user_func_array($function, $args);
-    }
+  if (entity_translation_node('node', $node)) {
+    $function = array_shift($args);
+    return call_user_func_array($function, $args);
   }
-  return FALSE;
+  else {
+    return entity_translation_tab_access('node', $node);
+  }
 }
 
 /**
@@ -127,8 +124,9 @@ function entity_translation_node_view($node, $build_mode) {
 function entity_translation_form_node_type_form_alter(&$form, &$form_state) {
   $type = $form['#node_type']->type;
 
+  $t_args = array('!url' => url('admin/config/regional/entity_translation'));
   $form['workflow']['language_content_type']['#options'][ENTITY_TRANSLATION_ENABLED] = t('Enabled, with field translation');
-  $form['workflow']['language_content_type']['#description'] .= ' ' . t('<p>If field translation is selected you can have per-field translation for each available language.');
+  $form['workflow']['language_content_type']['#description'] .= ' <p>' . t('If field translation is selected you can have per-field translation for each available language. You can find more options in the <a href="!url">entity translation settings</a>.', $t_args) . '</p>';
 
   $form['display']['entity_translation_node_metadata'] = array(
     '#type' => 'radios',
@@ -192,6 +190,17 @@ function entity_translation_preprocess_node(&$variables) {
       }
     }
   }
+}
+
+/**
+ * Returns whether the given comment type has support for translations.
+ *
+ * @return
+ *   Boolean value.
+ */
+function entity_translation_comment_supported_type($comment_type) {
+  $type = str_replace('comment_node_', '', $comment_type);
+  return entity_translation_node_supported_type($type);
 }
 
 /**

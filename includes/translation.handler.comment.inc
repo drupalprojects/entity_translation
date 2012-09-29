@@ -16,13 +16,6 @@ class EntityTranslationCommentHandler extends EntityTranslationDefaultHandler {
   }
 
   /**
-   * @see EntityTranslationDefaultHandler::getLanguage()
-   */
-  public function getLanguage() {
-    return $this->entity->language;
-  }
-
-  /**
    * @see EntityTranslationDefaultHandler::entityForm()
    */
   public function entityForm(&$form, &$form_state) {

@@ -35,7 +35,7 @@
  * - access callback: The access callback for the translation pages. Defaults to
  *   'entity_translation_tab_access'.
  * - access arguments: The access arguments for the translation pages. Defaults
- *   to "array($entity_type)".
+ *   to "array($entity_type, $entity_position)".
  * - view path: The menu router path to be used to view the entity. Defaults to
  *   the base path.
  * - edit path: The menu router path to be used to edit the entity. Defaults to
@@ -63,6 +63,10 @@
  *   alterations to the entity form. Defaults to ENTITY_TYPE.
  * - skip original values access: A flag specifying whether skipping access
  *   control when editing original values for this entity. Defaults to FALSE.
+ * - bundle callback: A callback to check whether the passed bundle has entity
+ *   translation enabled. If empty all bundles are supposed to be enabled.
+ * - default settings: The defaults to be applied to settings when an explicit
+ *   choice is missing.
  */
 function hook_entity_info() {
   $info['custom_entity'] = array(
@@ -73,6 +77,11 @@ function hook_entity_info() {
         'access callback' => 'custom_entity_tab_access',
         'access arguments' => array(1),
         'edit form' => 'custom_entity_form_state_key',
+        'bundle callback' => 'custom_entity_translation_enabled_bundle',
+        'default settings' => array(
+          'default_language' => LANGUAGE_NONE,
+          'hide_language_selector' => FALSE,
+        ),
       ),
     ),
   );

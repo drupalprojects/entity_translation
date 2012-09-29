@@ -48,14 +48,90 @@ function entity_translation_admin_form($form, $form_state) {
 
   // Avoid bloating memory with unused data.
   drupal_static_reset('_entity_translation_validate_path_schemes');
+  $enabled_types = array_filter(variable_get('entity_translation_entity_types', array()));
 
-  $form['entity_translation_entity_types'] = array(
-    '#type' => 'checkboxes',
+  $form['enabled'] = array(
+    '#type' => 'fieldset',
     '#title' => t('Translatable entity types'),
     '#description' => t('Select which entities can be translated.'),
-    '#options' => $options,
-    '#default_value' => variable_get('entity_translation_entity_types', array()),
+    '#collapsible' => TRUE,
+    '#collapsed' => !empty($enabled_types),
   );
+
+  $form['enabled']['entity_translation_entity_types'] = array(
+    '#type' => 'checkboxes',
+    '#options' => $options,
+    '#default_value' => $enabled_types,
+  );
+
+  $form['tabs'] = array(
+    '#type' => 'vertical_tabs',
+  );
+
+  $languages = array(
+    ENTITY_TRANSLATION_LANGUAGE_DEFAULT => t('Default language'),
+    ENTITY_TRANSLATION_LANGUAGE_CURRENT => t('Current language'),
+    ENTITY_TRANSLATION_LANGUAGE_AUTHOR => t('Author language'),
+    LANGUAGE_NONE => t('Language neutral'),
+  );
+  foreach (entity_translation_languages($entity_type) as $langcode => $language) {
+    $languages[$langcode] = t($language->name);
+  }
+
+  foreach ($enabled_types as $entity_type) {
+    $label = $options[$entity_type];
+
+    $entity_info = entity_get_info($entity_type);
+    $bundles = !empty($entity_info['bundles']) ? $entity_info['bundles'] : array($entity_type => array('label' => $label));
+    $enabled_bundles = 0;
+
+    foreach ($bundles as $bundle => $info) {
+      if (entity_translation_enabled_bundle($entity_type, $bundle)) {
+        $enabled_bundles++;
+        $settings = entity_translation_settings($entity_type, $bundle);
+        $settings_key = 'entity_translation_settings_' . $entity_type . '__' . $bundle;
+
+        // If the entity defines no bundle we do not need the fieldset.
+        if (count($bundles) > 1 || $bundle != $entity_type) {
+          $form['settings'][$entity_type][$settings_key] = array(
+            '#type' => 'fieldset',
+            '#title' => $info['label'],
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+            '#tree' => TRUE,
+          );
+        }
+
+        $form['settings'][$entity_type][$settings_key]['default_language'] = array(
+          '#type' => 'select',
+          '#title' => t('Default language'),
+          '#options' => $languages,
+          '#default_value' => $settings['default_language'],
+        );
+
+        $form['settings'][$entity_type][$settings_key]['hide_language_selector'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Hide language selector'),
+          '#default_value' => $settings['hide_language_selector'],
+        );
+
+        $form['settings'][$entity_type][$settings_key]['exclude_language_none'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Exclude <em>Language neutral</em> from the available languages'),
+          '#default_value' => $settings['exclude_language_none'],
+        );
+      }
+    }
+
+    if ($enabled_bundles > 0) {
+      $form['settings'][$entity_type][$settings_key]['#collapsed'] = $enabled_bundles > 1;
+      $form['settings'][$entity_type] += array(
+        '#type' => 'fieldset',
+        '#group' => 'tabs',
+        '#title' => $label,
+      );
+    }
+  }
 
   $form = system_settings_form($form);
 
@@ -72,6 +148,30 @@ function entity_translation_admin_form_submit($form, $form_state) {
   // Clear the entity info cache for the new entity translation settings.
   entity_info_cache_clear();
   menu_rebuild();
+}
+
+/**
+ * Applies the given settings to every defined bundle.
+ *
+ * @param $entity_type
+ *   The entity type the settings refer to.
+ * @param $settings
+ *   (optional) The settings to be applied. Defaults to the entity default
+ *   settings.
+ */
+function entity_translation_settings_init($entity_type, $settings = array()) {
+  if (entity_translation_enabled($entity_type)) {
+    $info = entity_get_info($entity_type);
+    $bundles = !empty($info['bundles']) ? array_keys($info['bundles']) : array($entity_type);
+
+    foreach ($bundles as $bundle) {
+      if (entity_translation_enabled_bundle($entity_type, $bundle)) {
+        $settings += entity_translation_settings($entity_type, $bundle);
+      }
+    }
+
+    variable_set('entity_translation_settings_' . $entity_type . '__' . $bundle, $settings);
+  }
 }
 
 /**

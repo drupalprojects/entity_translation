@@ -79,6 +79,16 @@ interface EntityTranslationHandlerInterface {
   public function getLanguage();
 
   /**
+   * Returns the translation object key for the wrapped entity type.
+   */
+  public function getLanguageKey();
+
+  /**
+   * Returns the default language for the wrapped entity type and bundle.
+   */
+  public function getDefaultLanguage();
+
+  /**
    * Sets the language of the orginal translation.
    *
    * @param $langcode
@@ -229,6 +239,16 @@ interface EntityTranslationHandlerInterface {
    * Performs the needed alterations to the entity form.
    */
   public function entityForm(&$form, &$form_state);
+
+  /**
+   * Adds an language selection widget to the entity form.
+   */
+  public function entityFormLanguageWidget(&$form, &$form_state);
+
+  /**
+   * Performs submission tasks on the submitted entity language.
+   */
+  public function entityFormLanguageWidgetSubmit($form, &$form_state);
 
   /**
    * Performs validation tasks on the submitted entity forms.
@@ -585,7 +605,57 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         return $this->entity->{$language_key};
       }
     }
-    return language_default()->language;
+
+    $translations = $this->getTranslations();
+    if (!empty($translations->original)) {
+      return $translations->original;
+    }
+    else {
+      // When we are creating an entity and no language is specified fall back
+      // to the default language for the current entity and bundle.
+      return $this->getDefaultLanguage();
+    }
+  }
+
+  /**
+   * @see EntityTranslationHandlerInterface::getLanguageKey()
+   */
+  public function getLanguageKey() {
+    return !empty($this->entityInfo['entity keys']['language']) ? $this->entityInfo['entity keys']['language'] : 'language';
+  }
+
+  /**
+   * @see EntityTranslationHandlerInterface::getDefaultLanguage()
+   */
+  public function getDefaultLanguage() {
+    list(, , $bundle) = entity_extract_ids($this->entityType, $this->entity);
+    $settings = variable_get('entity_translation_settings_' . $this->entityType . '__' . $bundle, array());
+
+    if (!empty($settings['default_language'])) {
+      switch ($settings['default_language']) {
+        case ENTITY_TRANSLATION_LANGUAGE_DEFAULT:
+          $langcode = language_default()->language;
+          break;
+
+        case ENTITY_TRANSLATION_LANGUAGE_CURRENT:
+          $langcode = $GLOBALS[LANGUAGE_TYPE_CONTENT]->language;
+          break;
+
+        case ENTITY_TRANSLATION_LANGUAGE_AUTHOR:
+          $langcode = $GLOBALS['user']->language;
+          break;
+
+        default:
+          // An actual language code has been explicitly configured.
+          $langcode = $settings['default_language'];
+      }
+    }
+    else {
+      // Fall back to the default language to keep backward compatibility.
+      $langcode = language_default()->language;
+    }
+
+    return $langcode;
   }
 
   /**
@@ -837,6 +907,12 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $no_translations = count($translations->data) < 2;
     $languages = language_list();
 
+    // The only way to determine whether we are editing the original values is
+    // comparing form language and entity language. Since a language change
+    // might render impossible to make this check after form submission, we
+    // store the related information here.
+    $form_state['entity_translation']['is_translation'] = $is_translation;
+
     // Adjust page title to specify the current language being edited, if we
     // have at least one translation.
     if ($form_langcode != LANGUAGE_NONE && (!$no_translations || $new_translation)) {
@@ -871,35 +947,17 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       }
     }
 
-    // Disable languages for existing translations, so it is not possible to
-    // switch this node to some language which is already in the translation
-    // set.
-    $language_widget = isset($form['language']) && $form['language']['#type'] == 'select';
-    if ($language_widget) {
-      foreach ($translations->data as $translation) {
-        if (!empty($translation['source'])) {
-          unset($form['language']['#options'][$translation['language']]);
-        }
-      }
-      if (count($translations->data) > 1) {
-        unset($form['language']['#options'][LANGUAGE_NONE]);
-      }
-    }
-    // If there is a language value associated to the form ensure it is correct.
-    elseif (isset($form['language'])) {
-      $form['language']['#value'] = $form_langcode;
-    }
+    // Add the entity language switcher.
+    $this->entityFormLanguageWidget($form, $form_state);
 
     if ($is_translation) {
       // If we are editing a translation set the correct value in the language
       // widget and not current one.
       // @todo Consider supporting the ability to change translation language.
-      if ($language_widget) {
-        $form['language']['#title'] = t('Original language');
-        $form['language']['#options'][$langcode] = $languages[$langcode]->name;
-        $form['language']['#default_value'] = $langcode;
-        $form['language']['#disabled'] = TRUE;
-      }
+      $form['language']['#title'] = t('Original language');
+      $form['language']['#options'][$langcode] = $languages[$langcode]->name;
+      $form['language']['#default_value'] = $langcode;
+      $form['language']['#disabled'] = TRUE;
 
       // Replace the delete button with the delete translation one.
       if (!$new_translation) {
@@ -1003,10 +1061,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       $this->menuForm($form, $form_state);
     }
 
-    // We need to process the posted form as early as possible to update the
-    // form language value.
-    array_unshift($form['#validate'], 'entity_translation_entity_form_validate');
-
     // Process entity form submission.
     $form['#submit'][] = 'entity_translation_entity_form_submit';
 
@@ -1015,6 +1069,49 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     if (!empty($form['actions']['delete']['#submit'])) {
       $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_submit';
     }
+  }
+
+  /**
+   * @see EntityTranslationHandlerInterface::entityFormLanguageWidget()
+   */
+  public function entityFormLanguageWidget(&$form, &$form_state) {
+    list(, , $bundle) = entity_extract_ids($this->entityType, $this->entity);
+    $settings = entity_translation_settings($this->entityType, $bundle);
+    $translations = $this->getTranslations();
+    $form_langcode = $this->getFormLanguage();
+    $languages = entity_translation_languages($this->entityType, $this->entity);
+    $options = count($translations->data) > 1 || !empty($settings['exclude_language_none']) ? array() : array(LANGUAGE_NONE => t('Language neutral'));
+
+    foreach ($languages as $langcode => $language) {
+      // Disable languages for existing translations, so it is not possible to
+      // switch this entity to some language which is already in the translation
+      // set.
+      if (!isset($translations->data[$langcode]) || empty($translations->data[$langcode]['source'])) {
+        $options[$langcode] = t($language->name);
+      }
+    }
+
+    $langcode = $this->isNewEntity() ? $this->getDefaultLanguage() : $this->getLanguage();
+
+    $form[$this->getLanguageKey()] = array(
+      '#type' => 'select',
+      '#title' => t('Language'),
+      '#default_value' => $langcode,
+      '#options' => $options,
+      '#access' => empty($settings['hide_language_selector']),
+    );
+
+    if (!empty($form['actions']['submit']['#submit'])) {
+      $submit = &$form['actions']['submit']['#submit'];
+    }
+    else {
+      if (!isset($form['#submit'])) {
+        $form['#submit'] = array();
+      }
+      $submit = &$form['#submit'];
+    }
+
+    array_unshift($submit, 'entity_translation_language_widget_submit');
   }
 
   /**
@@ -1031,7 +1128,28 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     // Update the form language as it might have changed. We exploit the
     // validation phase to be sure to act as early as possible.
     if (isset($form_state['values']['language']) && !$this->isTranslationForm()) {
-      $this->setFormLanguage($form_state['values']['language']);
+      $this->setFormLanguage($form_state['values'][$this->getLanguageKey()]);
+    }
+  }
+
+  /**
+   * @see EntityTranslationHandlerInterface::entityFormLanguageWidgetSubmit()
+   */
+  function entityFormLanguageWidgetSubmit($form, &$form_state) {
+    $form_langcode = $this->getFormLanguage();
+    list(, , $bundle) = entity_extract_ids($this->entityType, $this->entity);
+
+    foreach (field_info_instances($this->entityType, $bundle) as $instance) {
+      $field_name = $instance['field_name'];
+      $field = field_info_field($field_name);
+      $previous_langcode = $form[$field_name]['#language'];
+
+      // Handle a possible language change: new language values are inserted,
+      // previous ones are deleted.
+      if ($field['translatable'] && $previous_langcode != $form_langcode) {
+        $form_state['values'][$field_name][$form_langcode] = $form_state['values'][$field_name][$previous_langcode];
+        $form_state['values'][$field_name][$previous_langcode] = array();
+      }
     }
   }
 
@@ -1039,10 +1157,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::entityFormSubmit()
    */
   public function entityFormSubmit($form, &$form_state) {
-    $langcode = $this->getLanguage();
     $form_langcode = $this->getFormLanguage();
     $translations = $this->getTranslations();
-    $is_translation = $this->isTranslationForm();
+    $is_translation = !empty($form_state['entity_translation']['is_translation']);
     $new_translation = !isset($translations->data[$form_langcode]);
     $values = isset($form_state['values']['translation']) ? $form_state['values']['translation'] : array();
 
@@ -1057,7 +1174,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     if (!isset($translations->data[$form_langcode])) {
       // If we have a new translation the language is the original entity
       // language.
-      $translation = $is_translation ? array('language' => $form_langcode, 'source' => $this->getSourceLanguage()) : array('language' => $langcode, 'source' => '');
+      $translation = $is_translation ? array('language' => $form_langcode, 'source' => $this->getSourceLanguage()) : array('language' => $form_langcode, 'source' => '');
     }
     else {
       $translation = $translations->data[$form_langcode];
@@ -1072,7 +1189,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
     // Handle possible language changes for the original values.
     if (!$is_translation) {
-      $this->setOriginalLanguage($langcode);
+      $this->setOriginalLanguage($form_langcode);
     }
 
     $translation['status'] = intval($values['status']);

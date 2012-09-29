@@ -62,6 +62,13 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
   }
 
   /**
+   * @see EntityTranslationDefaultHandler::entityFormLanguageWidgetSubmit()
+   */
+  function entityFormLanguageWidgetSubmit($form, &$form_state) {
+    // Do nothing. Locale already takes care of nodes.
+  }
+
+  /**
    * @see EntityTranslationDefaultHandler::entityFormSubmit()
    */
   public function entityFormSubmit($form, &$form_state) {

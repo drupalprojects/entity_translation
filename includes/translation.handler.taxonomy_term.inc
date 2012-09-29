@@ -24,9 +24,12 @@ class EntityTranslationTaxonomyTermHandler extends EntityTranslationDefaultHandl
     // Remove the translation fieldset when the deletion confirm form is being
     // displayed.
     if (isset($form_state['confirm_delete'])) {
-      unset($form['source_language']);
-      unset($form['translation']);
-      unset($form['actions']['delete_translation']);
+      unset(
+        $form[$this->getLanguageKey()],
+        $form['source_language'],
+        $form['translation'],
+        $form['actions']['delete_translation']
+      );
     }
   }
 }

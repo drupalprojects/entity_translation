@@ -9,6 +9,22 @@ module_load_include('inc', 'entity_translation', 'entity_translation.node');
 
 
 /**
+ * Language code identifying the site default language.
+ */
+define('ENTITY_TRANSLATION_LANGUAGE_DEFAULT', 'xx-et-default');
+
+/**
+ * Language code identifying the current content language.
+ */
+define('ENTITY_TRANSLATION_LANGUAGE_CURRENT', 'xx-et-current');
+
+/**
+ * Language code identifying the author's preferred language.
+ */
+define('ENTITY_TRANSLATION_LANGUAGE_AUTHOR', 'xx-et-author');
+
+
+/**
  * Implements hook_hook_info().
  */
 function entity_translation_hook_info() {
@@ -59,6 +75,11 @@ function entity_translation_entity_info() {
         'access callback' => 'entity_translation_node_tab_access',
         'access arguments' => array(1),
         'admin theme' => variable_get('node_admin_theme'),
+        'bundle callback' => 'entity_translation_node_supported_type',
+        'default settings' => array(
+          'default_language' => LANGUAGE_NONE,
+          'hide_language_selector' => FALSE,
+        ),
       ),
     ),
   );
@@ -69,6 +90,11 @@ function entity_translation_entity_info() {
         'entity_translation' => array(
           'class' => 'EntityTranslationCommentHandler',
           'admin theme' => FALSE,
+          'bundle callback' => 'entity_translation_comment_supported_type',
+          'default settings' => array(
+            'default_language' => ENTITY_TRANSLATION_LANGUAGE_CURRENT,
+            'hide_language_selector' => TRUE,
+          ),
         ),
       ),
     );
@@ -89,6 +115,7 @@ function entity_translation_entity_info() {
   $info['user'] = array(
     'translation' => array(
       'entity_translation' => array(
+        'class' => 'EntityTranslationUserHandler',
         'skip original values access' => TRUE,
       ),
     ),
@@ -350,6 +377,10 @@ function entity_translation_menu_alter(&$items) {
           );
 
           $entity_position = array_search($scheme['path wildcard'], $scheme['translate path parts']);
+
+          if ($item['access callback'] == 'entity_translation_tab_access') {
+            $item['access arguments'][] = $entity_position;
+          }
 
           // Backup existing values for the translate overview page.
           if (isset($items[$translate_path])) {
@@ -642,8 +673,13 @@ function entity_translation_admin_paths() {
 /**
  * Access callback.
  */
-function entity_translation_tab_access($entity_type) {
-  return drupal_multilingual() && (user_access('translate any entity') || user_access("translate $entity_type entities"));
+function entity_translation_tab_access($entity_type, $entity) {
+  if (drupal_multilingual() && (user_access('translate any entity') || user_access("translate $entity_type entities"))) {
+    list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+    $enabled = entity_translation_enabled_bundle($entity_type, $bundle);
+    return $enabled && entity_translation_get_handler($entity_type, $entity)->getLanguage() != LANGUAGE_NONE;
+  }
+  return FALSE;
 }
 
 /**
@@ -733,6 +769,38 @@ function entity_translation_entity_load($entities, $entity_type) {
   if (entity_translation_enabled($entity_type)) {
     EntityTranslationDefaultHandler::loadMultiple($entity_type, $entities);
   }
+}
+
+/**
+ * Implements hook_field_extra_fields().
+ */
+function entity_translation_field_extra_fields() {
+  $extra = array();
+  $enabled = variable_get('entity_translation_entity_types', array());
+  $info = entity_get_info();
+
+  foreach ($enabled as $entity_type) {
+    if (entity_translation_enabled($entity_type)) {
+      $bundles = !empty($info[$entity_type]['bundles']) ? array_keys($info[$entity_type]['bundles']) : array($entity_type);
+      foreach ($bundles as $bundle) {
+        $settings = entity_translation_settings($entity_type, $bundle);
+        $language_key = entity_translation_get_handler($entity_type, $bundle)->getLanguageKey();
+        if (empty($settings['hide_language_selector'])) {
+          $extra[$entity_type][$bundle] = array(
+            'form' => array(
+              $language_key => array(
+                'label' => t('Language'),
+                'description' => t('Entity Translation module element'),
+                'weight' => 5,
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  return $extra;
 }
 
 /**
@@ -1222,8 +1290,16 @@ function _entity_translation_element_title_append(&$element, $suffix) {
  * Implements hook_form_alter().
  */
 function entity_translation_form_alter(&$form, &$form_state) {
-  if (($handler = entity_translation_entity_form_get_handler($form, $form_state)) && !$handler->isNewEntity()) {
-    $handler->entityForm($form, $form_state);
+  if ($handler = entity_translation_entity_form_get_handler($form, $form_state)) {
+    if (!$handler->isNewEntity()) {
+      $handler->entityForm($form, $form_state);
+    }
+    else {
+      $handler->entityFormLanguageWidget($form, $form_state);
+    }
+    // We need to process the posted form as early as possible to update the
+    // form language value.
+    array_unshift($form['#validate'], 'entity_translation_entity_form_validate');
   }
 }
 
@@ -1253,6 +1329,14 @@ function entity_translation_entity_form_delete_translation_submit($form, &$form_
 function entity_translation_entity_form_validate($form, &$form_state) {
   $handler = entity_translation_entity_form_get_handler($form, $form_state);
   $handler->entityFormValidate($form, $form_state);
+}
+
+/**
+ * Submit handler for the entity language widget.
+ */
+function entity_translation_language_widget_submit($form, &$form_state) {
+  $handler = entity_translation_entity_form_get_handler($form, $form_state);
+  $handler->entityFormLanguageWidgetSubmit($form, $form_state);
 }
 
 /**
@@ -1413,6 +1497,37 @@ function entity_translation_enabled($entity_type, $skip_handler = FALSE) {
 }
 
 /**
+ * Helper function. Determines whether the given entity bundle is translatable.
+ */
+function entity_translation_enabled_bundle($entity_type, $bundle) {
+  $info = entity_get_info($entity_type);
+  $bundle_callback = isset($info['translation']['entity_translation']['bundle callback']) ? $info['translation']['entity_translation']['bundle callback'] : FALSE;
+  return empty($bundle_callback) || call_user_func($bundle_callback, $bundle);
+}
+
+/**
+ * Return the entity translation settings for the given entity type and bundle.
+ */
+function entity_translation_settings($entity_type, $bundle) {
+  $settings = variable_get('entity_translation_settings_' . $entity_type . '__' . $bundle, array());
+
+  if (empty($settings)) {
+    $info = entity_get_info($entity_type);
+    if (!empty($info['translation']['entity_translation']['default settings'])) {
+      $settings = $info['translation']['entity_translation']['default settings'];
+    }
+  }
+
+  $settings += array(
+    'default_language' => ENTITY_TRANSLATION_LANGUAGE_DEFAULT,
+    'hide_language_selector' => TRUE,
+    'exclude_language_none' => FALSE,
+  );
+
+  return $settings;
+}
+
+/**
  * Entity language callback.
  *
  * This callback changes the entity language from the actual one to the active
@@ -1452,7 +1567,7 @@ function entity_translation_language($entity_type, $entity) {
     $langcode = $handler->getLanguage();
     $handler->setEntity($entity);
     $submitted_langcode = $handler->getLanguage();
-    // If the entity language has changed we are editing tha original values. In
+    // If the entity language has changed we are editing the original values. In
     // this case we need to update the current form language with the submitted
     // one.
     if ($submitted_langcode != $langcode) {
@@ -1470,7 +1585,8 @@ function entity_translation_language($entity_type, $entity) {
  * @param $entity_type
  *   (optional) The type of $entity; e.g. 'node' or 'user'.
  * @param $entity
- *   (optional) The entity to be translated.
+ *   (optional) The entity to be translated. A bundle name may be passed to
+ *   instantiate an empty entity.
  * @param $update
  *   (optional) Instances are statically cached: if this is TRUE the wrapped
  *   entity will be replaced by the passed one.
@@ -1496,6 +1612,9 @@ function entity_translation_get_handler($entity_type = NULL, $entity = NULL, $up
     else {
       return NULL;
     }
+  }
+  elseif (is_string($entity)) {
+    $entity = entity_create_stub_entity($entity_type, array(NULL, NULL, $entity));
   }
 
   list($entity_id) = entity_extract_ids($entity_type, $entity);
