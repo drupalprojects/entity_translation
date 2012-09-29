@@ -236,6 +236,11 @@ interface EntityTranslationHandlerInterface {
   public function isNewEntity();
 
   /**
+   * Returns TRUE whether we are displying an entity form.
+   */
+  public function isEntityForm();
+
+  /**
    * Performs the needed alterations to the entity form.
    */
   public function entityForm(&$form, &$form_state);
@@ -276,6 +281,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   protected $entityInfo;
   protected $entityId;
 
+  private $entityForm;
   private $translating;
   private $outdated;
   private $formLanguage;
@@ -307,6 +313,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $this->entityId = $entity_id;
     $this->setEntity($entity);
 
+    $this->entityForm = FALSE;
     $this->translating = FALSE;
     $this->outdated = FALSE;
     $this->formLanguage = FALSE;
@@ -896,9 +903,17 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   /**
+   * @see EntityTranslationHandlerInterface::isEntityForm()
+   */
+  public function isEntityForm() {
+    return $this->entityForm;
+  }
+
+  /**
    * @see EntityTranslationHandlerInterface::entityForm()
    */
   public function entityForm(&$form, &$form_state) {
+    $this->entityForm = TRUE;
     $translations = $this->getTranslations();
     $form_langcode = $this->getFormLanguage();
     $langcode = $this->getLanguage();
