@@ -120,6 +120,12 @@ function entity_translation_admin_form($form, $form_state) {
           '#title' => t('Exclude <em>Language neutral</em> from the available languages'),
           '#default_value' => $settings['exclude_language_none'],
         );
+
+        $form['settings'][$entity_type][$settings_key]['lock_language'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Prevent language from being changed once the entity has been created'),
+          '#default_value' => $settings['lock_language'],
+        );
       }
     }
 

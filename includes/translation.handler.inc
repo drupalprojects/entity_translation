@@ -966,14 +966,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $this->entityFormLanguageWidget($form, $form_state);
 
     if ($is_translation) {
-      // If we are editing a translation set the correct value in the language
-      // widget and not current one.
-      // @todo Consider supporting the ability to change translation language.
-      $form['language']['#title'] = t('Original language');
-      $form['language']['#options'][$langcode] = $languages[$langcode]->name;
-      $form['language']['#default_value'] = $langcode;
-      $form['language']['#disabled'] = TRUE;
-
       // Replace the delete button with the delete translation one.
       if (!$new_translation) {
         $weight = 100;
@@ -1093,6 +1085,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     list(, , $bundle) = entity_extract_ids($this->entityType, $this->entity);
     $settings = entity_translation_settings($this->entityType, $bundle);
     $translations = $this->getTranslations();
+    $is_new = $this->isNewEntity();
+    $is_translation = !$is_new && !empty($form_state['entity_translation']['is_translation']);
     $form_langcode = $this->getFormLanguage();
     $languages = entity_translation_languages($this->entityType, $this->entity);
     $options = count($translations->data) > 1 || !empty($settings['exclude_language_none']) ? array() : array(LANGUAGE_NONE => t('Language neutral'));
@@ -1106,7 +1100,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       }
     }
 
-    $langcode = $this->isNewEntity() ? $this->getDefaultLanguage() : $this->getLanguage();
+    $langcode = $is_new ? $this->getDefaultLanguage() : $this->getLanguage();
 
     $form[$this->getLanguageKey()] = array(
       '#type' => 'select',
@@ -1114,6 +1108,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       '#default_value' => $langcode,
       '#options' => $options,
       '#access' => empty($settings['hide_language_selector']),
+      '#disabled' => $is_translation || (!$is_new && !empty($settings['lock_language'])),
     );
 
     if (!empty($form['actions']['submit']['#submit'])) {
@@ -1124,6 +1119,11 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         $form['#submit'] = array();
       }
       $submit = &$form['#submit'];
+    }
+
+    if ($is_translation) {
+      // @todo Consider supporting the ability to change translation language.
+      $form['language']['#title'] = t('Original language');
     }
 
     array_unshift($submit, 'entity_translation_language_widget_submit');

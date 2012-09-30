@@ -1521,6 +1521,7 @@ function entity_translation_settings($entity_type, $bundle) {
     'default_language' => ENTITY_TRANSLATION_LANGUAGE_DEFAULT,
     'hide_language_selector' => TRUE,
     'exclude_language_none' => FALSE,
+    'lock_language' => FALSE,
   );
 
   return $settings;

@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1679736 by plach | renat: Provided an option to lock the original language.
 #1798460 by plach: Made the translate operation contextual.
 #1280546 by plach: Introduced a language selection widget for every entity.
 #1676716 by plach | quiptime: Do not list entity types that do not integrate
