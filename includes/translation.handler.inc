@@ -280,6 +280,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   protected $entity;
   protected $entityInfo;
   protected $entityId;
+  protected $bundle;
 
   private $entityForm;
   private $translating;
@@ -304,13 +305,10 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    *   The entity information for the entity being wrapped.
    * @param $entity
    *   The entity being wrapped.
-   * @param $entity_id
-   *   The identifier of the entity being wrapped.
    */
-  public function __construct($entity_type, $entity_info, $entity, $entity_id) {
+  public function __construct($entity_type, $entity_info, $entity) {
     $this->entityType = $entity_type;
     $this->entityInfo = $entity_info;
-    $this->entityId = $entity_id;
     $this->setEntity($entity);
 
     $this->entityForm = FALSE;
@@ -492,8 +490,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
     if (is_array($values)) {
       // Update field translations.
-      list(, , $bundle) = entity_extract_ids($this->entityType, $this->entity);
-      foreach (field_info_instances($this->entityType, $bundle) as $instance) {
+      foreach (field_info_instances($this->entityType, $this->bundle) as $instance) {
         $field_name = $instance['field_name'];
         $field = field_info_field($field_name);
         if ($field['translatable'] && isset($values[$field_name])) {
@@ -524,10 +521,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       $this->entity->{$translations_key}->data = array();
     }
 
-    list(, , $bundle) = entity_extract_ids($this->entityType, $this->entity);
-
     // Remove field translations.
-    foreach (field_info_instances($this->entityType, $bundle) as $instance) {
+    foreach (field_info_instances($this->entityType, $this->bundle) as $instance) {
       $field_name = $instance['field_name'];
       $field = field_info_field($field_name);
 
@@ -585,9 +580,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   public function initOriginalTranslation() {
     $fixed = FALSE;
     $translations = $this->getTranslations();
-    list(, , $bundle) = entity_extract_ids($this->entityType, $this->entity);
 
-    foreach (field_info_instances($this->entityType, $bundle) as $instance) {
+    foreach (field_info_instances($this->entityType, $this->bundle) as $instance) {
       $field_name = $instance['field_name'];
       $field = field_info_field($field_name);
       $langcode = count($this->entity->{$field_name}) == 1 ? key($this->entity->{$field_name}) : $translations->original;
@@ -635,8 +629,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::getDefaultLanguage()
    */
   public function getDefaultLanguage() {
-    list(, , $bundle) = entity_extract_ids($this->entityType, $this->entity);
-    $settings = variable_get('entity_translation_settings_' . $this->entityType . '__' . $bundle, array());
+    $settings = variable_get('entity_translation_settings_' . $this->entityType . '__' . $this->bundle, array());
 
     if (!empty($settings['default_language'])) {
       switch ($settings['default_language']) {
@@ -712,6 +705,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     if (!isset($this->entity->{$translations_key})) {
       $this->entity->{$translations_key} = self::emptyTranslations();
     }
+
+    // Update bundle and entity id properties.
+    list($this->entityId, , $this->bundle) = entity_extract_ids($this->entityType, $this->entity);
   }
 
   /**
@@ -1101,8 +1097,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::entityFormLanguageWidget()
    */
   public function entityFormLanguageWidget(&$form, &$form_state) {
-    list(, , $bundle) = entity_extract_ids($this->entityType, $this->entity);
-    $settings = entity_translation_settings($this->entityType, $bundle);
+    $settings = entity_translation_settings($this->entityType, $this->bundle);
     $translations = $this->getTranslations();
     $is_new = $this->isNewEntity();
     $is_translation = !$is_new && !empty($form_state['entity_translation']['is_translation']);
@@ -1171,9 +1166,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   function entityFormLanguageWidgetSubmit($form, &$form_state) {
     $form_langcode = $this->getFormLanguage();
-    list(, , $bundle) = entity_extract_ids($this->entityType, $this->entity);
 
-    foreach (field_info_instances($this->entityType, $bundle) as $instance) {
+    foreach (field_info_instances($this->entityType, $this->bundle) as $instance) {
       $field_name = $instance['field_name'];
       $field = field_info_field($field_name);
       $previous_langcode = $form[$field_name]['#language'];
