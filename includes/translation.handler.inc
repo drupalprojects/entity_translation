@@ -921,6 +921,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $new_translation = !isset($translations->data[$form_langcode]);
     $no_translations = count($translations->data) < 2;
     $languages = language_list();
+    $access = user_access('translate any entity') || user_access("translate $this->entityType entities");
 
     // The only way to determine whether we are editing the original values is
     // comparing form language and entity language. Since a language change
@@ -944,6 +945,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         '#collapsed' => TRUE,
         '#tree' => TRUE,
         '#weight' => -100,
+        '#access' => $access,
         'language' => array(
           '#type' => 'select',
           '#default_value' => $this->getSourceLanguage(),
@@ -997,7 +999,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         '#collapsed' => TRUE,
         '#tree' => TRUE,
         '#weight' => 10,
-        '#access' => user_access('translate any entity') || user_access("translate $this->entityType entities"),
+        '#access' => $access,
       );
 
       $status = $new_translation || $translations->data[$form_langcode]['status'];
@@ -1075,6 +1077,23 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     // action-specific submit handlers prevent global ones from being called.
     if (!empty($form['actions']['delete']['#submit'])) {
       $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_submit';
+    }
+
+    // Hide shared fields if the user is not allowed to edit them.
+    $this->entityFormAccess($form, user_access('edit translation shared fields') || user_access("edit $this->entityType translation shared fields"));
+  }
+
+  /**
+   * Assign the given access to the form elements not defining one yet.
+   */
+  protected function entityFormAccess(&$form, $access) {
+    if (!$access) {
+      $allowed_types = array_flip(array('actions', 'container', 'value', 'hidden', 'vertical_tabs'));
+      foreach (element_children($form) as $key) {
+        if (!isset($form[$key]['#access']) && !isset($allowed_types[$form[$key]['#type']])) {
+          $form[$key]['#access'] = $access;
+        }
+      }
     }
   }
 

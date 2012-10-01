@@ -712,13 +712,13 @@ function entity_translation_permission() {
       'title' => t('Toggle field translatability'),
       'description' => t('Toggle translatability of fields performing a bulk update.'),
     ),
-    'edit translation shared fields' => array(
-      'title' => t('Edit shared fields'),
-      'description' => t('Edit fields shared between translations on the translation form.'),
-    ),
     'translate any entity' => array(
       'title' => t('Translate any entity'),
       'description' => t('Translate field content for any fieldable entity.'),
+    ),
+    'edit translation shared fields' => array(
+      'title' => t('Edit shared fields'),
+      'description' => t('Edit fields shared between translations on the translation form.'),
     ),
     'edit original values' => array(
       'title' => t('Edit original values'),
@@ -742,6 +742,11 @@ function entity_translation_permission() {
       $permission["edit $entity_type original values"] = array(
         'title' => t('Edit original values on entities of type @type', array('@type' => $label)),
         'description' => t('Access the edit form in the original language for entities of type @type.', array('@type' => $label)),
+      );
+
+      $permission["edit $entity_type translation shared fields"] = array(
+        'title' => t('Edit @type shared fields.', array('@type' => $label)),
+        'description' => t('Edit fields shared between translations on the @type translation form.', array('@type' => $label)),
       );
     }
   }
