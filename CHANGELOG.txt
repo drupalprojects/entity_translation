@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1800822 by plach, peximo | facine: Fixed Call to a member function
+  getLanguageKey() on a non-object.
 #1799770 by bforchhammer: Updated id and bundle when setting a wrapped entity.
 #1798456 by plach: Hide shared form elements when the user has not the related
   permission.

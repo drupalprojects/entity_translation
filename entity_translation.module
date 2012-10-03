@@ -790,13 +790,13 @@ function entity_translation_field_extra_fields() {
       $bundles = !empty($info[$entity_type]['bundles']) ? array_keys($info[$entity_type]['bundles']) : array($entity_type);
       foreach ($bundles as $bundle) {
         $settings = entity_translation_settings($entity_type, $bundle);
-        $language_key = entity_translation_get_handler($entity_type, $bundle)->getLanguageKey();
-        if (empty($settings['hide_language_selector'])) {
+        if (empty($settings['hide_language_selector']) && entity_translation_enabled_bundle($entity_type, $bundle) && ($handler = entity_translation_get_handler($entity_type, $bundle))) {
+          $language_key = $handler->getLanguageKey();
           $extra[$entity_type][$bundle] = array(
             'form' => array(
               $language_key => array(
                 'label' => t('Language'),
-                'description' => t('Entity Translation module element'),
+                'description' => t('Language selection'),
                 'weight' => 5,
               ),
             ),
