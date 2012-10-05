@@ -1260,7 +1260,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       foreach ($translations->data as $langcode => $translation) {
         if ($this->getTranslationAccess($langcode)) {
           $links = $this->languageSwitchLinks($this->getEditPath($langcode));
-          $link = is_object($links) ? $links->links[$langcode] : array();
+          $link = !empty($links->links[$langcode]) ? $links->links[$langcode] : array();
 
           if (isset($link['href'])) {
             $tab = array();

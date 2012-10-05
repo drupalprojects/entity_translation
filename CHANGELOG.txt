@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1803362 by Dave Reid: Fixed PHP notice: Undefined index: in
+  EntityTranslationDefaultHandler->localTasksAlter().
 #1800822 by plach, peximo | facine: Fixed Call to a member function
   getLanguageKey() on a non-object.
 #1799770 by bforchhammer: Updated id and bundle when setting a wrapped entity.
