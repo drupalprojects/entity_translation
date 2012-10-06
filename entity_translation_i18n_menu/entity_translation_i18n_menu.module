@@ -165,6 +165,8 @@ function entity_translation_i18n_menu_form(&$form, &$form_state) {
       $langcode = $handler->getFormLanguage();
       $language_name = isset($languages[$langcode]) ? t($languages[$langcode]->name) : t('current');
 
+      $form['menu']['#multilingual'] = TRUE;
+
       $form['menu']['link']['tset'] = array(
         '#type' => 'checkbox',
         '#title' => t('Menu link enabled only for the %language language', array('%language' => $language_name)),

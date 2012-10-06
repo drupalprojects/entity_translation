@@ -256,6 +256,11 @@ interface EntityTranslationHandlerInterface {
   public function entityFormLanguageWidgetSubmit($form, &$form_state);
 
   /**
+   * Handle shared form elements.
+   */
+  public function entityFormSharedElements(&$element);
+
+  /**
    * Performs validation tasks on the submitted entity forms.
    */
   public function entityFormValidate($form, &$form_state);
@@ -942,6 +947,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         '#tree' => TRUE,
         '#weight' => -100,
         '#access' => $access,
+        '#multilingual' => TRUE,
         'language' => array(
           '#type' => 'select',
           '#default_value' => $this->getSourceLanguage(),
@@ -996,6 +1002,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         '#tree' => TRUE,
         '#weight' => 10,
         '#access' => $access,
+        '#multilingual' => TRUE,
       );
 
       $status = $new_translation || $translations->data[$form_langcode]['status'];
@@ -1074,20 +1081,46 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     if (!empty($form['actions']['delete']['#submit'])) {
       $form['actions']['delete']['#submit'][] = 'entity_translation_entity_form_submit';
     }
-
-    // Hide shared fields if the user is not allowed to edit them.
-    $this->entityFormAccess($form, user_access('edit translation shared fields') || user_access("edit $this->entityType translation shared fields"));
   }
 
   /**
-   * Assign the given access to the form elements not defining one yet.
+   * @see EntityTranslationHandlerInterface::entityFormSharedElements()
+   *
+   * Either remove access or add a translatability clue depending on the current
+   * user's "edit translation shared fields" permissions.
    */
-  protected function entityFormAccess(&$form, $access) {
-    if (!$access) {
-      $allowed_types = array_flip(array('actions', 'container', 'value', 'hidden', 'vertical_tabs'));
-      foreach (element_children($form) as $key) {
-        if (!isset($form[$key]['#access']) && !isset($allowed_types[$form[$key]['#type']])) {
-          $form[$key]['#access'] = $access;
+  public function entityFormSharedElements(&$element) {
+    static $ignored_types, $shared_labels, $access;
+    if (!isset($ignored_types)) {
+      $ignored_types = array_flip(array('actions', 'value', 'hidden', 'vertical_tabs', 'token'));
+    }
+    if (!isset($shared_labels)) {
+      $shared_labels = variable_get('entity_translation_shared_labels', TRUE);
+    }
+    if (!isset($access)) {
+      $access = user_access('edit translation shared fields') || user_access("edit $this->entityType translation shared fields");
+    }
+
+    foreach (element_children($element) as $key) {
+      if (!isset($element[$key]['#type'])) {
+        $this->entityFormSharedElements($element[$key]);
+      }
+      else {
+        // Ignore non-widget form elements.
+        if (isset($ignored_types[$element[$key]['#type']])) {
+          continue;
+        }
+        // Elements are considered to be non multilingual by default.
+        if (!isset($element[$key]['#multilingual'])) {
+          $element[$key]['#multilingual'] = FALSE;
+        }
+        // Update #access only if it has not been set already.
+        if (!isset($element[$key]['#access'])) {
+          $element[$key]['#access'] = $access || $element[$key]['#multilingual'];
+        }
+        // Add translatability clue for visible elements.
+        if ($access && $shared_labels) {
+          _entity_translation_element_add_callback($element[$key], '#process', 'entity_translation_element_translatability_clue');
         }
       }
     }
@@ -1101,7 +1134,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $translations = $this->getTranslations();
     $is_new = $this->isNewEntity();
     $is_translation = !$is_new && !empty($form_state['entity_translation']['is_translation']);
-    $form_langcode = $this->getFormLanguage();
     $languages = entity_translation_languages($this->entityType, $this->entity);
     $options = count($translations->data) > 1 || !empty($settings['exclude_language_none']) ? array() : array(LANGUAGE_NONE => t('Language neutral'));
 
@@ -1123,6 +1155,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       '#options' => $options,
       '#access' => empty($settings['hide_language_selector']),
       '#disabled' => $is_translation || (!$is_new && !empty($settings['lock_language'])),
+      '#multilingual' => TRUE,
     );
 
     if (!empty($form['actions']['submit']['#submit'])) {

@@ -96,14 +96,14 @@ function entity_translation_install() {
 
   // Grant the 'edit original values' permission, so we don't break editing on
   // existing sites.
-  $msg = _entity_translation_grant_original_values_permissions();
+  $msg = _entity_translation_grant_edit_permissions();
   drupal_set_message($msg);
 }
 
 /**
  * Grant 'edit $type original values' permission to existing roles.
  */
-function _entity_translation_grant_original_values_permissions() {
+function _entity_translation_grant_edit_permissions() {
   $permissions = array();
 
   // Nodes.
@@ -129,8 +129,12 @@ function _entity_translation_grant_original_values_permissions() {
 
   $assignments = array();
   foreach ($permissions as $entity_type => $permissions_filter) {
-    $permission = "edit $entity_type original values";
-    $assignments[] = _entity_translation_grant_permission($permission, $permissions_filter);
+    if (entity_translation_enabled($entity_type)) {
+      $permission = "edit $entity_type original values";
+      $assignments[] = _entity_translation_grant_permission($permission, $permissions_filter);
+      $permission = "edit $entity_type translation shared fields";
+      $assignments[] = _entity_translation_grant_permission($permission, $permissions_filter);
+    }
   }
   $assignments = '<ul><li>' . implode('</li><li>', $assignments) . '</li></ul>';
 
@@ -230,10 +234,10 @@ function entity_translation_update_7001() {
 }
 
 /**
- * Grant 'edit original values' permission to roles which have entity editing permissions.
+ * Grant 'edit original values' and 'edit shared field' permissions to roles which have entity editing permissions.
  */
 function entity_translation_update_7002() {
-  return _entity_translation_grant_original_values_permissions();
+  return _entity_translation_grant_edit_permissions();
 }
 
 /**

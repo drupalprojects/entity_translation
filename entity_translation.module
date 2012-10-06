@@ -117,6 +117,7 @@ function entity_translation_entity_info() {
       'entity_translation' => array(
         'class' => 'EntityTranslationUserHandler',
         'skip original values access' => TRUE,
+        'skip shared fields access' => TRUE,
       ),
     ),
   );
@@ -727,7 +728,7 @@ function entity_translation_permission() {
   );
 
   foreach (entity_get_info() as $entity_type => $info) {
-    if ($info['fieldable']) {
+    if ($info['fieldable'] && entity_translation_enabled($entity_type)) {
       $label = !empty($info['label']) ? t($info['label']) : $entity_type;
       $permission["translate $entity_type entities"] = array(
         'title' => t('Translate entities of type @type', array('@type' => $label)),
@@ -735,19 +736,20 @@ function entity_translation_permission() {
       );
 
       // Avoid access control for original values on the current entity.
-      if (!empty($info['translation']['entity_translation']['skip original values access'])) {
-        continue;
+      if (empty($info['translation']['entity_translation']['skip original values access'])) {
+        $permission["edit $entity_type original values"] = array(
+          'title' => t('Edit original values on entities of type @type', array('@type' => $label)),
+          'description' => t('Access the edit form in the original language for entities of type @type.', array('@type' => $label)),
+        );
       }
 
-      $permission["edit $entity_type original values"] = array(
-        'title' => t('Edit original values on entities of type @type', array('@type' => $label)),
-        'description' => t('Access the edit form in the original language for entities of type @type.', array('@type' => $label)),
-      );
-
-      $permission["edit $entity_type translation shared fields"] = array(
-        'title' => t('Edit @type shared fields.', array('@type' => $label)),
-        'description' => t('Edit fields shared between translations on the @type translation form.', array('@type' => $label)),
-      );
+      // Avoid access control for shared fields on the current entity.
+      if (empty($info['translation']['entity_translation']['skip shared fields access'])) {
+        $permission["edit $entity_type translation shared fields"] = array(
+          'title' => t('Edit @type shared fields.', array('@type' => $label)),
+          'description' => t('Edit fields shared between translations on the @type translation form.', array('@type' => $label)),
+        );
+      }
     }
   }
 
@@ -1127,29 +1129,13 @@ function entity_translation_field_attach_form($entity_type, $entity, &$form, &$f
     // Handle fields shared between translations when there is at least one
     // translation available or a new one is being created.
     if (!$handler->isNewEntity() && ($new_translation || count($translations->data) > 1)) {
+      $access = user_access('edit translation shared fields') || user_access("edit $entity_type translation shared fields");
       list(, , $bundle) = entity_extract_ids($entity_type, $entity);
-
-      // Shared fields are visible if we are either editing the source node, or
-      // if the user has the respective permission.
-      $is_source = $langcode == $handler->getLanguage();
-      $shared_fields_visible = $is_source || user_access('edit translation shared fields');
-
       foreach (field_info_instances($entity_type, $bundle) as $instance) {
         $field_name = $instance['field_name'];
         $field = field_info_field($field_name);
-
-        if ($shared_fields_visible) {
-          // Add visual clues about translatability.
-          if (!isset($form[$field_name]['#process'])) {
-            $form[$field_name]['#process'] = array();
-          }
-          $form[$field_name]['#field_name'] = $field_name;
-          array_unshift($form[$field_name]['#process'], 'entity_translation_element_translatability_clue');
-        }
-        // Hide shared fields.
-        elseif (!$field['translatable']) {
-          $form[$field_name]['#access'] = FALSE;
-        }
+        $form[$field_name]['#access'] = !empty($form[$field_name]['#access']) && ($field['translatable'] || $access) ;
+        $form[$field_name]['#multilingual'] = (boolean) $field['translatable'];
       }
     }
 
@@ -1236,14 +1222,10 @@ function entity_translation_form_element_language_replace(&$element, $source, $l
  * shared between different translations. Moreover fields receive a CSS class to
  * distinguish between translatable and shared fields.
  */
-function entity_translation_element_translatability_clue($element, &$form_state, $form) {
-  $field_name = $element['#field_name'];
-  $field = field_info_field($field_name);
-
+function entity_translation_element_translatability_clue($element) {
   // Append language to element title.
-  if (variable_get('entity_translation_shared_labels', TRUE)) {
-    $suffix = $field['translatable'] ? '' : ' (' . t('shared field') . ')';
-    _entity_translation_element_title_append($element, $suffix);
+  if (empty($element['#multilingual'])) {
+    _entity_translation_element_title_append($element, ' (' . t('all languages') . ')');
   }
 
   // Add CSS class names.
@@ -1253,9 +1235,41 @@ function entity_translation_element_translatability_clue($element, &$form_state,
   if (!isset($element['#attributes']['class'])) {
     $element['#attributes']['class'] = array();
   }
-  $element['#attributes']['class'][] = 'entity-translation-' . ($field['translatable'] ? 'field-translatable' : 'field-shared');
+  $element['#attributes']['class'][] = 'entity-translation-' . ($element['#multilingual'] ? 'field-translatable' : 'field-shared');
 
   return $element;
+}
+
+/**
+ * Adds a callback function to the given FAPI element.
+ *
+ * Drupal core only adds default element callbacks if the respective handler
+ * type is not defined yet. This function ensures that our callback is only
+ * prepended/appended to the default set of callbacks instead of replacing it.
+ *
+ * @param $element
+ *   The FAPI element.
+ * @param $type
+ *   The callback type, e.g. '#pre_render' or '#process'.
+ * @param $function
+ *   The name of the callback to add.
+ * @param $prepend
+ *   Set to TRUE to add the new callback to the beginning of the existing set of
+ *   callbacks, and set it to FALSE to append it at the end.
+ */
+function _entity_translation_element_add_callback(&$element, $type, $function, $prepend = TRUE) {
+  // If handler type has not been set, add defaults from element_info().
+  if (!isset($element[$type])) {
+    $element_type = isset($element['#type']) ? $element['#type'] : 'markup';
+    $element_info = element_info($element_type);
+    $element[$type] = isset($element_info[$type]) ? $element_info[$type] : array();
+  }
+  if ($prepend) {
+    array_unshift($element[$type], $function);
+  }
+  else {
+    $element[$type][] = $function;
+  }
 }
 
 /**
@@ -1299,6 +1313,8 @@ function entity_translation_form_alter(&$form, &$form_state) {
   if ($handler = entity_translation_entity_form_get_handler($form, $form_state)) {
     if (!$handler->isNewEntity()) {
       $handler->entityForm($form, $form_state);
+      // Hide shared form elements if the user is not allowed to edit them.
+      $handler->entityFormSharedElements($form);
     }
     else {
       $handler->entityFormLanguageWidget($form, $form_state);

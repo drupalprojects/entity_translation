@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1798456 by plach, bforchhammer, Berdir: Hide shared form elements when the user
+  does not have the related permission (follow up).
 #1803362 by Dave Reid: Fixed PHP notice: Undefined index: in
   EntityTranslationDefaultHandler->localTasksAlter().
 #1800822 by plach, peximo | facine: Fixed Call to a member function
