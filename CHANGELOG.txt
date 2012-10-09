@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1807698 by peximo: Added Hide node translation links.
 #1798456 by plach, bforchhammer, Berdir: Hide shared form elements when the user
   does not have the related permission (follow up).
 #1803362 by Dave Reid: Fixed PHP notice: Undefined index: in

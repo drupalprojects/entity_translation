@@ -116,6 +116,20 @@ function entity_translation_node_view($node, $build_mode) {
 }
 
 /**
+ * Implements hook_node_view_alter().
+ */
+function entity_translation_node_view_alter(&$build) {
+  $node = $build['#node'];
+
+  // Hide node translation links.
+  if (variable_get("entity_translation_hide_translation_links_{$node->type}", FALSE)) {
+    if (isset($build['links']['translation'])) {
+      unset($build['links']['translation']);
+    }
+  }
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  *
  * Provides settings into the node content type form to choose for entity
@@ -127,6 +141,12 @@ function entity_translation_form_node_type_form_alter(&$form, &$form_state) {
   $t_args = array('!url' => url('admin/config/regional/entity_translation'));
   $form['workflow']['language_content_type']['#options'][ENTITY_TRANSLATION_ENABLED] = t('Enabled, with field translation');
   $form['workflow']['language_content_type']['#description'] .= ' <p>' . t('If field translation is selected you can have per-field translation for each available language. You can find more options in the <a href="!url">entity translation settings</a>.', $t_args) . '</p>';
+  $form['workflow']['entity_translation_hide_translation_links'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get("entity_translation_hide_translation_links_$type", FALSE),
+    '#title' => t('Hide content translation links'),
+    '#description' => t('Hide the links to translations in content body and teasers. If you choose this option, switching language will only be available from the language switcher block.'),
+  );
 
   $form['display']['entity_translation_node_metadata'] = array(
     '#type' => 'radios',
