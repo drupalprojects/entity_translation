@@ -73,14 +73,14 @@ class entity_translation_handler_field_translate_link extends views_handler_fiel
     $entity_id = $this->get_value($values, 'entity_id');
     $language = $this->get_value($values, 'language');
     $entity = $this->entities[$type][$entity_id];
-    return $this->render_link($type, $entity_id, $language);
+    return $this->render_link($type, $entity_id, $entity, $language);
   }
 
   /**
    * Render the link to the translation overview page of the entity.
    */
-  function render_link($entity_type, $entity_id, $language) {
-    if (!entity_translation_enabled($entity_type) || !entity_translation_tab_access($entity_type) || $language == 'und') {
+  function render_link($entity_type, $entity_id, $entity, $language) {
+    if (!entity_translation_enabled($entity_type) || !entity_translation_tab_access($entity_type, $entity) || $language == 'und') {
       return;
     }
     // We use the entity info here to avoid having to call entity_load() for all
