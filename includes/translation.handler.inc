@@ -206,6 +206,11 @@ interface EntityTranslationHandlerInterface {
   public function getTranslationAccess($langcode);
 
   /**
+   * Checks if a user is allowed to edit shared fields on the active form.
+   */
+  public function getSharedFieldsAccess();
+
+  /**
    * Return TRUE if the entity supports URL aliasing.
    */
   public function isAliasEnabled();
@@ -861,6 +866,15 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   /**
+   * @see EntityTranslationHandlerInterface::getSharedFieldsAccess()
+   */
+  public function getSharedFieldsAccess() {
+    $settings = entity_translation_settings($this->entityType, $this->bundle);
+    return (user_access('edit translation shared fields') || user_access("edit {$this->entityType} translation shared fields"))
+      && ($settings['shared_fields_original_only'] == FALSE || $this->getLanguage() == $this->getFormLanguage());
+  }
+
+  /**
    * @see EntityTranslationHandlerInterface::isAliasEnabled()
    */
   public function isAliasEnabled() {
@@ -1098,7 +1112,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       $shared_labels = variable_get('entity_translation_shared_labels', TRUE);
     }
     if (!isset($access)) {
-      $access = user_access('edit translation shared fields') || user_access("edit $this->entityType translation shared fields");
+      $access = $this->getSharedFieldsAccess();
     }
 
     foreach (element_children($element) as $key) {
@@ -1111,12 +1125,10 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
           continue;
         }
         // Elements are considered to be non multilingual by default.
-        if (!isset($element[$key]['#multilingual'])) {
-          $element[$key]['#multilingual'] = FALSE;
-        }
-        // Update #access only if it has not been set already.
-        if (!isset($element[$key]['#access'])) {
-          $element[$key]['#access'] = $access || $element[$key]['#multilingual'];
+        // Update #access only if it has not been set already or if we have
+        // explicit mlutilingual support.
+        if (!isset($element[$key]['#access']) || isset($element[$key]['#multilingual'])) {
+          $element[$key]['#access'] = (!isset($element[$key]['#access']) || $element[$key]['#access']) && ($access || !empty($element[$key]['#multilingual']));
         }
         // Add translatability clue for visible elements.
         if ($access && $shared_labels) {
@@ -1147,8 +1159,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
 
     $langcode = $is_new ? $this->getDefaultLanguage() : $this->getLanguage();
+    $language_key = $this->getLanguageKey();
 
-    $form[$this->getLanguageKey()] = array(
+    $form[$language_key] = array(
       '#type' => 'select',
       '#title' => t('Language'),
       '#default_value' => $langcode,
@@ -1170,7 +1183,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
     if ($is_translation) {
       // @todo Consider supporting the ability to change translation language.
-      $form['language']['#title'] = t('Original language');
+      $form[$language_key]['#title'] = t('Original language');
     }
 
     array_unshift($submit, 'entity_translation_language_widget_submit');

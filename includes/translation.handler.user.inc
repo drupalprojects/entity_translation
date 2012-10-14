@@ -16,6 +16,16 @@ class EntityTranslationUserHandler extends EntityTranslationDefaultHandler {
   }
 
   /**
+   * @see EntityTranslationDefaultHandler::entityForm()
+   */
+  public function entityForm(&$form, &$form_state) {
+    parent::entityForm($form, $form_state);
+    $form['picture']['#multilingual'] = FALSE;
+    $form['locale']['#multilingual'] = FALSE;
+    $form['locale']['#title'] = t('Preferred language settings');
+  }
+
+  /**
    * @see EntityTranslationDefaultHandler::getLanguageKey()
    */
   public function getLanguageKey() {

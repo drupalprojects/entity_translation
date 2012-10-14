@@ -21,7 +21,7 @@ function entity_translation_admin_form($form, $form_state) {
   $form['entity_translation_shared_labels'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display shared labels'),
-    '#description' => t('Append a "Shared field" hint to entity form widgets shared accross translations.'),
+    '#description' => t('Append an "all languages" hint to entity form widgets shared accross translations.'),
     '#default_value' => variable_get('entity_translation_shared_labels', TRUE),
   );
 
@@ -90,15 +90,15 @@ function entity_translation_admin_form($form, $form_state) {
         $enabled_bundles++;
         $settings = entity_translation_settings($entity_type, $bundle);
         $settings_key = 'entity_translation_settings_' . $entity_type . '__' . $bundle;
+        $form['settings'][$entity_type][$settings_key] = array('#tree' => TRUE);
 
         // If the entity defines no bundle we do not need the fieldset.
         if (count($bundles) > 1 || $bundle != $entity_type) {
-          $form['settings'][$entity_type][$settings_key] = array(
+          $form['settings'][$entity_type][$settings_key] += array(
             '#type' => 'fieldset',
             '#title' => $info['label'],
             '#collapsible' => TRUE,
             '#collapsed' => TRUE,
-            '#tree' => TRUE,
           );
         }
 
@@ -125,6 +125,13 @@ function entity_translation_admin_form($form, $form_state) {
           '#type' => 'checkbox',
           '#title' => t('Prevent language from being changed once the entity has been created'),
           '#default_value' => $settings['lock_language'],
+        );
+
+        $form['settings'][$entity_type][$settings_key]['shared_fields_original_only'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Hide shared fields on translation forms'),
+          '#description' => t('Display shared fields only on entity forms for the original language.'),
+          '#default_value' => $settings['shared_fields_original_only'],
         );
       }
     }

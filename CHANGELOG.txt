@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1770748 by bforchhammer, plach: Option to display shared fields only when
+  editing the original values.
 #1811672 by joelrosen: Fixed Entity translation stuff showing on content types
   with multilingual support disabled.
 #1810322 by Dave Reid: Fixed Fatal error when using the translate link field
