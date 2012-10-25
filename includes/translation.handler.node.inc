@@ -78,7 +78,8 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
    */
   public function entityFormSubmit($form, &$form_state) {
     if (!isset($form_state['values']['translation'])) {
-      $form_state['values']['translation'] = array('status' => $form_state['values']['status']);
+      // Always publish the original values when we have no translations.
+      $form_state['values']['translation'] = array('status' => TRUE);
     }
     $values = &$form_state['values']['translation'];
 

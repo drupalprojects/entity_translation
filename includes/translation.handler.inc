@@ -1019,13 +1019,16 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         '#multilingual' => TRUE,
       );
 
+      // A new translation is enabled by default.
       $status = $new_translation || $translations->data[$form_langcode]['status'];
-      $enabled = !$status;
       // If there is only one published translation we cannot unpublish it,
       // since there would be no content left to display. The whole entity
       // should be unpublished instead, where possible.
+      $enabled = !$status;
       if (!empty($status)) {
-        $published = 0;
+        // A new translation is not available in the translation data hence it
+        // should count as one more.
+        $published = $new_translation;
         foreach ($translations->data as $langcode => $translation) {
           $published += $translation['status'];
         }
