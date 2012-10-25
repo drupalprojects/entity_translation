@@ -1200,6 +1200,13 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::entityFormValidate()
    */
   public function entityFormValidate($form, &$form_state) {
+    // By default do nothing: subclasses may want to add some logic here.
+  }
+
+  /**
+   * Update the current form language based on the submitted value.
+   */
+  protected function updateFormLanguage($form_state) {
     // Update the form language as it might have changed. We exploit the
     // validation phase to be sure to act as early as possible.
     if (isset($form_state['values']['language']) && !$this->isTranslationForm()) {
@@ -1211,6 +1218,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::entityFormLanguageWidgetSubmit()
    */
   function entityFormLanguageWidgetSubmit($form, &$form_state) {
+    $this->updateFormLanguage($form_state);
     $form_langcode = $this->getFormLanguage();
 
     foreach (field_info_instances($this->entityType, $this->bundle) as $instance) {

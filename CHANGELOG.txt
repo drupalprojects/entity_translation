@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1819844 by plach | bforchhammer, renat: Fixed Incompatibility with fields with
+  unlimited number of values introduced in ET -dev.
 #1818620 by bforchhammer, plach | renat: Fixed fatal error when creating a node
   which has a field_collection field.
 #1820742 by mkalkbrenner, plach: Fixed parameter $langcode of core function
