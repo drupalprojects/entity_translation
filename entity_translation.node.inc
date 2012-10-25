@@ -232,7 +232,7 @@ function entity_translation_comment_supported_type($comment_type) {
  */
 function entity_translation_query_comment_filter_alter(QueryAlterableInterface $query) {
   $node = $query->getMetaData('node');
-  if (variable_get("entity_translation_comment_filter_{$node->type}", FALSE)) {
+  if (!empty($node->type) && variable_get("entity_translation_comment_filter_{$node->type}", FALSE)) {
     // Determine alias for "comment" table.
     $comment_alias = FALSE;
     foreach ($query->getTables() as $table) {

@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1820910 by plach | astutonet: Fixed Notices when trying to filter comments by
+  language.
 #1770748 by bforchhammer, plach: Option to display shared fields only when
   editing the original values.
 #1811672 by joelrosen: Fixed Entity translation stuff showing on content types
