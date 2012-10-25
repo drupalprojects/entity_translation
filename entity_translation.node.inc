@@ -88,7 +88,7 @@ function entity_translation_node_supported_type($type) {
  * Provides content language switcher links to navigate among node translations.
  */
 function entity_translation_node_view($node, $build_mode, $langcode) {
-  if (!empty($node->translations) && drupal_multilingual() && entity_translation_node_supported_type($node->type)) {
+  if (!empty($node->translations) && drupal_multilingual() && entity_translation_node_supported_type($node->type) && !variable_get("entity_translation_hide_translation_links_{$node->type}", FALSE)) {
     $path = 'node/' . $node->nid;
     $links = EntityTranslationDefaultHandler::languageSwitchLinks($path);
 
@@ -111,20 +111,6 @@ function entity_translation_node_view($node, $build_mode, $langcode) {
         '#links' => $links->links,
         '#attributes' => array('class' => 'links inline'),
       );
-    }
-  }
-}
-
-/**
- * Implements hook_node_view_alter().
- */
-function entity_translation_node_view_alter(&$build) {
-  $node = $build['#node'];
-
-  // Hide node translation links.
-  if (variable_get("entity_translation_hide_translation_links_{$node->type}", FALSE)) {
-    if (isset($build['links']['translation'])) {
-      unset($build['links']['translation']);
     }
   }
 }
