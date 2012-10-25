@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1818620 by bforchhammer, plach | renat: Fixed fatal error when creating a node
+  which has a field_collection field.
 #1820742 by mkalkbrenner, plach: Fixed parameter $langcode of core function
   node_view() ignored.
 #1820910 by plach | astutonet: Fixed Notices when trying to filter comments by
