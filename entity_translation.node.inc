@@ -87,7 +87,7 @@ function entity_translation_node_supported_type($type) {
  *
  * Provides content language switcher links to navigate among node translations.
  */
-function entity_translation_node_view($node, $build_mode) {
+function entity_translation_node_view($node, $build_mode, $langcode) {
   if (!empty($node->translations) && drupal_multilingual() && entity_translation_node_supported_type($node->type)) {
     $path = 'node/' . $node->nid;
     $links = EntityTranslationDefaultHandler::languageSwitchLinks($path);
@@ -97,7 +97,7 @@ function entity_translation_node_view($node, $build_mode) {
       $translations = $handler->getTranslations()->data;
 
       // Remove the link for the current language.
-      unset($links->links[$GLOBALS['language_content']->language]);
+      unset($links->links[$langcode]);
 
       // Remove links to unavailable translations.
       foreach ($links->links as $langcode => $link) {
