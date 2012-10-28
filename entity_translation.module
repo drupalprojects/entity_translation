@@ -217,7 +217,7 @@ function entity_translation_menu() {
 
   $items['admin/config/regional/entity_translation'] = array(
     'title' => 'Entity translation',
-    'description' => 'Configure which entities can be translated and enable or disable language falback.',
+    'description' => 'Configure which entities can be translated and enable or disable language fallback.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('entity_translation_admin_form'),
     'access arguments' => array('administer entity translation'),
@@ -227,7 +227,7 @@ function entity_translation_menu() {
 
   $items['admin/config/regional/entity_translation/translatable/%'] = array(
     'title' => 'Confirm change in translatability.',
-    'description' => 'Confirm page for changing field translatability.',
+    'description' => 'Confirmation page for changing field translatability.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('entity_translation_translatable_form', 5),
     'access arguments' => array('toggle field translatability'),
