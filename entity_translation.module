@@ -269,8 +269,8 @@ function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label
     // compatible.
     $paths = array();
     foreach ($items as $path => $item) {
-      $path = preg_replace($regex, '%', $path);
-      $paths[$path] = $path;
+      $stripped_path = preg_replace($regex, '%', $path);
+      $paths[$stripped_path] = $path;
     }
   }
 
@@ -284,7 +284,7 @@ function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label
     throw new Exception('The Entity Translation path scheme validation function has not been initialized properly.');
   }
 
-  foreach ($schemes as $delta => $scheme) {
+  foreach ($schemes as $delta => &$scheme) {
     // Every path scheme needs to declare a path wildcard for the entity id.
     if (empty($scheme['path wildcard'])) {
       if ($warnings) {
@@ -302,33 +302,53 @@ function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label
       if (isset($scheme[$key])) {
         $path = $scheme[$key];
         $parts = explode('/', $path);
-        $schemes[$delta][$key . ' parts'] = $parts;
+        $scheme[$key . ' parts'] = $parts;
 
-        // Check that the path contains the path wildcard.
-        if ($warnings && !in_array($wildcard, $parts)) {
-          $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%wildcard' => $wildcard, '%path' => $path);
-          drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: entity wildcard %wildcard not found in %path.', $t_args), 'warning');
-        }
-
-        // Check that the current element has a parent path which matches an
-        // existing menu path.
-        if ($check_parent) {
-          $parent_path = implode('/', array_slice($parts, 0, -1));
-          if (!isset($paths[preg_replace($regex, '%', $parent_path)])) {
-            if ($warnings) {
-              $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%path' => $path);
-              drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: parent menu item not found for %path', $t_args), 'warning');
-            }
-            unset($schemes[$delta][$key]);
+        // Check that the path contains the path wildcard. Required for
+        // determining the position of the entity id in the path (see
+        // entity_translation_menu_alter()).
+        if (!in_array($wildcard, $parts)) {
+          if ($warnings) {
+            $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%wildcard' => $wildcard, '%path' => $path);
+            drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: entity wildcard %wildcard not found in %path.', $t_args), 'warning');
           }
+          unset($scheme[$key]);
+          continue;
         }
-        // Check that the current element matches an existing menu path.
-        elseif (!isset($paths[preg_replace($regex, '%', $path)])) {
+
+        // Remove the trailing path element for paths requiring an existing
+        // parent menu item (i.e. the "translate path").
+        $trailing_path_element = FALSE;
+        if ($check_parent) {
+          $trailing_path_element = array_pop($parts);
+          $path = implode('/', $parts);
+        }
+        $stripped_path = preg_replace($regex, '%', $path);
+
+        if (!isset($paths[$stripped_path])) {
           if ($warnings) {
             $t_args = array('%path_key' => $key, '%entity_type' => $entity_type_label, '%path' => $path);
-            drupal_set_message(t('Invalid %path_key defined for entities of type %entity_type: matching menu item not found for %path', $t_args), 'warning');
+            $msg = $check_parent ?
+              t('Invalid %path_key defined for entities of type %entity_type: parent menu item not found for %path', $t_args) :
+              t('Invalid %path_key defined for entities of type %entity_type: matching menu item not found for %path', $t_args);
+            drupal_set_message($msg, 'warning');
           }
-          unset($schemes[$delta][$key]);
+          unset($scheme[$key]);
+        }
+        // If there is a matching menu item for the current scheme key, save
+        // the real path, i.e. the path of the matching menu item.
+        else {
+          $real_path = $paths[$stripped_path];
+          $real_parts = explode('/', $real_path);
+
+          // Restore previously removed trailing path element.
+          if ($trailing_path_element) {
+            $real_path .= '/' . $trailing_path_element;
+            $real_parts[] = $trailing_path_element;
+          }
+
+          $scheme['real ' . $key] = $real_path;
+          $scheme['real ' . $key . ' parts'] = $real_parts;
         }
       }
     }
@@ -412,18 +432,16 @@ function entity_translation_menu_alter(&$items) {
         // proxy implementation, and register new callbacks for adding and
         // editing a translation.
         if (isset($scheme['edit path'])) {
-          $edit_path = $scheme['edit path'];
-          $edit_path_parts = $scheme['edit path parts'];
-
-          // If the edit path is a default local task we need to find the parent
-          // item.
+          // Find the edit item. If the edit path is a default local task we
+          // need to find the parent item.
+          $real_edit_path_parts = $scheme['real edit path parts'];
           do {
-            $edit_item = &$items[implode('/', $edit_path_parts)];
-            array_pop($edit_path_parts);
+            $edit_item = &$items[implode('/', $real_edit_path_parts)];
+            array_pop($real_edit_path_parts);
           }
           while (!empty($edit_item['type']) && $edit_item['type'] == MENU_DEFAULT_LOCAL_TASK);
 
-          // Reset edit path parts to ensure proper position calculations.
+          $edit_path = $scheme['edit path'];
           $edit_path_parts = $scheme['edit path parts'];
 
           // Replace the main edit callback with our proxy implementation to set
