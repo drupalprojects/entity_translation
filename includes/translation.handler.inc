@@ -554,7 +554,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $langcode = $this->getLanguage();
 
     if (!empty($langcode)) {
-      $translation = array('language' => $langcode, 'status' => (int) $this->getStatus());
+      $translation = array('language' => $langcode, 'status' => 1);
       $this->setTranslation($translation);
       $this->setOriginalLanguage($langcode);
     }

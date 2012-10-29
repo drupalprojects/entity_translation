@@ -3,7 +3,7 @@ Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
 Issue #1818440 by bforchhammer, plach, miro_dietiker: Fixed Fatal error with
   unclean edit path.
-#1672710 by plach, valencianok | haclong99, miro_dietiker: Fixed published
+#1672710 by plach, valencianok, miro_dietiker | haclong99: Fixed published
   source node appears as not published in the translate tab.
 #1819844 by plach | bforchhammer, renat: Fixed Incompatibility with fields with
   unlimited number of values introduced in ET -dev.
