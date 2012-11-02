@@ -1,6 +1,12 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1829980 by plach | Stan Shevchuk: Fixed Upgrade to Beta1 results in 'Integrity
+  constraint violation: 1048 Column 'module' cannot be null'.
+
+
+Entity translation 7.x-1.0-beta1, 2012-11-02
+--------------------------------------------
 #1828794 by plach: Make translation workflow permissions optional.
 #1829666 by bforchhammer: Fixed Fatal error caused by menu translation when node
   translation is disabled.
