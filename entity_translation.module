@@ -554,7 +554,8 @@ function entity_translation_edit_access() {
   $translations = $handler->getTranslations();
   $langcode = entity_translation_form_language($langcode, $handler);
 
-  // The user must be explicitly allowed to access the original values.
+  // The user must be explicitly allowed to access the original values if
+  // workflow permissions are enabled.
   if (!$handler->getTranslationAccess($langcode)) {
     return FALSE;
   }
@@ -735,15 +736,21 @@ function entity_translation_permission() {
       'title' => t('Translate any entity'),
       'description' => t('Translate field content for any fieldable entity.'),
     ),
-    'edit translation shared fields' => array(
-      'title' => t('Edit shared fields'),
-      'description' => t('Edit fields shared between translations on the translation form.'),
-    ),
-    'edit original values' => array(
-      'title' => t('Edit original values'),
-      'description' => t('Access any entity edit form in the original language.'),
-    ),
   );
+
+  $workflow = entity_translation_workflow_enabled();
+  if ($workflow) {
+    $permission += array(
+      'edit translation shared fields' => array(
+        'title' => t('Edit shared values'),
+        'description' => t('Edit values shared between translations on the entity form.'),
+      ),
+      'edit original values' => array(
+        'title' => t('Edit original values'),
+        'description' => t('Access any entity form in the original language.'),
+      ),
+    );
+  }
 
   foreach (entity_get_info() as $entity_type => $info) {
     if ($info['fieldable'] && entity_translation_enabled($entity_type)) {
@@ -753,25 +760,34 @@ function entity_translation_permission() {
         'description' => t('Translate field content for entities of type @type.', array('@type' => $label)),
       );
 
-      // Avoid access control for original values on the current entity.
-      if (empty($info['translation']['entity_translation']['skip original values access'])) {
-        $permission["edit $entity_type original values"] = array(
-          'title' => t('Edit original values on entities of type @type', array('@type' => $label)),
-          'description' => t('Access the edit form in the original language for entities of type @type.', array('@type' => $label)),
-        );
-      }
+      if ($workflow) {
+        // Avoid access control for original values on the current entity.
+        if (empty($info['translation']['entity_translation']['skip original values access'])) {
+          $permission["edit $entity_type original values"] = array(
+            'title' => t('Edit original values on entities of type @type', array('@type' => $label)),
+            'description' => t('Access the entity form in the original language for entities of type @type.', array('@type' => $label)),
+          );
+        }
 
-      // Avoid access control for shared fields on the current entity.
-      if (empty($info['translation']['entity_translation']['skip shared fields access'])) {
-        $permission["edit $entity_type translation shared fields"] = array(
-          'title' => t('Edit @type shared fields.', array('@type' => $label)),
-          'description' => t('Edit fields shared between translations on the @type translation form.', array('@type' => $label)),
-        );
+        // Avoid access control for shared fields on the current entity.
+        if (empty($info['translation']['entity_translation']['skip shared fields access'])) {
+          $permission["edit $entity_type translation shared fields"] = array(
+            'title' => t('Edit @type shared values.', array('@type' => $label)),
+            'description' => t('Edit values shared between translations on @type forms.', array('@type' => $label)),
+          );
+        }
       }
     }
   }
 
   return $permission;
+}
+
+/**
+ * Returns TRUE if the translation workflow is enabled.
+ */
+function entity_translation_workflow_enabled() {
+  return variable_get('entity_translation_workflow_enabled', FALSE);
 }
 
 /**

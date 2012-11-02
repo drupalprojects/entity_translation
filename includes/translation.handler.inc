@@ -862,7 +862,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::getTranslationAccess()
    */
   public function getTranslationAccess($langcode) {
-    return !empty($this->entityInfo['translation']['entity_translation']['skip original values access']) || $langcode != $this->getLanguage() || user_access('edit original values') || user_access("edit {$this->entityType} original values");
+    return !empty($this->entityInfo['translation']['entity_translation']['skip original values access']) || !entity_translation_workflow_enabled() || $langcode != $this->getLanguage() || user_access('edit original values') || user_access("edit {$this->entityType} original values");
   }
 
   /**
@@ -870,8 +870,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public function getSharedFieldsAccess() {
     $settings = entity_translation_settings($this->entityType, $this->bundle);
-    return (user_access('edit translation shared fields') || user_access("edit {$this->entityType} translation shared fields"))
-      && ($settings['shared_fields_original_only'] == FALSE || $this->getLanguage() == $this->getFormLanguage());
+    return ($settings['shared_fields_original_only'] == FALSE || $this->getLanguage() == $this->getFormLanguage()) &&
+      (!entity_translation_workflow_enabled() || user_access('edit translation shared fields') || user_access("edit {$this->entityType} translation shared fields"));
   }
 
   /**

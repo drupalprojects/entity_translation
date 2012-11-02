@@ -32,6 +32,13 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
   }
 
   /**
+   * @see EntityTranslationDefaultHandler::getTranslationAccess()
+   */
+  public function getTranslationAccess($langcode) {
+    return user_access('bypass node access') || parent::getTranslationAccess($langcode);
+  }
+
+  /**
    * Convert the translation update status fieldset into a vartical tab.
    */
   public function entityForm(&$form, &$form_state) {

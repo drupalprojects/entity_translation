@@ -85,7 +85,6 @@ class EntityTranslationTestCase extends DrupalWebTestCase {
         'create page content',
         'edit own page content',
         'delete own page content',
-        'edit original values', // @todo required for "edit own page content"
         'translate any entity',
       ), $permissions));
     }

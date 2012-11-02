@@ -25,6 +25,13 @@ function entity_translation_admin_form($form, $form_state) {
     '#default_value' => variable_get('entity_translation_shared_labels', TRUE),
   );
 
+  $form['entity_translation_workflow_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable translation workflow permissions'),
+    '#description' => t('By enabling the translation workflow permissions it will be possible to limit the access to the entity form elements. Once this is active every role previously allowed to access the entity form will need to be granted the <em>Edit original values</em> permission to edit the entity in the original language. Moreover, form elements dealing with values shared accross the translations will be visible only to roles having been granted the <em>Edit shared values</em> permission.'),
+    '#default_value' => entity_translation_workflow_enabled(),
+  );
+
   $_null = NULL;
   list($items, ) = menu_router_build();
   _entity_translation_validate_path_schemes($_null, FALSE, $items);
@@ -129,8 +136,8 @@ function entity_translation_admin_form($form, $form_state) {
 
         $form['settings'][$entity_type][$settings_key]['shared_fields_original_only'] = array(
           '#type' => 'checkbox',
-          '#title' => t('Hide shared fields on translation forms'),
-          '#description' => t('Display shared fields only on entity forms for the original language.'),
+          '#title' => t('Hide shared elements on translation forms'),
+          '#description' => t('Display form elements shared accross translations only on entity forms for the original language.'),
           '#default_value' => $settings['shared_fields_original_only'],
         );
       }

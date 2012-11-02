@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1828794 by plach: Make translation workflow permissions optional.
 #1829666 by bforchhammer: Fixed Fatal error caused by menu translation when node
   translation is disabled.
 #1829740 by plach: Fixed Node and comments ET settings are available also when
