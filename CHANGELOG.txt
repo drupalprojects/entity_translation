@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1829666 by bforchhammer: Fixed Fatal error caused by menu translation when node
+  translation is disabled.
 Issue #1829740 by plach: Fixed Node and comments ET settings are available also
   when translation is disabled.
 Issue #1818440 by bforchhammer, plach, miro_dietiker: Fixed Fatal error with
