@@ -142,15 +142,15 @@ function entity_translation_form_node_type_form_alter(&$form, &$form_state) {
       '#default_value' => variable_get("entity_translation_node_metadata_$type", ENTITY_TRANSLATION_METADATA_HIDE),
       '#options' => array(t('Hidden'), t('Shown'), t('Replacing post information')),
     );
-  }
 
-  if (isset($form['comment']) && entity_translation_enabled('comment')) {
-    $form['comment']['entity_translation_comment_filter'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Filter comments per language'),
-      '#default_value' => variable_get("entity_translation_comment_filter_$type", FALSE),
-      '#description' => t('Show only comments whose language matches content language.'),
-    );
+    if (isset($form['comment']) && entity_translation_enabled('comment')) {
+      $form['comment']['entity_translation_comment_filter'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Filter comments per language'),
+        '#default_value' => variable_get("entity_translation_comment_filter_$type", FALSE),
+        '#description' => t('Show only comments whose language matches content language.'),
+      );
+    }
   }
 }
 
