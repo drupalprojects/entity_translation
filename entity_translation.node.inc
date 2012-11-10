@@ -143,7 +143,7 @@ function entity_translation_form_node_type_form_alter(&$form, &$form_state) {
       '#options' => array(t('Hidden'), t('Shown'), t('Replacing post information')),
     );
 
-    if (isset($form['comment']) && entity_translation_enabled('comment')) {
+    if (isset($form['comment'])) {
       $form['comment']['entity_translation_comment_filter'] = array(
         '#type' => 'checkbox',
         '#title' => t('Filter comments per language'),
