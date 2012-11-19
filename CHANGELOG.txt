@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1397560 by timofey, fricca, bforchhammer: Fixed Delete translation button not
+  working if destination parameter is set.
 #1829740 by plach: Comment filtering should be available if node translation is
   enabled (follow-up).
 #1829980 by plach | Stan Shevchuk: Fixed Upgrade to Beta1 results in 'Integrity
