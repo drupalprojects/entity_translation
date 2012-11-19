@@ -249,12 +249,8 @@ function entity_translation_update_7003() {
 }
 
 /**
- * Enable translation workflow.
+ * Rebuild entity information to update the path scheme settings.
  */
 function entity_translation_update_7004() {
-  // Originally this was meant to enable workflow permissions for pre-beta1
-  // sites, because we had them on by default in all the dev releases before
-  // beta1. Moreover they allow to implement a translation workflow closer to
-  // the one implemented by alpha2. This is now performed in update 7002 because
-  // permissions cannot be granted if workflow permissions are not enabled.
+  entity_info_cache_clear();
 }
