@@ -1,6 +1,7 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1844844 by plach, bforchhammer: Fixed Content type settings always showed.
 #1833496 by bforchhammer, plach: Fixed Upgrade to Beta1 results in 'Cannot
   initialize entity translation path variables'.
 #1397560 by timofey, fricca, bforchhammer: Fixed Delete translation button not
