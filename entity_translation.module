@@ -503,14 +503,16 @@ function entity_translation_menu_alter(&$items) {
       if ($translate_ui_attached == FALSE) {
         drupal_set_message(t('The entities of type %entity_type do not define a valid path scheme: it will not be possible to translate them.', array('%entity_type' => $info['label'])), 'warning');
       }
+
+      // Node-specific menu alterations.
+      if ($entity_type == 'node') {
+        entity_translation_node_menu_alter($items, $backup);
+      }
     }
   }
 
   // Avoid bloating memory with unused data.
   drupal_static_reset('_entity_translation_validate_path_schemes');
-
-  // Node-specific menu alterations.
-  entity_translation_node_menu_alter($items, $backup);
 }
 
 /**

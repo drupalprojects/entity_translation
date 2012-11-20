@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1437976 by plach | Wolfgang Reszel: Fixed Invalid node translation menu
+  callback set when entity translation for nodes is disabled.
 #1844844 by plach, bforchhammer: Fixed Content type settings always showed.
 #1833496 by bforchhammer, plach: Fixed Upgrade to Beta1 results in 'Cannot
   initialize entity translation path variables'.
