@@ -1078,9 +1078,14 @@ function entity_translation_sync($entity_type, $entity) {
  */
 function entity_translation_field_attach_insert($entity_type, $entity) {
   if (entity_translation_enabled($entity_type)) {
-    $handler = entity_translation_get_handler($entity_type, $entity);
-    $handler->initTranslations();
-    $handler->saveTranslations();
+    list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+    // Store entity translation metadata only if the entity bundle is
+    // translatable.
+    if (entity_translation_enabled_bundle($entity_type, $bundle)) {
+      $handler = entity_translation_get_handler($entity_type, $entity);
+      $handler->initTranslations();
+      $handler->saveTranslations();
+    }
   }
 }
 
@@ -1089,9 +1094,14 @@ function entity_translation_field_attach_insert($entity_type, $entity) {
  */
 function entity_translation_field_attach_update($entity_type, $entity) {
   if (entity_translation_enabled($entity_type)) {
-    $handler = entity_translation_get_handler($entity_type, $entity, TRUE);
-    $handler->updateTranslations();
-    $handler->saveTranslations();
+    list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+    // Store entity translation metadata only if the entity bundle is
+    // translatable.
+    if (entity_translation_enabled_bundle($entity_type, $bundle)) {
+      $handler = entity_translation_get_handler($entity_type, $entity, TRUE);
+      $handler->updateTranslations();
+      $handler->saveTranslations();
+    }
   }
 }
 
