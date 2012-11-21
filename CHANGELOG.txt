@@ -1,6 +1,10 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+
+
+Entity translation 7.x-1.0-beta2, 2012-11-21
+--------------------------------------------
 #1846104 by David_Rothstein, plach: Fixed Entity Translation shouldn't assume
   $form['#entity_type()'] is a string.
 #1845896 by plach, peximo: Fixed Validate translation authoring info on submit.
