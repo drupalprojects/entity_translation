@@ -1740,7 +1740,7 @@ function entity_translation_get_handler($entity_type = NULL, $entity = NULL, $up
  */
 function entity_translation_entity_form_get_handler($form, &$form_state) {
   $handler = FALSE;
-  $entity_type = isset($form['#entity_type']) ? $form['#entity_type'] : FALSE;
+  $entity_type = isset($form['#entity_type']) && is_string($form['#entity_type']) ? $form['#entity_type'] : FALSE;
 
   if ($entity_type) {
     if (empty($form_state['storage']['entity_translation']['handler'][$entity_type])) {

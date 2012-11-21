@@ -1,6 +1,8 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1846104 by David_Rothstein, plach: Fixed Entity Translation shouldn't assume
+  $form['#entity_type()'] is a string.
 #1845896 by plach, peximo: Fixed Validate translation authoring info on submit.
 #1835578 by farse, plach: Fixed Entity translation metadata should be stored
   only if the entity bundle is translatable.
