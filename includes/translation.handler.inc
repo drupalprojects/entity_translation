@@ -123,6 +123,16 @@ interface EntityTranslationHandlerInterface {
   public function setEntity($entity);
 
   /**
+   * Checks that the wrapped entity matches the give entity
+   *
+   * @param $entity_type
+   *   The type of the entity to be matched.
+   * @param $entity
+   *   The entity to be matched.
+   */
+  public function isWrappedEntity($entity_type, $entity);
+
+  /**
    * Sets the translation update status.
    *
    * @param $outdated
@@ -718,6 +728,14 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
     // Update bundle and entity id properties.
     list($this->entityId, , $this->bundle) = entity_extract_ids($this->entityType, $this->entity);
+  }
+
+  /**
+   * @see EntityTranslationHandlerInterface::isWrappedEntity()
+   */
+  public function isWrappedEntity($entity_type, $entity) {
+    list($id,,) = entity_extract_ids($entity_type, $entity);
+    return $entity_type == $this->entityType && $id == $this->entityId;
   }
 
   /**

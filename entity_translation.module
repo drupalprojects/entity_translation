@@ -1646,7 +1646,9 @@ function entity_translation_language($entity_type, $entity) {
   }
   // If a translation handler associated to the current form is found, we need
   // to update the wrapped entity. This way submitted values will be picked up.
-  else {
+  // Other entities may be created or saved while submitting the current one,
+  // hence we need to check we are dealing with it.
+  elseif ($handler->isWrappedEntity($entity_type, $entity)) {
     $langcode = $handler->getLanguage();
     $handler->setEntity($entity);
     $submitted_langcode = $handler->getLanguage();
