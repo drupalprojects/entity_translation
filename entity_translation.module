@@ -182,7 +182,7 @@ function entity_translation_entity_info_alter(&$entity_info) {
     // Every fieldable entity type must have a translation handler class, no
     // matter if it is enabled for translation or not. As a matter of fact we
     // might need it to correctly switch field translatability when a field is
-    // shared accross different entities.
+    // shared across different entities.
     $et_info += array('class' => 'EntityTranslationDefaultHandler');
 
     if (entity_translation_enabled($entity_type, TRUE)) {
@@ -1530,7 +1530,7 @@ function entity_translation_form_field_ui_field_edit_form_alter(&$form, $form_st
       '#prefix' => '<label>' . t('Field synchronization') . '</label>',
       '#type' => 'checkbox',
       '#title' => t('Enable field synchronization'),
-      '#description' => t('Check this option if you wish to synchronize the value of this field accross its translations.'),
+      '#description' => t('Check this option if you wish to synchronize the value of this field across its translations.'),
       '#default_value' => !empty($instance['settings']['entity_translation_sync']),
     );
   }

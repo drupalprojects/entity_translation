@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1862882 by Cottser: Fixed Typo: accross = across.
 #1851118 by peximo | impleri: Fixed Incorrect ET Handler set in node/add form
   when inserting new taxonomy term.
 #1842540 by peximo, bforchhammer | plach: Added Pathauto core entity types
