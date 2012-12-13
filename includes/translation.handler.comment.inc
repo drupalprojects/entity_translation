@@ -37,4 +37,28 @@ class EntityTranslationCommentHandler extends EntityTranslationDefaultHandler {
   protected function getStatus() {
     return (boolean) $this->entity->status;
   }
+
+   /**
+   * Overrides EntityTranslationController::getAccess().
+   */
+  public function getAccess($op) {
+    switch ($op) {
+      case 'view':
+        return user_access('access comments');
+      case 'update':
+        return comment_access('edit', $this->entity);
+      case 'delete':
+        return user_access('administer comments');
+      case 'create':
+        return user_access('post comments');
+    }
+    return parent::getAccess($op);
+  }
+
+  /**
+   * Overrides EntityTranslationController::getTranslationAccess().
+   */
+  public function getTranslationAccess($op) {
+    return user_access('translate comments') && parent::getTranslationAccess($op);
+  }
 }

@@ -202,7 +202,11 @@ interface EntityTranslationHandlerInterface {
    * Checks if the user can perform the given operation on the wrapped entity.
    *
    * @param $op
-   *   The operation to be performed.
+   *   The operation to be performed. Possible values are:
+   *   - "view"
+   *   - "update"
+   *   - "delete"
+   *   - "create"
    *
    * @return
    *   TRUE if the user is allowed to perform the given operation, FALSE
@@ -211,14 +215,21 @@ interface EntityTranslationHandlerInterface {
   public function getAccess($op);
 
   /**
-   * Checks if a user is allowed to edit the given translation.
+   * Checks if a user can perform the given operation on translations of the
+   * wrapped entity.
+   *
+   * @param $op
+   *   The operation to be performed. Possible values are:
+   *   - "view"
+   *   - "update"
+   *   - "delete"
+   *   - "create"
+   *
+   * @return
+   *   TRUE if the user is allowed to perform the given operation, FALSE
+   *   otherwise.
    */
-  public function getTranslationAccess($langcode);
-
-  /**
-   * Checks if a user is allowed to edit shared fields on the active form.
-   */
-  public function getSharedFieldsAccess();
+  public function getTranslationAccess($op);
 
   /**
    * Return TRUE if the entity supports URL aliasing.
@@ -879,17 +890,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   /**
    * @see EntityTranslationHandlerInterface::getTranslationAccess()
    */
-  public function getTranslationAccess($langcode) {
-    return !empty($this->entityInfo['translation']['entity_translation']['skip original values access']) || !entity_translation_workflow_enabled() || $langcode != $this->getLanguage() || user_access('edit original values') || user_access("edit {$this->entityType} original values");
-  }
-
-  /**
-   * @see EntityTranslationHandlerInterface::getSharedFieldsAccess()
-   */
-  public function getSharedFieldsAccess() {
-    $settings = entity_translation_settings($this->entityType, $this->bundle);
-    return ($settings['shared_fields_original_only'] == FALSE || $this->getLanguage() == $this->getFormLanguage()) &&
-      (!entity_translation_workflow_enabled() || user_access('edit translation shared fields') || user_access("edit {$this->entityType} translation shared fields"));
+  public function getTranslationAccess($op) {
+    return user_access("$op entity translations");
   }
 
   /**

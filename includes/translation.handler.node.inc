@@ -31,11 +31,11 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
     return node_access($op, $this->entity);
   }
 
-  /**
-   * @see EntityTranslationDefaultHandler::getTranslationAccess()
-   */
-  public function getTranslationAccess($langcode) {
-    return user_access('bypass node access') || parent::getTranslationAccess($langcode);
+   /**
+    * Overrides EntityTranslationController::getTranslationAccess().
+    */
+  public function getTranslationAccess($op) {
+    return user_access("translate any {$this->bundle} content") && parent::getTranslationAccess($op);
   }
 
   /**

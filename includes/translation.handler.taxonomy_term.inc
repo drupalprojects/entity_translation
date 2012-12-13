@@ -32,4 +32,25 @@ class EntityTranslationTaxonomyTermHandler extends EntityTranslationDefaultHandl
       );
     }
   }
+
+  /**
+   * Overrides EntityTranslationController::getAccess().
+   */
+  public function getAccess($op) {
+    switch ($op) {
+      case 'create':
+      case 'update':
+        return taxonomy_term_access('edit', $this->entity);
+      case 'delete':
+        return taxonomy_term_access('delete', $this->$entity);
+    }
+    return parent::getAccess($op);
+  }
+
+  /**
+   * Overrides EntityTranslationController::getTranslationAccess().
+   */
+  public function getTranslationAccess($op) {
+    return user_access("translate terms in $this->entity->vid") && parent::getTranslationAccess($op);
+  }
 }
