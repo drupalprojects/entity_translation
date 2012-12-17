@@ -390,9 +390,6 @@ function entity_translation_delete_confirm_submit($form, &$form_state) {
   field_attach_presave($entity_type, $entity);
   field_attach_update($entity_type, $entity);
 
-  // Remove any existing path alias for the removed translation.
-  path_delete(array('source' => $handler->getViewPath(), 'language' => $langcode));
-
   $form_state['redirect'] = $handler->getTranslatePath();
 }
 
