@@ -339,7 +339,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $this->pathScheme = 'default';
     $this->routerMap = array();
 
-    $this->initPathVariables();
+    if (entity_translation_enabled($entity_type)) {
+      $this->initPathVariables();
+    }
   }
 
   /**

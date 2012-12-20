@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1870236 by plach: Fixed Field translatability migration fails when translation
+  for the entity type is disabled.
 #1865176 by bforchhammer: Implement hook_entity_translation_delete() on behalf
   of path module.
 #1862882 by Cottser: Fixed Typo: accross = across.

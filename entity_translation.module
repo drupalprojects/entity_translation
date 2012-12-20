@@ -179,11 +179,12 @@ function entity_translation_entity_info_alter(&$entity_info) {
     }
     $et_info = &$entity_info[$entity_type]['translation']['entity_translation'];
 
-    // Every fieldable entity type must have a translation handler class, no
-    // matter if it is enabled for translation or not. As a matter of fact we
-    // might need it to correctly switch field translatability when a field is
-    // shared across different entities.
+    // Every fieldable entity type must have a translation handler class and
+    // translation keys defined, no matter if it is enabled for translation or
+    // not. As a matter of fact we might need them to correctly switch field
+    // translatability when a field is shared across different entity types.
     $et_info += array('class' => 'EntityTranslationDefaultHandler');
+    $entity_info[$entity_type]['entity keys'] += array('translations' => 'translations');
 
     if (entity_translation_enabled($entity_type, TRUE)) {
       $entity_info[$entity_type]['language callback'] = 'entity_translation_language';
@@ -201,10 +202,6 @@ function entity_translation_entity_info_alter(&$entity_info) {
       if (!isset($et_info['edit form']) || $et_info['edit form'] === TRUE) {
         $et_info['edit form'] = $entity_type;
       }
-
-      $entity_info[$entity_type]['entity keys'] += array(
-        'translations' => 'translations',
-      );
     }
   }
 }
