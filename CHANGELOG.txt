@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1876750 by David_Rothstein: Fixed Fatal error when creating an entity as an
+  anonymous user.
 #1760270 by plach | Berdir: Fixed Comment translation broken?.
 #1870236 by plach: Fixed Field translatability migration fails when translation
   for the entity type is disabled.

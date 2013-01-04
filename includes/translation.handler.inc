@@ -1283,7 +1283,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $values += array(
       'status' => TRUE,
       'retranslate' => 0,
-      'name' => $GLOBALS['user']->name,
+      'name' => isset($GLOBALS['user']->name) ? $GLOBALS['user']->name : '',
     );
 
     if (!isset($translations->data[$form_langcode])) {
@@ -1308,7 +1308,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
 
     $translation['status'] = intval($values['status']);
-    $translation['uid'] = user_load_by_name($values['name'])->uid;
+    $translation['uid'] = $values['name'] ? user_load_by_name($values['name'])->uid : 0;
     $translation['created'] = empty($values['created']) ? REQUEST_TIME : strtotime($values['created']);
     $this->setTranslation($translation);
 
