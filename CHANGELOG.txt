@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1760270 by plach | Berdir: Fixed Comment translation broken?.
 #1870236 by plach: Fixed Field translatability migration fails when translation
   for the entity type is disabled.
 #1865176 by bforchhammer: Implement hook_entity_translation_delete() on behalf
