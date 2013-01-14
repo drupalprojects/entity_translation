@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1885370 by grndlvl: Fixed 'View' title blank on translation overview when using
+  optional title replacement field.
 #1881872 by plach | Demoshane: Added an explict dependecy on Drupal core 7.15.
 #1876750 by David_Rothstein: Fixed Fatal error when creating an entity as an
   anonymous user.

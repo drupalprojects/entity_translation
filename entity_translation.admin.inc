@@ -341,7 +341,10 @@ function _entity_translation_label($entity_type, $entity, $langcode = NULL) {
     if (!empty($entity_info['entity keys']['label'])) {
       $legacy_field = $entity_info['entity keys']['label'];
       if (title_field_replacement_enabled($entity_type, $bundle, $legacy_field)) {
-        return title_entity_label($entity, $entity_type, $langcode);
+        $title = title_entity_label($entity, $entity_type, $langcode);
+        if (!empty($title)) {
+          return $title;
+        }
       }
     }
   }
