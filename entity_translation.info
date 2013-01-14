@@ -3,8 +3,7 @@ description = Allows entities to be translated into different languages.
 package = Multilingual - Entity Translation
 core = 7.x
 configure = admin/config/regional/entity_translation
-
-dependencies[] = locale
+dependencies[] = locale (> 7.14)
 
 files[] = includes/translation.handler.inc
 files[] = includes/translation.handler.comment.inc
