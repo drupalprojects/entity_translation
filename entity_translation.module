@@ -596,12 +596,10 @@ function entity_translation_form_language($langcode, $handler) {
     $langcode = $GLOBALS['language_content']->language;
   }
 
-  if (drupal_multilingual()) {
-    $translations = $handler->getTranslations();
-    $fallback = language_fallback_get_candidates();
-    while (!empty($langcode) && !isset($translations->data[$langcode])) {
-      $langcode = array_shift($fallback);
-    }
+  $translations = $handler->getTranslations();
+  $fallback = drupal_multilingual() ? language_fallback_get_candidates() : array(LANGUAGE_NONE);
+  while (!empty($langcode) && !isset($translations->data[$langcode])) {
+    $langcode = array_shift($fallback);
   }
 
   // If no translation is available fall back to the entity language.
