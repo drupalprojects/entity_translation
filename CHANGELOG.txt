@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1890346 by plach: Fixed Entity language change not handled on non-translatable
+  entities with translatable fields.
 #1883584 by grndlvl: Added Allow for link 'destination' on overview page.
 #1888324 by plach: Fixed Wrong form language set when only one language is
   enabled and the entity has LANGUAGE_NONE language.
