@@ -557,6 +557,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         }
       }
     }
+
+    // Clear the cache for this entity.
+    entity_get_controller($this->entityType)->resetCache(array($this->getEntityId()));
   }
 
   /**
