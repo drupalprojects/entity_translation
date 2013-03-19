@@ -5,6 +5,7 @@ core = 7.x
 configure = admin/config/regional/entity_translation
 dependencies[] = locale (>7.14)
 
+files[] = includes/translation.handler_factory.inc
 files[] = includes/translation.handler.inc
 files[] = includes/translation.handler.comment.inc
 files[] = includes/translation.handler.node.inc
