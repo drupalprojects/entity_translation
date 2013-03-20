@@ -186,7 +186,7 @@ function entity_translation_entity_info_alter(&$entity_info) {
     $et_info += array('class' => 'EntityTranslationDefaultHandler');
     $entity_info[$entity_type]['entity keys'] += array('translations' => 'translations');
 
-    if (entity_translation_enabled($entity_type, TRUE)) {
+    if (entity_translation_enabled($entity_type, NULL, TRUE)) {
       $entity_info[$entity_type]['language callback'] = 'entity_translation_language';
 
       // Process path schemes and fill-in defaults.
@@ -669,7 +669,7 @@ function _entity_translation_callback($callback, $args, $info = array()) {
 function entity_translation_admin_paths() {
   $paths = array();
   foreach (entity_get_info() as $entity_type => $info) {
-    if (entity_translation_enabled($entity_type, TRUE)) {
+    if (entity_translation_enabled($entity_type, NULL, TRUE)) {
       foreach ($info['translation']['entity_translation']['path schemes'] as $scheme) {
         if (!empty($scheme['admin theme'])) {
           if (isset($scheme['translate path'])) {
@@ -693,8 +693,7 @@ function entity_translation_admin_paths() {
  */
 function entity_translation_tab_access($entity_type, $entity) {
   if (drupal_multilingual() && (user_access('translate any entity') || user_access("translate $entity_type entities"))) {
-    list(, , $bundle) = entity_extract_ids($entity_type, $entity);
-    $enabled = entity_translation_enabled_bundle($entity_type, $bundle);
+    $enabled = entity_translation_enabled($entity_type, $entity);
     return $enabled && entity_translation_get_handler($entity_type, $entity)->getLanguage() != LANGUAGE_NONE;
   }
   return FALSE;
@@ -953,7 +952,7 @@ function entity_translation_field_info_alter(&$info) {
  * Implements hook_field_attach_presave().
  */
 function entity_translation_field_attach_presave($entity_type, $entity) {
-  if (entity_translation_enabled($entity_type)) {
+  if (entity_translation_enabled($entity_type, $entity)) {
     entity_translation_sync($entity_type, $entity);
   }
 }
@@ -1072,15 +1071,12 @@ function entity_translation_sync($entity_type, $entity) {
  * Implements hook_field_attach_insert().
  */
 function entity_translation_field_attach_insert($entity_type, $entity) {
-  if (entity_translation_enabled($entity_type)) {
-    list(, , $bundle) = entity_extract_ids($entity_type, $entity);
-    // Store entity translation metadata only if the entity bundle is
-    // translatable.
-    if (entity_translation_enabled_bundle($entity_type, $bundle)) {
-      $handler = entity_translation_get_handler($entity_type, $entity);
-      $handler->initTranslations();
-      $handler->saveTranslations();
-    }
+  // Store entity translation metadata only if the entity bundle is
+  // translatable.
+  if (entity_translation_enabled($entity_type, $entity)) {
+    $handler = entity_translation_get_handler($entity_type, $entity);
+    $handler->initTranslations();
+    $handler->saveTranslations();
   }
 }
 
@@ -1088,15 +1084,12 @@ function entity_translation_field_attach_insert($entity_type, $entity) {
  * Implements hook_field_attach_update().
  */
 function entity_translation_field_attach_update($entity_type, $entity) {
-  if (entity_translation_enabled($entity_type)) {
-    list(, , $bundle) = entity_extract_ids($entity_type, $entity);
-    // Store entity translation metadata only if the entity bundle is
-    // translatable.
-    if (entity_translation_enabled_bundle($entity_type, $bundle)) {
-      $handler = entity_translation_get_handler($entity_type, $entity, TRUE);
-      $handler->updateTranslations();
-      $handler->saveTranslations();
-    }
+  // Store entity translation metadata only if the entity bundle is
+  // translatable.
+  if (entity_translation_enabled($entity_type, $bundle)) {
+    $handler = entity_translation_get_handler($entity_type, $entity, TRUE);
+    $handler->updateTranslations();
+    $handler->saveTranslations();
   }
 }
 
@@ -1104,7 +1097,7 @@ function entity_translation_field_attach_update($entity_type, $entity) {
  * Implements hook_field_attach_delete().
  */
 function entity_translation_field_attach_delete($entity_type, $entity) {
-  if (entity_translation_enabled($entity_type)) {
+  if (entity_translation_enabled($entity_type, $entity)) {
     $handler = entity_translation_get_handler($entity_type, $entity);
     $handler->removeTranslations();
     $handler->saveTranslations();
@@ -1580,15 +1573,46 @@ function entity_translation_form_field_ui_field_edit_form_alter(&$form, $form_st
 }
 
 /**
- * Helper function. Determines whether the given entity type is translatable.
+ * Determines whether the given entity type is translatable.
+ *
+ * @param $entity_type
+ *   The entity type enabled for translation.
+ * @param $entity
+ *   (optional) The entity belonging to the bundle enabled for translation. A
+ *   bundle name can alternatively be passed. If an empty value is passed the
+ *   bundle-level check is skipped. Defaults to NULL.
+ * @param $skip_handler
+ *   (optional) A boolean indicating whether skip checking if the entity type is
+ *   registered as a field translation handler. Defaults to FALSE.
  */
-function entity_translation_enabled($entity_type, $skip_handler = FALSE) {
+function entity_translation_enabled($entity_type, $entity = NULL, $skip_handler = FALSE) {
   $enabled_types = variable_get('entity_translation_entity_types', array());
-  return !empty($enabled_types[$entity_type]) && ($skip_handler || field_has_translation_handler($entity_type, 'entity_translation'));
+  $enabled = !empty($enabled_types[$entity_type]) && ($skip_handler || field_has_translation_handler($entity_type, 'entity_translation'));
+
+  // If the entity type is not enabled or we are not checking bundle status, we
+  // have a result.
+  if (!$enabled || !isset($entity)) {
+    return $enabled;
+  }
+
+  // Determine the bundle to check for translatability.
+  $bundle = FALSE;
+  if (is_object($entity)) {
+    list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+  }
+  elseif (is_string($entity)) {
+    $bundle = $entity;
+  }
+  return $bundle && entity_translation_enabled_bundle($entity_type, $bundle);
 }
 
 /**
- * Helper function. Determines whether the given entity bundle is translatable.
+ * Determines whether the given entity bundle is translatable.
+ *
+ * @param $entity_type
+ *   The entity type the bundle to be checked belongs to.
+ * @param $bundle
+ *   The name of the bundle to be checked.
  */
 function entity_translation_enabled_bundle($entity_type, $bundle) {
   $info = entity_get_info($entity_type);
@@ -1757,8 +1781,7 @@ function entity_translation_entity_form_get_handler($form, &$form_state) {
   if ($entity_type) {
     if (empty($form_state['storage']['entity_translation']['handler'][$entity_type])) {
       if ($info = entity_translation_edit_form_info($form, $form_state)) {
-        list(, , $bundle) = entity_extract_ids($info['entity type'], $info['entity']);
-        if (entity_translation_enabled($info['entity type']) && entity_translation_enabled_bundle($info['entity type'], $bundle) && !entity_translation_node($info['entity type'], $info['entity'])) {
+        if (entity_translation_enabled($info['entity type'], $info['entity'])) {
           $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
           $form_state['storage']['entity_translation']['handler'][$info['entity type']] = $handler;
         }
@@ -1871,7 +1894,7 @@ function entity_translation_uuid_entities_features_export_entity_alter($entity, 
   // - Created and changed could be left but the UUID module removes created and
   //   changed values from the entities it exports, hence we do the same for
   //   consistency.
-  if (entity_translation_enabled($entity_type)) {
+  if (entity_translation_enabled($entity_type, $entity)) {
     $fields = array('entity_type', 'entity_id', 'uid', 'created', 'changed');
     $handler = entity_translation_get_handler($entity_type, $entity);
     $translations = $handler->getTranslations();
@@ -1913,8 +1936,7 @@ function entity_translation_pathauto_alias_alter(&$alias, array &$context) {
   // Ensure that we are dealing with a bundle having entity translation enabled.
   if ($context['op'] == 'bulkupdate' && !empty($info[$entity_type]['token type']) && !empty($context['data'][$info[$entity_type]['token type']])) {
     $entity = $context['data'][$info[$entity_type]['token type']];
-    list(, , $bundle) = entity_extract_ids($entity_type, $entity);
-    if (entity_translation_enabled($entity_type) && entity_translation_enabled_bundle($entity_type, $bundle)) {
+    if (entity_translation_enabled($entity_type, $entity)) {
       $translations = entity_translation_get_handler($entity_type, $entity)->getTranslations();
       // Only create extra aliases if we are working on the original language to
       // avoid infinite recursion.
