@@ -373,7 +373,13 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public static function loadMultiple($entity_type, $entities) {
     $entity_info = entity_get_info($entity_type);
-    $translations_key = $entity_info['entity keys']['translations'];
+    if (isset($entity_info['entity keys']['translations'])){
+      $translations_key = $entity_info['entity keys']['translations'];
+    }
+    else {
+      // If no translations key is defined we cannot proceed.
+      return;
+    }
 
     foreach ($entities as $id => $entity) {
       $entities[$id]->{$translations_key} = self::emptyTranslations();
@@ -447,8 +453,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     if (isset($this->entityId)) {
       $this->loadMultiple($this->entityType, array($this->entityId => $this->entity));
     }
-    else {
-      $this->entity->{$this->getTranslationsKey()} = $this->emptyTranslations();
+    elseif ($translations_key = $this->getTranslationsKey()) {
+      $this->entity->{$translations_key} = $this->emptyTranslations();
     }
   }
 
@@ -522,15 +528,15 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::getTranslations()
    */
   public function getTranslations() {
-    $translations_key = $this->getTranslationsKey();
-
-    // Lazy load translations if for some reason the wrapped entity did not go
-    // through hook_entity_load().
-    if (!isset($this->entity->{$translations_key})) {
-      $this->loadTranslations();
+    if ($translations_key = $this->getTranslationsKey()) {
+      // Lazy load translations if for some reason the wrapped entity did not go
+      // through hook_entity_load().
+      if (!isset($this->entity->{$translations_key})) {
+        $this->loadTranslations();
+      }
+      return $this->entity->{$translations_key};
     }
-
-    return $this->entity->{$translations_key};
+    return self::emptyTranslations();
   }
 
   /**
@@ -579,8 +585,11 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public function removeTranslation($langcode) {
     $translations_key = $this->getTranslationsKey();
-    $hook_info = array('hook' => 'delete');
+    if (empty($translations_key)) {
+      return;
+    }
 
+    $hook_info = array('hook' => 'delete');
     if (!empty($langcode)) {
       unset($this->entity->{$translations_key}->data[$langcode]);
       // Keep track that the current translation has been removed.
@@ -779,7 +788,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
     // Ensure translations data is populated.
     $translations_key = $this->getTranslationsKey();
-    if (!isset($this->entity->{$translations_key})) {
+    if ($translations_key && !isset($this->entity->{$translations_key})) {
       $this->entity->{$translations_key} = self::emptyTranslations();
     }
 
@@ -1473,7 +1482,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * Returns the translation object key for the wrapped entity type.
    */
   protected function getTranslationsKey() {
-    return $this->entityInfo['entity keys']['translations'];
+    return isset($this->entityInfo['entity keys']['translations']) ? $this->entityInfo['entity keys']['translations'] : FALSE;
   }
 
   /**
