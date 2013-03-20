@@ -1240,7 +1240,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::entityFormLanguageWidget()
    */
   public function entityFormLanguageWidget(&$form, &$form_state) {
-    if (entity_translation_enabled($this->entityType) && entity_translation_enabled_bundle($this->entityType, $this->bundle)) {
+    if (entity_translation_enabled($this->entityType, $this->bundle)) {
       $is_new = $this->isNewEntity();
       $is_translation = !empty($form_state['entity_translation']['is_translation']);
       $translations = $this->getTranslations();
