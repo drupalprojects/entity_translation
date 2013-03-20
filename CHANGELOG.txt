@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1370900 by mojzis, plach | mgladding: Fixed Fatal Error: Cannot access empty
+  property in translation.handler.inc.
 Issue #1924088 by plach | drzraf: Fixed Wrong form 'language' value in case of
   content-translation enabled bundles.
 #1933742 by das-peter: Fixed Delete translation doesn't flush the entity cache.
