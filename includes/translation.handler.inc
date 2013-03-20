@@ -1201,8 +1201,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * Either remove access or add a translatability clue depending on the current
    * user's "edit translation shared fields" permissions.
    */
-  public function entityFormSharedElements(&$element) {
-    static $ignored_types, $shared_labels, $access;
+  public function entityFormSharedElements(&$element, $access = NULL) {
+    static $ignored_types, $shared_labels;
+
     if (!isset($ignored_types)) {
       $ignored_types = array_flip(array('actions', 'value', 'hidden', 'vertical_tabs', 'token'));
     }
@@ -1215,7 +1216,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
     foreach (element_children($element) as $key) {
       if (!isset($element[$key]['#type'])) {
-        $this->entityFormSharedElements($element[$key]);
+        $this->entityFormSharedElements($element[$key], $access);
       }
       else {
         // Ignore non-widget form elements.
