@@ -1364,30 +1364,32 @@ function _entity_translation_element_title_append(&$element, $suffix) {
  * Implements hook_form_alter().
  */
 function entity_translation_form_alter(&$form, &$form_state) {
-  if ($handler = entity_translation_entity_form_get_handler($form, $form_state)) {
-    if (!$handler->isNewEntity()) {
-      $handler->entityForm($form, $form_state);
-      $translations = $handler->getTranslations();
-      $form_langcode = $handler->getFormLanguage();
-      if (!isset($translations->data[$form_langcode]) || count($translations->data) > 1) {
-        // Hide shared form elements if the user is not allowed to edit them.
-        $handler->entityFormSharedElements($form);
+  if ($info = entity_translation_edit_form_info($form, $form_state)) {
+    $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
+    if (entity_translation_enabled($info['entity type'], $info['entity'])) {
+      if (!$handler->isNewEntity()) {
+        $handler->entityForm($form, $form_state);
+        $translations = $handler->getTranslations();
+        $form_langcode = $handler->getFormLanguage();
+        if (!isset($translations->data[$form_langcode]) || count($translations->data) > 1) {
+          // Hide shared form elements if the user is not allowed to edit them.
+          $handler->entityFormSharedElements($form);
+        }
       }
+      else {
+        $handler->entityFormLanguageWidget($form, $form_state);
+      }
+      // We need to process the posted form as early as possible to update the
+      // form language value.
+      array_unshift($form['#validate'], 'entity_translation_entity_form_validate');
     }
+    // We might have an entity form for an entity or a bundle not enabled for
+    // translation. In this case we might need to deal with entity and field
+    // languages anyway, since fields may be shared among different bundles and
+    // entity types.
     else {
       $handler->entityFormLanguageWidget($form, $form_state);
     }
-    // We need to process the posted form as early as possible to update the
-    // form language value.
-    array_unshift($form['#validate'], 'entity_translation_entity_form_validate');
-  }
-  // We might have an entity form for an entity or a bundle not enabled for
-  // translation. In this case we might need to deal with entity and field
-  // languages anyway, since fields may be shared among different bundles and
-  // entity types.
-  elseif ($info = entity_translation_edit_form_info($form, $form_state)) {
-    $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
-    $handler->entityFormLanguageWidget($form, $form_state);
   }
 }
 
@@ -1468,7 +1470,7 @@ function entity_translation_entity_form_submit($form, &$form_state) {
  * Mark translations as outdated if the submitted value is true.
  */
 function entity_translation_field_attach_submit($entity_type, $entity, $form, &$form_state) {
-  if ($handler = entity_translation_entity_form_get_handler($form, $form_state)) {
+  if (($handler = entity_translation_entity_form_get_handler($form, $form_state)) && entity_translation_enabled($entity_type, $entity)) {
     // Update the wrapped entity with the submitted values.
     $handler->setEntity($entity);
     $handler->entityFormSubmit($form, $form_state);
@@ -1734,7 +1736,7 @@ function entity_translation_get_handler($entity_type = NULL, $entity = NULL) {
  */
 function entity_translation_entity_form_get_handler($form, $form_state) {
   $handler = FALSE;
-  if (($info = entity_translation_edit_form_info($form, $form_state)) && entity_translation_enabled($info['entity type'], $info['entity'])) {
+  if ($info = entity_translation_edit_form_info($form, $form_state)) {
     $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
   }
   return $handler;
