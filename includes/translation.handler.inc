@@ -798,7 +798,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     list($this->entityId, , $this->bundle) = entity_extract_ids($this->entityType, $this->entity);
 
     // Initialize the handler id if needed.
-    if (isset($this->factory)) {
+    if (!empty($this->factory)) {
       $this->factory->getHandlerId($this->entityType, $entity);
     }
   }
