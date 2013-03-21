@@ -1692,7 +1692,7 @@ function entity_translation_settings($entity_type, $bundle) {
  *   A valid language code.
  */
 function entity_translation_language($entity_type, $entity) {
-  $handler = EntityTranslationHandlerFactory::getInstance()->getHandler($entity_type, $entity);
+  $handler = entity_translation_get_handler($entity_type, $entity);
   $langcode = $handler->getFormLanguage();
   return !empty($langcode) ? $langcode : $handler->getLanguage();
 }
@@ -1714,6 +1714,11 @@ function entity_translation_get_handler($entity_type = NULL, $entity = NULL) {
     $factory = EntityTranslationHandlerFactory::getInstance();
     return empty($entity) ? $factory->getLastHandler($entity_type) : $factory->getHandler($entity_type, $entity);
   }
+  // @todo BC layer. Remove before the first stable release.
+  elseif (!empty($entity_type) && !empty($entity)) {
+    $entity_info = entity_get_info($entity_type);
+    return new EntityTranslationDefaultHandler($entity_type, $entity_info, $entity);
+  }
 }
 
 /**
@@ -1730,7 +1735,7 @@ function entity_translation_get_handler($entity_type = NULL, $entity = NULL) {
 function entity_translation_entity_form_get_handler($form, $form_state) {
   $handler = FALSE;
   if ($info = entity_translation_edit_form_info($form, $form_state)) {
-    $handler = EntityTranslationHandlerFactory::getInstance()->getHandler($info['entity type'], $info['entity']);
+    $handler = entity_translation_get_handler($info['entity type'], $info['entity']);
   }
   return $handler;
 }

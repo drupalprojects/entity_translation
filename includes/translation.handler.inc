@@ -429,12 +429,14 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::addChild()
    */
   public function addChild($entity_type, $entity) {
-    $handler = $this->factory->getHandler($entity_type, $entity);
-    $handler->setFormLanguage($this->getFormLanguage());
-    $handler->setSourceLanguage($this->getSourceLanguage());
-    // Avoid registering more than one child handler for each entity.
-    $hid = $this->factory->getHandlerId($entity_type, $entity);
-    $this->children[$hid] = $handler;
+    if (!empty($this->factory)) {
+      $handler = $this->factory->getHandler($entity_type, $entity);
+      $handler->setFormLanguage($this->getFormLanguage());
+      $handler->setSourceLanguage($this->getSourceLanguage());
+      // Avoid registering more than one child handler for each entity.
+      $hid = $this->factory->getHandlerId($entity_type, $entity);
+      $this->children[$hid] = $handler;
+    }
   }
 
   /**
