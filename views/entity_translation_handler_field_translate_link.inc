@@ -80,7 +80,7 @@ class entity_translation_handler_field_translate_link extends views_handler_fiel
    * Render the link to the translation overview page of the entity.
    */
   function render_link($entity_type, $entity_id, $entity, $language) {
-    if (!entity_translation_enabled($entity_type) || !entity_translation_tab_access($entity_type, $entity) || $language == 'und') {
+    if (!entity_translation_tab_access($entity_type, $entity)) {
       return;
     }
     // We use the entity info here to avoid having to call entity_load() for all
