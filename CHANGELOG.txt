@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1907456 by leon.nk: Added Allow bulk field updates to copy data for all
+  translations.
 #1947764 by plach: Improve bundle translatability checks.
 #1370900 by mojzis, plach | mgladding: Fixed Fatal Error: Cannot access empty
   property in translation.handler.inc.
