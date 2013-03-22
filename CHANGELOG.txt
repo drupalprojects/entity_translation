@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1942712 by das-peter: Fixed Non wrapped entity passed to Rules.
 #1907456 by leon.nk: Added Allow bulk field updates to copy data for all
   translations.
 #1947764 by plach: Improve bundle translatability checks.
