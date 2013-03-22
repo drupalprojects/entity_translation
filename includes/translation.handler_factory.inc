@@ -125,7 +125,10 @@ class EntityTranslationHandlerFactory {
    *   A class implementing EntityTranslationHandlerInterface.
    */
   public function getLastHandler($entity_type = NULL) {
-    return isset($this->lastByType[$entity_type]) ? $this->lastByType[$entity_type] : $this->last;
+    if (isset($entity_type)) {
+      return isset($this->lastByType[$entity_type]) ? $this->lastByType[$entity_type] : NULL;
+    }
+    return $this->last;
   }
 
 }

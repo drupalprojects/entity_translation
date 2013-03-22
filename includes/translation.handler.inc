@@ -25,6 +25,11 @@ interface EntityTranslationHandlerInterface {
   public function addChild($entity_type, $entity);
 
   /**
+   * Removes a previously registered child translation handler.
+   */
+  public function removeChild($entity_type, $entity);
+
+  /**
    * Loads the translation data into the wrapped entity.
    */
   public function loadTranslations();
@@ -436,6 +441,16 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       // Avoid registering more than one child handler for each entity.
       $hid = $this->factory->getHandlerId($entity_type, $entity);
       $this->children[$hid] = $handler;
+    }
+  }
+
+  /**
+   * @see EntityTranslationHandlerInterface::removeChild()
+   */
+  public function removeChild($entity_type, $entity) {
+    if (!empty($this->factory)) {
+      $hid = $this->factory->getHandlerId($entity_type, $entity);
+      unset($this->children[$hid]);
     }
   }
 
