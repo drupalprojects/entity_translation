@@ -1,6 +1,10 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1942732 by OnkelTem: Fixed WSOD when LEFT JOIN'ing entities' translations.
+#1942712 by das-peter: Fixed Non wrapped entity passed to Rules.
+#1907456 by leon.nk: Added Allow bulk field updates to copy data for all
+  translations.
 #1947764 by plach: Improve bundle translatability checks.
 #1370900 by mojzis, plach | mgladding: Fixed Fatal Error: Cannot access empty
   property in translation.handler.inc.

@@ -413,6 +413,12 @@ function entity_translation_translatable_form($form, &$form_state, $field_name) 
   }
   else {
     $title = t('Are you sure you want to enable translation for the %name field?', $t_args);
+    $form['copy_all_languages'] = array(
+      '#title' => t('Copy translations'),
+      '#description' => t('Copy current data for <em>all</em> translations, otherwise data will only be copied for the original language.'),
+      '#type' => 'checkbox',
+      '#default_value' => TRUE,
+    );
   }
 
   // We need to keep some information for later processing.
@@ -443,6 +449,7 @@ function entity_translation_translatable_form_submit($form, $form_state) {
   // This is the current state that we want to reverse.
   $translatable = $form_state['values']['translatable'];
   $field_name = $form_state['field']['field_name'];
+  $copy_all_languages = !empty($form_state['values']['copy_all_languages']);
   $field = field_info_field($field_name);
 
   if ($field['translatable'] !== $translatable) {
@@ -458,7 +465,7 @@ function entity_translation_translatable_form_submit($form, $form_state) {
   // LANGUAGE_NONE before making a field untranslatable lest we lose
   // information.
   $operations = array(
-    array('entity_translation_translatable_batch', array(!$translatable, $field_name)),
+    array('entity_translation_translatable_batch', array(!$translatable, $field_name, $copy_all_languages)),
     array('entity_translation_translatable_switch', array(!$translatable, $field_name)),
   );
   $operations = $translatable ? $operations : array_reverse($operations);
@@ -499,7 +506,7 @@ function entity_translation_translatable_switch($translatable, $field_name) {
 /**
  * Batch operation. Convert field data to or from LANGUAGE_NONE.
  */
-function entity_translation_translatable_batch($translatable, $field_name, &$context) {
+function entity_translation_translatable_batch($translatable, $field_name, $copy_all_languages, &$context) {
   if (empty($context['sandbox'])) {
     $context['sandbox']['progress'] = 0;
 
@@ -549,7 +556,17 @@ function entity_translation_translatable_batch($translatable, $field_name, &$con
       if ($translatable && isset($entity->{$field_name}[LANGUAGE_NONE])) {
         // If the field is being switched to translatable and has data for
         // LANGUAGE_NONE then we need to move the data to the right language.
-        $entity->{$field_name}[$langcode] = $entity->{$field_name}[LANGUAGE_NONE];
+
+        if ($copy_all_languages) {
+          $translations = $handler->getTranslations();
+          foreach ($translations->data as $translation) {
+            $entity->{$field_name}[$translation['language']] = $entity->{$field_name}[LANGUAGE_NONE];
+          }
+        }
+        else {
+          $entity->{$field_name}[$langcode] = $entity->{$field_name}[LANGUAGE_NONE];
+        }
+
         // Store the original value.
         _entity_translation_update_field($entity_type, $entity, $field_name);
         $entity->{$field_name}[LANGUAGE_NONE] = array();

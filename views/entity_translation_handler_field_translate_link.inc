@@ -58,7 +58,9 @@ class entity_translation_handler_field_translate_link extends views_handler_fiel
     $ids = array();
     $ids_by_type = array();
     foreach ($values as $row) {
-      $ids_by_type[$this->get_value($row, 'entity_type')][] = $this->get_value($row, 'entity_id');
+      if ($entity_type = $this->get_value($row, 'entity_type')) {
+        $ids_by_type[$entity_type][] = $this->get_value($row, 'entity_id');
+      }
     }
     foreach ($ids_by_type as $type => $ids) {
       $this->entities[$type] = entity_load($type, $ids);
@@ -71,6 +73,10 @@ class entity_translation_handler_field_translate_link extends views_handler_fiel
   function render($values) {
     $type = $this->get_value($values, 'entity_type');
     $entity_id = $this->get_value($values, 'entity_id');
+    // Check if entity is not empty
+    if (!$entity_id || !$type) {
+      return NULL;
+    }
     $language = $this->get_value($values, 'language');
     $entity = $this->entities[$type][$entity_id];
     return $this->render_link($type, $entity_id, $entity, $language);
