@@ -403,22 +403,33 @@ function entity_translation_delete_confirm_submit($form, &$form_state) {
  */
 function entity_translation_translatable_form($form, &$form_state, $field_name) {
   $field = field_info_field($field_name);
-  $t_args = array('%name' => $field_name);
 
-  $warning = t('By submitting this form you will trigger a batch operation.');
   if ($field['translatable']) {
-    $title = t('Are you sure you want to disable translation for the %name field?', $t_args);
-    $warning .= "<br>" . t("<strong>All the existing translations of this field will be deleted.</strong><br>This action cannot be undone.");
+    $title = t('Are you sure you want to disable translation for this field?');
+    $text = t('All occurrences of this field will become <em>untranslatable</em>:');
+    if (empty($form_state['input'])) {
+      drupal_set_message(t('All the existing field translations will be deleted. This operation cannot be undone.'), 'warning');
+    }
   }
   else {
-    $title = t('Are you sure you want to enable translation for the %name field?', $t_args);
-    $form['copy_all_languages'] = array(
+    $title = t('Are you sure you want to enable translation for this field?');
+    $text = t('All occurrences of this field will become <em>translatable</em>:');
+
+    $form['options'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Migration settings'),
+      '#weight' => -10,
+    );
+    $form['options']['copy_all_languages'] = array(
       '#title' => t('Copy translations'),
-      '#description' => t('Copy current data for <em>all</em> translations, otherwise data will only be copied for the original language.'),
+      '#description' => t('Copy field data into <em>all</em> existing translations, otherwise data will only be available in the original language.'),
       '#type' => 'checkbox',
       '#default_value' => TRUE,
     );
   }
+
+  $text .= _entity_translation_field_desc($field);
+  $text .= t('This operation may take a long time to complete.');
 
   // We need to keep some information for later processing.
   $form_state['field'] = $field;
@@ -430,7 +441,7 @@ function entity_translation_translatable_form($form, &$form_state, $field_name) 
     '#default_value' => $field['translatable'],
   );
 
-  return confirm_form($form, $title, '', $warning);
+  return confirm_form($form, $title, '', $text);
 }
 
 /**
