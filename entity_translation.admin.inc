@@ -235,6 +235,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
     }
 
     foreach ($languages as $language) {
+      $classes = array();
       $options = array();
       $language_name = $language->name;
       $langcode = $language->language;
@@ -267,8 +268,9 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
         }
 
         $status = $translation['status'] ? t('Published') : t('Not published');
-        // @todo Add a theming function here.
-        $status .= isset($translation['translate']) && $translation['translate'] ? ' - <span class="marker">' . t('outdated') . '</span>' : '';
+        $classes[] = $translation['status'] ? 'published' : 'not-published';
+        $status .= isset($translation['translate']) && $translation['translate'] ? theme('entity_translation_overview_outdated', array('message' => t('outdated'))) : '';
+        $classes[] = isset($translation['translate']) && $translation['translate'] ? 'outdated' : '';
 
         if ($is_original) {
           $language_name = t('<strong>@language_name</strong>', array('@language_name' => $language_name));
@@ -298,10 +300,14 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
           $link = isset($add_links->links[$langcode]['href']) ? $add_links->links[$langcode] : array('href' => $add_path, 'language' => $language);
           $link['query'] = isset($_GET['destination']) ? drupal_get_destination() : FALSE;
           $options[] = $translatable ? l(t('add'), $link['href'], $link) : t('No translatable fields');
+          $classes[] = $translatable ? '' : 'non-traslatable';
         }
         $status = t('Not translated');
       }
-      $rows[] = array($language_name, $source_name, $row_title, $status, implode(" | ", $options));
+      $rows[] = array(
+        'data' => array($language_name, $source_name, $row_title, $status, implode(" | ", $options)),
+        'class' => $classes,
+      );
     }
   }
 
@@ -312,7 +318,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   $build['#entity_type'] = $entity_type;
   $build['#entity'] = $entity;
   $build['entity_translation_overview'] = array(
-    '#theme' => 'table',
+    '#theme' => 'entity_translation_overview',
     '#header' => $header,
     '#rows' => $rows,
   );
@@ -351,6 +357,24 @@ function _entity_translation_label($entity_type, $entity, $langcode = NULL) {
     }
   }
   return t('view');
+}
+/**
+ * Theme wrapper for the entity translation language page.
+ */
+function theme_entity_translation_overview($variables){
+  $rows = $variables['rows'];
+  return theme('table', array(
+    'rows' => $rows,
+    'header' => $variables['header'],
+  ));
+}
+
+/**
+ * Theme wrapper for the entity translation language outdated translation.
+ */
+function theme_entity_translation_overview_outdated($variables){
+  $message = $variables['message'];
+  return ' - <span class="marker">' . $message . '</span>';
 }
 
 /**

@@ -797,6 +797,14 @@ function entity_translation_theme() {
     'entity_translation_language_tabs' => array(
       'render element' => 'element',
     ),
+    'entity_translation_overview' => array(
+      'variables' => array('rows' => NULL, 'header' => NULL),
+      'file' => 'entity_translation.admin.inc'
+    ),
+    'entity_translation_overview_outdated' => array(
+      'variables' => array('message' => NULL),
+      'file' => 'entity_translation.admin.inc'
+    ),
   );
 }
 
