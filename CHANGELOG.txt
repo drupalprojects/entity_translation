@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1941080 by plopesc, bforchhammer: Fixed Menu translation on node form is
+  broken.
 #1937242 by eliosh: Use custom theme function for node translation overview.
 #1916738 by alberto56, plach: Added Make it more obvious to those new to the
   concept of field translation that all instances of the field are translatable.
