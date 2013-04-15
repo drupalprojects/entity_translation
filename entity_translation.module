@@ -1029,9 +1029,9 @@ function entity_translation_sync($entity_type, $entity) {
       // Backup field values.
       $field_values = $entity->{$field_name};
 
-      // Reset field values so that no spurious value is stored. Source values
-      // must be preserved in any case.
-      $entity->{$field_name} = array($source_langcode => $source_items);
+      // Reset field values so that no spurious translation value is stored.
+      // Source values and anything else must be preserved in any case.
+      $entity->{$field_name} = array($source_langcode => $source_items) + array_diff_key($entity->{$field_name}, $translations->data);
 
       // Update translations.
       foreach ($translations->data as $langcode => $translation) {

@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1959614 by plach | rutcreate: Fixed Image is deleted by saving node 5 times.
 #1941080 by plopesc, bforchhammer: Fixed Menu translation on node form is
   broken.
 #1937242 by eliosh: Use custom theme function for node translation overview.
