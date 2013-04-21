@@ -6,7 +6,7 @@
  */
 
 /**
- * Menu specific implementation of hook_node_prepare().
+ * Implements hook_node_prepare().
  *
  * Translates the menu item shown on node edit forms if the node language does
  * not equal the language of the menu item. This means either loading the
@@ -40,7 +40,7 @@ function entity_translation_i18n_menu_module_implements_alter(&$implementations,
 }
 
 /**
- * Menu specific implementation of hook_node_presave().
+ * Implements hook_node_presave().
  */
 function entity_translation_i18n_menu_node_presave($node) {
   if (!entity_translation_enabled('node')) {
@@ -95,7 +95,7 @@ function entity_translation_i18n_menu_form_menu_edit_item_alter(&$form, &$form_s
 }
 
 /**
- * Menu specific implementation of hook_menu_link_alter().
+ * Implements hook_menu_link_alter().
  */
 function entity_translation_i18n_menu_menu_link_alter(&$link) {
   if (!empty($link['mlid']) && !empty($link['entity_language']) && $link['language'] == LANGUAGE_NONE && entity_translation_i18n_menu_item($link)) {
@@ -134,7 +134,7 @@ function entity_translation_i18n_menu_menu_link_alter(&$link) {
 }
 
 /**
- * Menu specific implementation of hook_menu_link_update().
+ * Implements hook_menu_link_update().
  */
 function entity_translation_i18n_menu_menu_link_update($link) {
   // Make sure localizations are saved properly.
@@ -268,6 +268,11 @@ function entity_translation_i18n_menu_node_menu_item_translate($node, $langcode)
   // Localization.
   if ($node->menu['language'] == LANGUAGE_NONE) {
     _i18n_menu_link_localize($node->menu, $langcode);
+    // Update properties 'link_title' and 'options.attributes.title' which are
+    // used for the node menu form; i18n_menu_link_localize only localizes
+    // rendered properties 'title' and 'localized_options.attributes.title'.
+    $node->menu['link_title'] = $node->menu['title'];
+    $node->menu['options']['attributes']['title'] = $node->menu['localized_options']['attributes']['title'];
   }
   // Translation sets.
   else {
@@ -280,6 +285,10 @@ function entity_translation_i18n_menu_node_menu_item_translate($node, $langcode)
       if (!empty($menu) && !isset($menu['parent_depth_limit'])) {
         $menu['parent_depth_limit'] = _menu_parent_depth_limit($menu);
       }
+
+      // Make sure the menu item is not set to hidden; i18n_menu automatically
+      // hides any menu items not matching the current interface language.
+      $menu['hidden'] = FALSE;
     }
 
     // Replace the menu item with the translated version, or null if there is

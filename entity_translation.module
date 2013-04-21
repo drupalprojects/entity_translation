@@ -797,6 +797,14 @@ function entity_translation_theme() {
     'entity_translation_language_tabs' => array(
       'render element' => 'element',
     ),
+    'entity_translation_overview' => array(
+      'variables' => array('rows' => NULL, 'header' => NULL),
+      'file' => 'entity_translation.admin.inc'
+    ),
+    'entity_translation_overview_outdated' => array(
+      'variables' => array('message' => NULL),
+      'file' => 'entity_translation.admin.inc'
+    ),
   );
 }
 
@@ -1021,9 +1029,9 @@ function entity_translation_sync($entity_type, $entity) {
       // Backup field values.
       $field_values = $entity->{$field_name};
 
-      // Reset field values so that no spurious value is stored. Source values
-      // must be preserved in any case.
-      $entity->{$field_name} = array($source_langcode => $source_items);
+      // Reset field values so that no spurious translation value is stored.
+      // Source values and anything else must be preserved in any case.
+      $entity->{$field_name} = array($source_langcode => $source_items) + array_diff_key($entity->{$field_name}, $translations->data);
 
       // Update translations.
       foreach ($translations->data as $langcode => $translation) {
@@ -1566,11 +1574,11 @@ function entity_translation_form_field_ui_field_edit_form_alter(&$form, $form_st
 
   $translatable = $field['translatable'];
   $label = t('Field translation');
-  $title = t('Users may translate this field.');
+  $title = t('Users may translate all occurrences of this field:') . _entity_translation_field_desc($field);
 
   if (field_has_data($field)) {
     $path = "admin/config/regional/entity_translation/translatable/$field_name";
-    $status = $translatable ? $title : t('This field is shared among the entity translations.');
+    $status = $translatable ? $title : (t('All occurrences of this field are untranslatable:') . _entity_translation_field_desc($field));
     $link_title = !$translatable ? t('Enable translation') : t('Disable translation');
 
     $form['field']['translatable'] = array(
@@ -1596,6 +1604,27 @@ function entity_translation_form_field_ui_field_edit_form_alter(&$form, $form_st
       '#default_value' => $translatable,
     );
   }
+}
+
+/**
+ * Returns a human-readable, localized, bullet list of instances of a field.
+ *
+ * @param field
+ *   A field data structure.
+ *
+ * @return
+ *    A themed list of field instances with the bundle they are attached to.
+ */
+function _entity_translation_field_desc($field) {
+  $instances = array();
+  foreach ($field['bundles'] as $entity_type => $bundle_names) {
+    $entity_type_info = entity_get_info($entity_type);
+    foreach ($bundle_names as $bundle_name) {
+      $instance_info = field_info_instance($entity_type, $field['field_name'], $bundle_name);
+      $instances[] = t('@instance_label in %entity_label', array('@instance_label' => $instance_info['label'], '%entity_label' => $entity_type_info['bundles'][$bundle_name]['label']));
+    }
+  }
+  return theme('item_list', array('items' => $instances));
 }
 
 /**

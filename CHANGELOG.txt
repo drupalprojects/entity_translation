@@ -1,6 +1,12 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1959614 by plach | rutcreate: Fixed Image is deleted by saving node 5 times.
+#1941080 by plopesc, bforchhammer: Fixed Menu translation on node form is
+  broken.
+#1937242 by eliosh: Use custom theme function for node translation overview.
+#1916738 by alberto56, plach: Added Make it more obvious to those new to the
+  concept of field translation that all instances of the field are translatable.
 #1942732 by OnkelTem: Fixed WSOD when LEFT JOIN'ing entities' translations.
 #1942712 by das-peter: Fixed Non wrapped entity passed to Rules.
 #1907456 by leon.nk: Added Allow bulk field updates to copy data for all
