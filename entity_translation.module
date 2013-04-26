@@ -1417,7 +1417,9 @@ function entity_translation_entity_form_delete_translation_submit($form, &$form_
  */
 function entity_translation_entity_form_validate($form, &$form_state) {
   $handler = entity_translation_entity_form_get_handler($form, $form_state);
-  $handler->entityFormValidate($form, $form_state);
+  if (!empty($handler)) {
+    $handler->entityFormValidate($form, $form_state);
+  }
 }
 
 /**
