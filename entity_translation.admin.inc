@@ -591,8 +591,9 @@ function entity_translation_translatable_batch($translatable, $field_name, $copy
         // If the field is being switched to translatable and has data for
         // LANGUAGE_NONE then we need to move the data to the right language.
 
-        if ($copy_all_languages) {
-          $translations = $handler->getTranslations();
+        $translations = $handler->getTranslations();
+
+        if ($copy_all_languages && !empty($translations->data)) {
           foreach ($translations->data as $translation) {
             $entity->{$field_name}[$translation['language']] = $entity->{$field_name}[LANGUAGE_NONE];
           }

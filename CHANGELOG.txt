@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1979406 by milesw: Field values for node translations not filled correctly when
+  making a field translatable.
 #1969366 by plach | EdNet: Fixed unsupported operand types in
   entity_translation().module line 951 - Unable to clear cache, run cron,
   etc from drush or aegir.
