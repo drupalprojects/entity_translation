@@ -1,6 +1,9 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1969366 by plach | EdNet: Fixed unsupported operand types in
+  entity_translation().module line 951 - Unable to clear cache, run cron,
+  etc from drush or aegir.
 #1970246 by jweowu: Fixed entity_translation_upgrade() doesn't flush the entity
   load cache.
 #1959614 by plach | rutcreate: Fixed Image is deleted by saving node 5 times.
