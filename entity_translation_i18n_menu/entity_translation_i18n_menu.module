@@ -272,7 +272,7 @@ function entity_translation_i18n_menu_node_menu_item_translate($node, $langcode)
     // used for the node menu form; i18n_menu_link_localize only localizes
     // rendered properties 'title' and 'localized_options.attributes.title'.
     $node->menu['link_title'] = $node->menu['title'];
-    $node->menu['options']['attributes']['title'] = $node->menu['localized_options']['attributes']['title'];
+    $node->menu['options']['attributes']['title'] = isset($node->menu['localized_options']['attributes']['title']) ? $node->menu['localized_options']['attributes']['title'] : '';
   }
   // Translation sets.
   else {
@@ -288,7 +288,9 @@ function entity_translation_i18n_menu_node_menu_item_translate($node, $langcode)
 
       // Make sure the menu item is not set to hidden; i18n_menu automatically
       // hides any menu items not matching the current interface language.
-      $menu['hidden'] = FALSE;
+      if (!empty($menu)) {
+        $menu['hidden'] = FALSE;
+      }
     }
 
     // Replace the menu item with the translated version, or null if there is
