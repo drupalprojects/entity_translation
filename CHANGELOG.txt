@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2000926 by GiorgosK, bforchhammer: Fixed entity_translation_i18n_menu should
+  check if entity is node before deleting menu links.
 #1991452 by twistor: Fixed Strict warnings on testing page.
 #1992588 by bforchhammer: Fixed PHP notices on node page (menu-related).
 #1979406 by milesw: Field values for node translations not filled correctly when

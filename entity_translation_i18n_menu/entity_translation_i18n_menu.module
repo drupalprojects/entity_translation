@@ -370,6 +370,11 @@ function entity_translation_i18n_menu_entity_translation_upgrade($node, $transla
  * Implements hook_entity_translation_delete().
  */
 function entity_translation_i18n_menu_entity_translation_delete($entity_type, $entity, $langcode) {
+  // Make sure that we are working with an entity of type node.
+  if ($entity_type != 'node') {
+    return;
+  }
+
   list($entity_id, , ) = entity_extract_ids($entity_type, $entity);
 
   // Clean-up all menu module links that point to this node.
