@@ -26,6 +26,7 @@ class EntityTranslationMenuTranslationTestCase extends EntityTranslationTestCase
     $this->login($this->getAdminUser(array('administer menu')));
     $this->addLanguage('en');
     $this->addLanguage('es');
+    $this->addLanguage('it');
     $this->configureContentType();
     $this->configureMenu();
     $this->enableUrlLanguageDetection();
@@ -76,7 +77,9 @@ class EntityTranslationMenuTranslationTestCase extends EntityTranslationTestCase
     $edit['menu[enabled]'] = TRUE;
     $edit['menu[link_title]'] = $link_title;
     $edit['menu[description]'] = $description ? $description : 'link language = ' . $langcode;
-    $edit['menu[tset]'] = $use_tsets;
+    if ($use_tsets != NULL) {
+      $edit['menu[tset]'] = $use_tsets;
+    }
 
     $this->drupalPost(NULL, $edit, t('Save'));
     $this->drupalGet('node/' . $node->nid . '/translate');
@@ -229,6 +232,17 @@ class EntityTranslationMenuTranslationTestCase extends EntityTranslationTestCase
     $this->editPage($node, $link_title_es, $link_title_es2, 'es');
 
     // Check that English menu link has not changed.
+    $this->get('en', '<front>');
+    $this->assertText($link_title_en2);
+
+    // Add another translation, and check that other menu items are not
+    // affected. See https://drupal.org/node/1982140
+    $link_title_it = $this->randomName();
+    $node_translation = $this->createTranslation($node, $link_title_it, NULL, 'it', NULL);
+
+    // Check that Spanish and English menu links have not changed.
+    $this->get('es', '<front>');
+    $this->assertText($link_title_es2);
     $this->get('en', '<front>');
     $this->assertText($link_title_en2);
 

@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1982140 by bforchhammer | carligraph: Fixed Menu item is deleted when adding a
+  third translation.
 #2000926 by GiorgosK, bforchhammer: Fixed entity_translation_i18n_menu should
   check if entity is node before deleting menu links.
 #1991452 by twistor: Fixed Strict warnings on testing page.

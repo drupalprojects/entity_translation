@@ -58,11 +58,10 @@ function entity_translation_i18n_menu_node_presave($node) {
     return;
   }
 
-  // If we change from menu localization to translation sets while working on
-  // a translation (i.e. not the source node), then leave the source menu item
-  // intact and create a new one.
+  // When creating a new translation, leave the source menu item intact and
+  // create a new one.
   $langcode = entity_language('node', $node);
-  if (!empty($node->menu) && $tset && $node->menu['language'] == LANGUAGE_NONE && !empty($source_langcode)) {
+  if (!empty($node->menu) && $tset && !empty($source_langcode)) {
     $node->source_menu = menu_link_load($node->menu['mlid']);
     unset($node->menu['mlid']);
   }
@@ -262,7 +261,7 @@ function entity_translation_i18n_menu_item($item) {
  * @param $node
  *   A node object, with a menu item ($node->menu).
  * @param $langcode
- *   The language into which the menu item should be translates.
+ *   The language into which the menu item should be translated.
  */
 function entity_translation_i18n_menu_node_menu_item_translate($node, $langcode) {
   // Localization.
