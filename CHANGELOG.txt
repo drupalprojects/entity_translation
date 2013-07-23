@@ -1,6 +1,10 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+
+
+Entity Translation 7.x-1.0-beta3, 2013-07-23
+--------------------------------------------
 #2037789 by Jelle_S: Fixed Default to user_access() access callback like drupal
   menu does.
 #1982140 by bforchhammer | carligraph: Fixed Menu item is deleted when adding a
