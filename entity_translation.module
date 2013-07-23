@@ -695,8 +695,12 @@ function entity_translation_admin_paths() {
  */
 function entity_translation_tab_access($entity_type, $entity) {
   if (drupal_multilingual() && (user_access('translate any entity') || user_access("translate $entity_type entities"))) {
+    $handler = entity_translation_get_handler($entity_type, $entity);
+    // Ensure $entity holds an entity object and not an id.
+    $entity = $handler->getEntity();
+
     $enabled = entity_translation_enabled($entity_type, $entity);
-    return $enabled && entity_translation_get_handler($entity_type, $entity)->getLanguage() != LANGUAGE_NONE;
+    return $enabled && $handler->getLanguage() != LANGUAGE_NONE;
   }
   return FALSE;
 }
@@ -1770,6 +1774,9 @@ function entity_translation_get_handler($entity_type = NULL, $entity = NULL, $up
     else {
       return NULL;
     }
+  }
+  elseif (is_numeric($entity)) {
+    $entity = reset(entity_load($entity_type, array($entity)));
   }
   elseif (is_string($entity)) {
     $entity = entity_create_stub_entity($entity_type, array(NULL, NULL, $entity));

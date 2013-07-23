@@ -204,6 +204,8 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   }
 
   $handler = entity_translation_get_handler($entity_type, $entity);
+  // Ensure $entity holds an entity object and not an id.
+  $entity = $handler->getEntity();
   $handler->initPathScheme();
 
   // Initialize translations if they are empty.
@@ -387,7 +389,8 @@ function entity_translation_delete_confirm($form, $form_state, $entity_type, $en
   $form = array(
     '#handler' => $handler,
     '#entity_type' => $entity_type,
-    '#entity' => $entity,
+    // Ensure $entity holds an entity object and not an id.
+    '#entity' => $handler->getEntity(),
     '#language' => $langcode,
   );
 

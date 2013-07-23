@@ -123,6 +123,14 @@ interface EntityTranslationHandlerInterface {
   public function setEntity($entity);
 
   /**
+   * Retrieve the current entity.
+   *
+   * @param return
+   *  The entity to be translated.
+   */
+  public function getEntity();
+
+  /**
    * Checks that the wrapped entity matches the give entity
    *
    * @param $entity_type
@@ -746,6 +754,13 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
     // Update bundle and entity id properties.
     list($this->entityId, , $this->bundle) = entity_extract_ids($this->entityType, $this->entity);
+  }
+
+  /**
+   * @see EntityTranslationHandlerInterface::getEntity()
+   */
+  public function getEntity() {
+    return $this->entity;
   }
 
   /**
