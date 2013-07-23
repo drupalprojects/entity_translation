@@ -568,7 +568,8 @@ function entity_translation_edit_access() {
     $enabled_languages = entity_translation_languages($entity_type, $entity);
     if (isset($enabled_languages[$langcode]) || $langcode == LANGUAGE_NONE) {
       $edit_form_item = array_shift($args);
-      return _entity_translation_callback($edit_form_item['access callback'], $args, $edit_form_item);
+      $access_callback = isset($edit_form_item['access callback']) ? $edit_form_item['access callback'] : 'user_access';
+      return _entity_translation_callback($access_callback, $args, $edit_form_item);
     }
   }
 
@@ -625,7 +626,8 @@ function entity_translation_add_access() {
     $enabled_languages = entity_translation_languages($entity_type, $entity);
     if (isset($enabled_languages[$langcode])) {
       $edit_form_item = array_shift($args);
-      return _entity_translation_callback($edit_form_item['access callback'], $args, $edit_form_item);
+      $access_callback = isset($edit_form_item['access callback']) ? $edit_form_item['access callback'] : 'user_access';
+      return _entity_translation_callback($access_callback, $args, $edit_form_item);
     }
   }
 
