@@ -75,7 +75,10 @@ class EntityTranslationHandlerFactory {
    *   A class implementing EntityTranslationHandlerInterface.
    */
   public function getHandler($entity_type, $entity) {
-    if (is_string($entity)) {
+    if (is_numeric($entity)) {
+      $entity = reset(entity_load($entity_type, array($entity)));
+    }
+    elseif (is_string($entity)) {
       $entity = entity_create_stub_entity($entity_type, array(NULL, NULL, $entity));
     }
 

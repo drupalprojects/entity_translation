@@ -204,6 +204,8 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   }
 
   $handler = entity_translation_get_handler($entity_type, $entity);
+  // Ensure $entity holds an entity object and not an id.
+  $entity = $handler->getEntity();
   $handler->initPathScheme();
 
   // Initialize translations if they are empty.
@@ -388,7 +390,8 @@ function entity_translation_delete_confirm($form, $form_state, $entity_type, $en
   $form = array(
     '#handler' => $handler,
     '#entity_type' => $entity_type,
-    '#entity' => $entity,
+    // Ensure $entity holds an entity object and not an id.
+    '#entity' => $handler->getEntity(),
     '#language' => $langcode,
   );
 
@@ -592,8 +595,9 @@ function entity_translation_translatable_batch($translatable, $field_name, $copy
         // If the field is being switched to translatable and has data for
         // LANGUAGE_NONE then we need to move the data to the right language.
 
-        if ($copy_all_languages) {
-          $translations = $handler->getTranslations();
+        $translations = $handler->getTranslations();
+
+        if ($copy_all_languages && !empty($translations->data)) {
           foreach ($translations->data as $translation) {
             $entity->{$field_name}[$translation['language']] = $entity->{$field_name}[LANGUAGE_NONE];
           }

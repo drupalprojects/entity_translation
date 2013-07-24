@@ -1,6 +1,27 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1866076 by grndlvl: Added support for non-entity load tokens when declaring
+  translations.
+
+
+Entity Translation 7.x-1.0-beta3, 2013-07-23
+--------------------------------------------
+#2037789 by Jelle_S: Fixed Default to user_access() access callback like drupal
+  menu does.
+#1982140 by bforchhammer | carligraph: Fixed Menu item is deleted when adding a
+  third translation.
+#2000926 by GiorgosK, bforchhammer: Fixed entity_translation_i18n_menu should
+  check if entity is node before deleting menu links.
+#1991452 by twistor: Fixed Strict warnings on testing page.
+#1992588 by bforchhammer: Fixed PHP notices on node page (menu-related).
+#1979406 by milesw: Field values for node translations not filled correctly when
+  making a field translatable.
+#1969366 by plach | EdNet: Fixed unsupported operand types in
+  entity_translation().module line 951 - Unable to clear cache, run cron,
+  etc from drush or aegir.
+#1970246 by jweowu: Fixed entity_translation_upgrade() doesn't flush the entity
+  load cache.
 #1959614 by plach | rutcreate: Fixed Image is deleted by saving node 5 times.
 #1941080 by plopesc, bforchhammer: Fixed Menu translation on node form is
   broken.
@@ -14,7 +35,7 @@ Entity Translation 7.x-1.x, xxxx-xx-xx
 #1947764 by plach: Improve bundle translatability checks.
 #1370900 by mojzis, plach | mgladding: Fixed Fatal Error: Cannot access empty
   property in translation.handler.inc.
-Issue #1924088 by plach | drzraf: Fixed Wrong form 'language' value in case of
+#1924088 by plach | drzraf: Fixed Wrong form 'language' value in case of
   content-translation enabled bundles.
 #1933742 by das-peter: Fixed Delete translation doesn't flush the entity cache.
 #1903024 by fabsor | dimitrileonidas: Fixed SQL error in Views when adding an
