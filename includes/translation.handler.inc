@@ -113,6 +113,9 @@ interface EntityTranslationHandlerInterface {
 
   /**
    * Returns TRUE if the entity is currently being translated.
+   *
+   * @deprecated This is no longer used and will be removed before the first
+   *   stable release.
    */
   public function isTranslating();
 
@@ -121,6 +124,9 @@ interface EntityTranslationHandlerInterface {
    *
    * @param $translating
    *   A boolean value.
+   *
+   * @deprecated This is no longer used and will be removed before the first
+   *   stable release.
    */
   public function setTranslating($translating);
 
@@ -607,6 +613,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         }
       }
     }
+
+    $this->notifyChildren(__FUNCTION__, func_get_args());
   }
 
   /**
@@ -677,7 +685,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     if (empty($this->getTranslations()->data)) {
       $this->initTranslations();
     }
-    elseif (!empty($langcode) && !$this->isTranslating()) {
+    elseif (!empty($langcode)) {
       $this->setOriginalLanguage($langcode);
     }
   }
@@ -779,13 +787,16 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   public function setOriginalLanguage($langcode) {
     $translations = $this->getTranslations();
 
-    if (isset($translations->original) && $translations->original != $langcode) {
-      $translations->data[$langcode] = $translations->data[$translations->original];
-      $translations->data[$langcode]['language'] = $langcode;
-      unset($translations->data[$translations->original]);
-    }
+    if (!isset($translations->original) || $translations->original != $langcode) {
+      if (isset($translations->original)) {
+        $translations->data[$langcode] = $translations->data[$translations->original];
+        $translations->data[$langcode]['language'] = $langcode;
+        unset($translations->data[$translations->original]);
+      }
 
-    $translations->original = $langcode;
+      $translations->original = $langcode;
+      $this->notifyChildren(__FUNCTION__, func_get_args());
+    }
   }
 
   /**
@@ -856,6 +867,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
           $translation['translate'] = 1;
         }
       }
+      $this->notifyChildren(__FUNCTION__, func_get_args());
     }
   }
 
