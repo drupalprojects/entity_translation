@@ -614,7 +614,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       }
     }
 
-    $this->notifyChildren(__FUNCTION__, func_get_args());
+    $args = func_get_args();
+    $this->notifyChildren(__FUNCTION__, $args);
   }
 
   /**
@@ -795,7 +796,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       }
 
       $translations->original = $langcode;
-      $this->notifyChildren(__FUNCTION__, func_get_args());
+      $args = func_get_args();
+      $this->notifyChildren(__FUNCTION__, $args);
     }
   }
 
@@ -867,7 +869,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
           $translation['translate'] = 1;
         }
       }
-      $this->notifyChildren(__FUNCTION__, func_get_args());
+      $args = func_get_args();
+      $this->notifyChildren(__FUNCTION__, $args);
     }
   }
 
@@ -1023,7 +1026,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public function setFormLanguage($langcode) {
     $this->formLanguage = $langcode;
-    $this->notifyChildren(__FUNCTION__, func_get_args());
+    $args = func_get_args();
+    $this->notifyChildren(__FUNCTION__, $args);
   }
 
   /**
@@ -1038,7 +1042,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public function setSourceLanguage($langcode) {
     $this->sourceLanguage = $langcode;
-    $this->notifyChildren(__FUNCTION__, func_get_args());
+    $args = func_get_args();
+    $this->notifyChildren(__FUNCTION__, $args);
   }
 
   /**
