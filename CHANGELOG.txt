@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2055491 by plach: Fixed Synced image fields cannot be emptied.
 #1866076 by grndlvl: Added support for non-entity load tokens when declaring
   translations.
 
