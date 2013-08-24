@@ -533,7 +533,7 @@ function entity_translation_edit_page() {
   // Set the current form language.
   $handler = entity_translation_get_handler($entity_type, $entity);
   $handler->initPathScheme();
-  $langcode = entity_translation_form_language($langcode, $handler);
+  $langcode = entity_translation_get_existing_language($entity_type, $entity, $langcode);
   $handler->setFormLanguage($langcode);
 
   // Display the entity edit form.
@@ -551,7 +551,7 @@ function entity_translation_edit_access() {
 
   $handler = entity_translation_get_handler($entity_type, $entity);
   $translations = $handler->getTranslations();
-  $langcode = entity_translation_form_language($langcode, $handler);
+  $langcode = $langcode = entity_translation_get_existing_language($entity_type, $entity, $langcode);
 
   // The user must be explicitly allowed to access the original values if
   // workflow permissions are enabled.
@@ -579,11 +579,6 @@ function entity_translation_edit_access() {
 /**
  * Determines the current form language.
  *
- * Based on the requested language and the translations available for the entity
- * being edited, determines the active form language. This takes into account
- * language fallback rules so that the translation being edited matches the one
- * being viewed.
- *
  * @param $langcode
  *   The requested language code.
  * @param EntityTranslationHandlerInterface $handler
@@ -591,8 +586,35 @@ function entity_translation_edit_access() {
  *
  * @return
  *   A valid language code.
+ *
+ * @deprecated This is no longer used and will be removed in the first stable
+ *   release.
  */
 function entity_translation_form_language($langcode, $handler) {
+  return entity_translation_get_existing_language($handler->getEntity(), $handler->getEntityType(), $langcode);
+}
+
+/**
+ * Determines an existing translation language.
+ *
+ * Based on the requested language and the translations available for the given
+ * entity, determines an existing translation language. This takes into account
+ * language fallback rules.
+ *
+ * @param $entity_type
+ *    The type of the entity.
+ * @param $entity
+ *    The entity whose existing translation language has to be returned.
+ * @param $langcode
+ *   (optional) The requested language code. Defaults to the current content
+ *   language.
+ *
+ * @return
+ *   A valid language code.
+ */
+function entity_translation_get_existing_language($entity_type, $entity, $langcode = NULL) {
+  $handler = entity_translation_get_handler($entity_type, $entity);
+
   if (empty($langcode)) {
     $langcode = $GLOBALS['language_content']->language;
   }

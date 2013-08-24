@@ -144,12 +144,20 @@ interface EntityTranslationHandlerInterface {
   public function setEntity($entity);
 
   /**
-   * Retrieve the current entity.
+   * Returns the wrapped entity.
    *
    * @param return
-   *  The entity to be translated.
+   *   The wrapped entity.
    */
   public function getEntity();
+
+  /**
+   * Returns the wrapped entity type.
+   *
+   * @param return
+   *   The wrapped entity type.
+   */
+  public function getEntityType();
 
   /**
    * Checks that the wrapped entity matches the give entity
@@ -848,6 +856,13 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public function getEntity() {
     return $this->entity;
+  }
+
+  /**
+   * @see EntityTranslationHandlerInterface::getEntityType()
+   */
+  public function getEntityType() {
+    return $this->entityType;
   }
 
   /**
