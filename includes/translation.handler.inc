@@ -1131,7 +1131,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     // Add the entity language switcher.
     $this->entityFormLanguageWidget($form, $form_state);
 
-    if ($is_translation) {
+    if ($is_translation && isset($form['actions']['delete'])) {
       // Replace the delete button with the delete translation one.
       if (!$new_translation) {
         $weight = 100;
