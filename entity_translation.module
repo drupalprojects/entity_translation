@@ -1852,11 +1852,13 @@ function entity_translation_edit_form_info($form, $form_state) {
   if ($entity_type) {
     $entity_info = entity_get_info($form['#entity_type']);
     if (!empty($entity_info['translation']['entity_translation']['edit form'])) {
-      $entity_key = $entity_info['translation']['entity_translation']['edit form'];
-      if (isset($form_state[$entity_key])) {
+      $entity_keys = explode('][', $entity_info['translation']['entity_translation']['edit form']);
+      $key_exists = FALSE;
+      $entity = drupal_array_get_nested_value($form_state, $entity_keys, $key_exists);
+      if ($key_exists) {
         $info = array(
           'entity type' => $form['#entity_type'],
-          'entity' => (object) $form_state[$entity_key],
+          'entity' => (object) $entity,
         );
       }
     }
