@@ -1,6 +1,10 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2073231 by plach: Rename entity_translation_form_language() to
+  entity_translation_get_existing_language().
+#2072865 by douggreen: Fixed Only replace 'delete' button with
+  'delete translation', don't add one that doesn't exist.
 #1865244 by plach | bojanz, agoradesign, ciss, interdruper, joel_osc: Added
   support for multiple translation handlers on the same form.
 #2055491 by plach: Fixed Synced image fields cannot be emptied.

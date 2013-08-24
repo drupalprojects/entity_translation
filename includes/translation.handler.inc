@@ -144,12 +144,20 @@ interface EntityTranslationHandlerInterface {
   public function setEntity($entity);
 
   /**
-   * Retrieve the current entity.
+   * Returns the wrapped entity.
    *
    * @param return
-   *  The entity to be translated.
+   *   The wrapped entity.
    */
   public function getEntity();
+
+  /**
+   * Returns the wrapped entity type.
+   *
+   * @param return
+   *   The wrapped entity type.
+   */
+  public function getEntityType();
 
   /**
    * Checks that the wrapped entity matches the give entity
@@ -851,6 +859,13 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   /**
+   * @see EntityTranslationHandlerInterface::getEntityType()
+   */
+  public function getEntityType() {
+    return $this->entityType;
+  }
+
+  /**
    * @see EntityTranslationHandlerInterface::isWrappedEntity()
    */
   public function isWrappedEntity($entity_type, $entity) {
@@ -1131,7 +1146,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     // Add the entity language switcher.
     $this->entityFormLanguageWidget($form, $form_state);
 
-    if ($is_translation) {
+    if ($is_translation && isset($form['actions']['delete'])) {
       // Replace the delete button with the delete translation one.
       if (!$new_translation) {
         $weight = 100;
