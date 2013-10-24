@@ -1,7 +1,9 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
-#2027513 by GaëlG, jcisio: Added support for nested values for 'edit form' in
+#1516202 by fabsor, spotzero: Added a CTools access plugin for checking if a
+  translation is available.
+#2027513 by GaÃ«lG, jcisio: Added support for nested values for 'edit form' in
   hook_entity_info().
 #2073231 by plach: Rename entity_translation_form_language() to
   entity_translation_get_existing_language().
