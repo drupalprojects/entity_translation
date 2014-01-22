@@ -129,7 +129,7 @@ function entity_translation_entity_info() {
  * Processes the given path schemes and fill-in default values.
  */
 function _entity_translation_process_path_schemes($entity_type, &$et_info) {
-  $path_scheme_keys = array_flip(array('base path', 'view path', 'edit path', 'translate path', 'path wildcard', 'admin theme'));
+  $path_scheme_keys = array_flip(array('base path', 'view path', 'edit path', 'translate path', 'path wildcard', 'admin theme', 'edit tabs'));
 
   // Insert the default path scheme into the 'path schemes' array and remove
   // respective elements from the entity_translation info array.
@@ -164,6 +164,7 @@ function _entity_translation_process_path_schemes($entity_type, &$et_info) {
     $et_info['path schemes'][$delta] += array(
       'admin theme' => TRUE,
       'path wildcard' => "%$entity_type",
+      'edit tabs' => TRUE,
     );
   }
 }
@@ -452,21 +453,23 @@ function entity_translation_menu_alter(&$items) {
           $edit_item['access arguments'] = array_merge($args, $original_item['access arguments']);
 
           // Edit translation callback.
-          $translation_position = count($edit_path_parts);
-          $args = array($entity_type, $entity_position, $translation_position, $original_item);
-          $items["$edit_path/%entity_translation_language"] = array(
-            'type' => MENU_DEFAULT_LOCAL_TASK,
-            'title callback' => 'entity_translation_edit_title',
-            'title arguments' => array($translation_position),
-            'page callback' => 'entity_translation_edit_page',
-            'page arguments' => array_merge($args, $original_item['page arguments']),
-            'access callback' => 'entity_translation_edit_access',
-            'access arguments' => array_merge($args, $original_item['access arguments']),
-          )
-          // We need to inherit the remaining menu item keys, mostly 'module'
-          // and 'file' to keep ajax callbacks working (see form_get_cache() and
-          // drupal_retrieve_form()).
-          + $original_item;
+          if ($scheme['edit tabs'] !== FALSE) {
+            $translation_position = count($edit_path_parts);
+            $args = array($entity_type, $entity_position, $translation_position, $original_item);
+            $items["$edit_path/%entity_translation_language"] = array(
+              'type' => MENU_DEFAULT_LOCAL_TASK,
+              'title callback' => 'entity_translation_edit_title',
+              'title arguments' => array($translation_position),
+              'page callback' => 'entity_translation_edit_page',
+              'page arguments' => array_merge($args, $original_item['page arguments']),
+              'access callback' => 'entity_translation_edit_access',
+              'access arguments' => array_merge($args, $original_item['access arguments']),
+            )
+            // We need to inherit the remaining menu item keys, mostly 'module'
+            // and 'file' to keep ajax callbacks working (see form_get_cache() and
+            // drupal_retrieve_form()).
+            + $original_item;
+          }
 
           // Add translation callback.
           $add_path = "$edit_path/add/%entity_translation_language/%entity_translation_language";
