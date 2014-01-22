@@ -696,7 +696,7 @@ function _entity_translation_callback($callback, $args, $info = array()) {
 function entity_translation_admin_paths() {
   $paths = array();
   foreach (entity_get_info() as $entity_type => $info) {
-    if (entity_translation_enabled($entity_type, NULL, TRUE)) {
+    if (isset($info['translation']['entity_translation']['path schemes']) && entity_translation_enabled($entity_type, NULL, TRUE)) {
       foreach ($info['translation']['entity_translation']['path schemes'] as $scheme) {
         if (!empty($scheme['admin theme'])) {
           if (isset($scheme['translate path'])) {
