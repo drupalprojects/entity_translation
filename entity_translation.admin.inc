@@ -286,7 +286,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
         // No such translation in the set yet: help user to create it.
         $row_title = $source_name = t('n/a');
 
-        if ($source != $langcode && $handler->getAccess('update')) {
+        if ($source != $langcode && $handler->getAccess('update') && $handler->getTranslationAccess($langcode)) {
           list(, , $bundle) = entity_extract_ids($entity_type, $entity);
           $translatable = FALSE;
 

@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2151503 by SebCorbin: Check for translation access for Add links.
 #2130091 by peximo: Media edit dialog integration bug.
 #2065221 by catch, plach: Fixed Static cache for handlers should key by $vid.
 #1516202 by fabsor, spotzero: Added a CTools access plugin for checking if a
