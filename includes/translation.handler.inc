@@ -398,7 +398,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   /**
    * Read the translation data from the storage.
    */
-  public static function loadMultiple($entity_type, $entities) {
+  public static function loadMultiple($entity_type, $entities, $reset = FALSE) {
     $entity_info = entity_get_info($entity_type);
     if (isset($entity_info['entity keys']['translations'])){
       $translations_key = $entity_info['entity keys']['translations'];
@@ -409,24 +409,33 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
 
     foreach ($entities as $id => $entity) {
-      $entities[$id]->{$translations_key} = self::emptyTranslations();
+      // Set empty values only if explicitly requested of if translations were
+      // not loaded yet.
+      if ($reset || !isset($entity->{$translations_key})) {
+        $entities[$id]->{$translations_key} = self::emptyTranslations();
+      }
+      else {
+        unset($entities[$id]);
+      }
     }
 
-    $results = db_select('entity_translation', 'et')
-      ->fields('et')
-      ->condition('entity_type', $entity_type)
-      ->condition('entity_id', array_keys($entities), 'IN')
-      ->orderBy('entity_id')
-      ->orderBy('created')
-      ->execute();
+    if ($entities) {
+      $results = db_select('entity_translation', 'et')
+        ->fields('et')
+        ->condition('entity_type', $entity_type)
+        ->condition('entity_id', array_keys($entities), 'IN')
+        ->orderBy('entity_id')
+        ->orderBy('created')
+        ->execute();
 
-    foreach ($results as $row) {
-      $id = $row->entity_id;
-      $entities[$id]->{$translations_key}->data[$row->language] = (array) $row;
+      foreach ($results as $row) {
+        $id = $row->entity_id;
+        $entities[$id]->{$translations_key}->data[$row->language] = (array) $row;
 
-      // Only the original translation has an empty source.
-      if (empty($row->source)) {
-        $entities[$id]->{$translations_key}->original = $row->language;
+        // Only the original translation has an empty source.
+        if (empty($row->source)) {
+          $entities[$id]->{$translations_key}->original = $row->language;
+        }
       }
     }
   }
