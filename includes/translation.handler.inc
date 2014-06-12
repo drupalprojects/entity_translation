@@ -136,6 +136,11 @@ interface EntityTranslationHandlerInterface {
   public function isRevision();
 
   /**
+   * Return TRUE if the entity type supports revisions.
+   */
+  public function isRevisionable();
+
+  /**
    * Replaces the wrapped entity.
    *
    * @param $entity
@@ -338,6 +343,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   protected $entityInfo;
   protected $entityId;
   protected $bundle;
+  protected $revisionable;
 
   /**
    * The translation handler factory.
@@ -420,10 +426,28 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
 
     if ($entities) {
-      $results = db_select('entity_translation', 'et')
+      $revisionable = self::isEntityTypeRevisionable($entity_type);
+      $revisions_ids = array();
+      foreach ($entities as $id => $entity) {
+        $entities[$id]->{$translations_key} = self::emptyTranslations();
+        if ($revisionable) {
+          list(, $revisions_id,) = entity_extract_ids($entity_type, $entity);
+          $revisions_ids[$id] = $revisions_id;
+        }
+      }
+
+      $query = db_select('entity_translation_revision', 'et')
         ->fields('et')
-        ->condition('entity_type', $entity_type)
-        ->condition('entity_id', array_keys($entities), 'IN')
+        ->condition('entity_type', $entity_type);
+
+      if (!$revisionable) {
+        $query->condition('entity_id', array_keys($entities), 'IN');
+      }
+      else {
+        $query->condition('revision_id', $revisions_ids, 'IN');
+      }
+
+      $results = $query
         ->orderBy('entity_id')
         ->orderBy('created')
         ->execute();
@@ -510,43 +534,14 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::saveTranslations()
    */
   public function saveTranslations() {
-    // Delete and insert, rather than update, in case a value was added.
-    db_delete('entity_translation')
-      ->condition('entity_type', $this->entityType)
-      ->condition('entity_id', $this->entityId)
-      ->execute();
-
     $translations = $this->getTranslations();
 
-    if (count($translations->data)) {
-      global $user;
+    // Save current values.
+    $this->doSaveTranslations($translations, 'entity_translation');
 
-      $columns = array('entity_type', 'entity_id', 'language', 'source', 'uid', 'status', 'translate', 'created', 'changed');
-      $query = db_insert('entity_translation')->fields($columns);
-
-      // These values should overridde the translation ones as they are not
-      // supposed to change.
-      $overrides = array(
-        'entity_id' => $this->entityId,
-        'entity_type' => $this->entityType,
-      );
-
-      // These instead are just defaults.
-      $defaults = array(
-        'source' => '',
-        'uid' => $user->uid,
-        'translate' => 0,
-        'status' => 0,
-        'created' => REQUEST_TIME,
-        'changed' => REQUEST_TIME,
-      );
-
-      foreach ($translations->data as $langcode => $translation) {
-        $translation = $overrides + $translation + $defaults;
-        $query->values($translation);
-      }
-
-      $query->execute();
+    // Save revision values.
+    if ($this->isRevisionable()) {
+      $this->doSaveTranslations($translations, 'entity_translation_revision', TRUE);
     }
 
     // The translation handler interface decouples operations on translations at
@@ -573,6 +568,54 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
       // Avoid firing hooks more than once for the same changes.
       $translations->hook = array();
+    }
+  }
+
+  /**
+   * Saves entity translation records to the storage.
+   */
+  protected function doSaveTranslations($translations, $table, $revision = FALSE) {
+    // Delete and insert, rather than update, in case a value was added.
+    $query = db_delete($table)
+      ->condition('entity_type', $this->entityType)
+      ->condition('entity_id', $this->entityId);
+    // If we are storing translations for the current revision or we are
+    // deleting the entity we should remove all translation data.
+    $langcode = $translations->original;
+    $hook = isset($translations->hook) ? $translations->hook : array();
+    if ($revision && $this->isRevisionable() && (empty($hook[$langcode]['hook']) || $hook[$langcode]['hook'] != 'delete')) {
+      $query->condition('revision_id', $this->revisionId);
+    }
+    $query->execute();
+
+    if (count($translations->data)) {
+      $columns = array('entity_type', 'entity_id', 'revision_id', 'language', 'source', 'uid', 'status', 'translate', 'created', 'changed');
+      $query = db_insert($table)->fields($columns);
+
+      // These values should override the translation ones as they are not
+      // supposed to change.
+      $overrides = array(
+        'entity_type' => $this->entityType,
+        'entity_id' => $this->entityId,
+        'revision_id' => $this->isRevisionable() ? $this->revisionId : $this->entityId,
+      );
+
+      // These instead are just defaults.
+      $defaults = array(
+        'source' => '',
+        'uid' => $GLOBALS['user']->uid,
+        'translate' => 0,
+        'status' => 0,
+        'created' => REQUEST_TIME,
+        'changed' => REQUEST_TIME,
+      );
+
+      foreach ($translations->data as $translation) {
+        $translation = $overrides + $translation + $defaults;
+        $query->values($translation);
+      }
+
+      $query->execute();
     }
   }
 
@@ -840,6 +883,25 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   /**
+   * @see EntityTranslationHandlerInterface::isRevisionable()
+   */
+  public function isRevisionable() {
+    $result = FALSE;
+    if (!isset($this->revisionable)) {
+      $result = self::isEntityTypeRevisionable($this->entityType);
+    }
+    return $result;
+  }
+
+  /**
+   * Returns whether the entity type is revisionable.
+   */
+  public static function isEntityTypeRevisionable($entity_type) {
+    $entity_info = entity_get_info($entity_type);
+    return variable_get('entity_translation_revision_enabled', TRUE) && !empty($entity_info['entity keys']['revision']);
+  }
+
+  /**
    * @see EntityTranslationHandlerInterface::setEntity()
    */
   public function setEntity($entity) {
@@ -851,8 +913,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       $this->entity->{$translations_key} = self::emptyTranslations();
     }
 
-    // Update bundle and entity id properties.
-    list($this->entityId, , $this->bundle) = entity_extract_ids($this->entityType, $this->entity);
+    // Update entity properties.
+    list($this->entityId, $this->revisionId, $this->bundle) = entity_extract_ids($this->entityType, $this->entity);
 
     // Initialize the handler id if needed.
     if (!empty($this->factory)) {
