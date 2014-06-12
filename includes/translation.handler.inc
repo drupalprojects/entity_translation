@@ -414,10 +414,10 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       return;
     }
 
-    $revisionable = static::entityTypeRevisionable($entity_type);
+    $revisionable = self::isEntityTypeRevisionable($entity_type);
     $revisions_ids = array();
     foreach ($entities as $id => $entity) {
-      $entities[$id]->{$translations_key} = static::emptyTranslations();
+      $entities[$id]->{$translations_key} = self::emptyTranslations();
       if ($revisionable) {
         list(, $revisions_id,) = entity_extract_ids($entity_type, $entity);
         $revisions_ids[$id] = $revisions_id;
@@ -559,7 +559,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   }
 
   /**
-   * TODO
+   * Saves entity translation records to the storage.
    */
   protected function doSaveTranslations($translations, $table, $revision = FALSE) {
     // Delete and insert, rather than update, in case a value was added.
@@ -875,15 +875,15 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   public function isRevisionable() {
     $result = FALSE;
     if (!isset($this->revisionable)) {
-      $result = static::entityTypeRevisionable($this->entityType);
+      $result = self::isEntityTypeRevisionable($this->entityType);
     }
     return $result;
   }
 
   /**
-   * TODO
+   * Returns whether the entity type is revisionable.
    */
-  public static function entityTypeRevisionable($entity_type) {
+  public static function isEntityTypeRevisionable($entity_type) {
     $entity_info = entity_get_info($entity_type);
     return variable_get('entity_translation_revision_enabled', TRUE) && !empty($entity_info['entity keys']['revision']);
   }
