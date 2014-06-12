@@ -569,7 +569,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     // If we are storing translations for the current revision or we are
     // deleting the entity we should remove all translation data.
     $langcode = $translations->original;
-    $hook = $translations->hook;
+    $hook = isset($translations->hook) ? $translations->hook : array();
     if ($revision && $this->isRevisionable() && (empty($hook[$langcode]['hook']) || $hook[$langcode]['hook'] != 'delete')) {
       $query->condition('revision_id', $this->revisionId);
     }
