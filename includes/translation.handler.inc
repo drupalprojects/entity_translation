@@ -78,6 +78,11 @@ interface EntityTranslationHandlerInterface {
   public function removeTranslations();
 
   /**
+   * Removes all translations from the current revision.
+   */
+  public function removeRevisionTranslations();
+
+  /**
    * Initialize the language of the original field values.
    *
    * Ensure that the original translation language matches the language assigned
@@ -756,6 +761,17 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public function removeTranslations() {
     $this->removeTranslation(NULL);
+  }
+
+  /**
+   * @see EntityTranslationHandlerInterface::removeRevisionTranslations()
+   */
+  public function removeRevisionTranslations() {
+    $translations_key = $this->getTranslationsKey();
+    $keys = array_keys($this->entity->{$translations_key}->data);
+    $values = array_fill(0, count($keys), array('hook' => 'delete_revision'));
+    $this->removeTranslation(NULL);
+    $this->entity->{$translations_key}->hook = array_combine($keys, $values);
   }
 
   /**
