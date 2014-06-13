@@ -25,6 +25,13 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
   }
 
   /**
+   * @see EntityTranslationHandlerInterface::getCurrentEntityRevision()
+   */
+  public function getCurrentEntityRevision() {
+    return module_exists('workbench_moderation') ? workbench_moderation_node_current_load($this->getEntity()) : parent::getCurrentEntityRevision();
+  }
+
+  /**
    * @see EntityTranslationDefaultHandler::getAccess()
    */
   public function getAccess($op) {
@@ -76,7 +83,7 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
   /**
    * @see EntityTranslationDefaultHandler::entityFormLanguageWidgetSubmit()
    */
-  function entityFormLanguageWidgetSubmit($form, &$form_state) {
+  public function entityFormLanguageWidgetSubmit($form, &$form_state) {
     $this->updateFormLanguage($form_state);
   }
 
@@ -115,4 +122,5 @@ class EntityTranslationNodeHandler extends EntityTranslationDefaultHandler {
   protected function getStatus() {
     return (boolean) $this->entity->status;
   }
+
 }

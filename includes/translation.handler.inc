@@ -156,15 +156,23 @@ interface EntityTranslationHandlerInterface {
   /**
    * Returns the wrapped entity.
    *
-   * @param return
+   * @return object
    *   The wrapped entity.
    */
   public function getEntity();
 
   /**
+   * Returns the current revision for entity types supporting forward revisions.
+   *
+   * @return object
+   *   The current revision of the wrapped entity.
+   */
+  public function getCurrentEntityRevision();
+
+  /**
    * Returns the wrapped entity type.
    *
-   * @param return
+   * @return string
    *   The wrapped entity type.
    */
   public function getEntityType();
@@ -336,6 +344,7 @@ interface EntityTranslationHandlerInterface {
    * Alters the local tasks render array to populate the language tabs.
    */
   public function localTasksAlter(&$data, $router_item, $root_path);
+
 }
 
 /**
@@ -945,6 +954,14 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public function getEntity() {
     return $this->entity;
+  }
+
+  /**
+   * @see EntityTranslationHandlerInterface::getCurrentEntityRevision()
+   */
+  public function getCurrentEntityRevision() {
+    $entities = entity_load($this->entityType, array($this->entityId));
+    return reset($entities);
   }
 
   /**
