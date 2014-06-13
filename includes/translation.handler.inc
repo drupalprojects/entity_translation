@@ -429,7 +429,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       }
     }
 
-    $query = db_select('entity_translation_revision', 'et')
+    $table = $revisionable ? 'entity_translation_revision' : 'entity_translation';
+    $query = db_select($table, 'et')
       ->fields('et')
       ->condition('entity_type', $entity_type);
 
