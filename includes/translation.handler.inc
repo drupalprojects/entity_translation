@@ -431,17 +431,19 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     }
 
     if ($entities) {
+      $table = 'entity_translation';
       $revisionable = self::isEntityTypeRevisionable($entity_type);
-      $revisions_ids = array();
-      foreach ($entities as $id => $entity) {
-        $entities[$id]->{$translations_key} = self::emptyTranslations();
-        if ($revisionable) {
+
+      if ($revisionable) {
+        $revisions_ids = array();
+        foreach ($entities as $id => $entity) {
           list(, $revisions_id,) = entity_extract_ids($entity_type, $entity);
           $revisions_ids[$id] = $revisions_id;
         }
+        $table = 'entity_translation_revision';
       }
 
-      $query = db_select('entity_translation_revision', 'et')
+      $query = db_select($table, 'et')
         ->fields('et')
         ->condition('entity_type', $entity_type);
 
