@@ -353,7 +353,8 @@ function entity_translation_update_7006() {
   $spec = array(
     'type' => 'int',
     'unsigned' => TRUE,
-    'not null' => TRUE,
+    // If we have existing data we cannot enforce this to be NOT NULL.
+    'not null' => FALSE,
     'description' => 'The entity revision id this translation relates to',
   );
   db_add_field('entity_translation', 'revision_id', $spec);
