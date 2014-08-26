@@ -20,3 +20,4 @@ files[] = views/entity_translation_handler_field_label.inc
 files[] = views/entity_translation_handler_filter_entity_type.inc
 files[] = views/entity_translation_handler_filter_language.inc
 files[] = views/entity_translation_handler_filter_translation_exists.inc
+files[] = views/entity_translation_handler_field_field.inc
