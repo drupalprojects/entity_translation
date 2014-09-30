@@ -185,6 +185,9 @@ function entity_translation_entity_info_alter(&$entity_info) {
     // not. As a matter of fact we might need them to correctly switch field
     // translatability when a field is shared across different entity types.
     $et_info += array('class' => 'EntityTranslationDefaultHandler');
+    if (!isset($entity_info[$entity_type]['entity keys'])) {
+      $entity_info[$entity_type]['entity keys'] = array();
+    }
     $entity_info[$entity_type]['entity keys'] += array('translations' => 'translations');
 
     if (entity_translation_enabled($entity_type, NULL, TRUE)) {
