@@ -902,7 +902,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    */
   public static function isEntityTypeRevisionable($entity_type) {
     $entity_info = entity_get_info($entity_type);
-    return variable_get('entity_translation_revision_enabled', TRUE) && !empty($entity_info['entity keys']['revision']);
+    return variable_get('entity_translation_revision_enabled', FALSE) && !empty($entity_info['entity keys']['revision']);
   }
 
   /**

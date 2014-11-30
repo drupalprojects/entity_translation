@@ -172,6 +172,9 @@ function entity_translation_install() {
 
   // Make translation use the content language type.
   variable_set('translation_language_type', LANGUAGE_TYPE_CONTENT);
+
+  // Enable revision support for entity translation.
+  variable_set('entity_translation_revision_enabled', TRUE);
 }
 
 /**
@@ -345,9 +348,6 @@ function entity_translation_update_7005() {
  * Add revision schema for entity translation metadata.
  */
 function entity_translation_update_7006() {
-  // Disable translation revisions on existing sites to avoid upgrade issues. It
-  // will have to be enabled/upgraded manually case by case.
-  variable_set('entity_translation_revision_enabled', FALSE);
 
   // Create revision id column.
   $spec = array(
@@ -431,4 +431,8 @@ function entity_translation_update_7006() {
     'indexes'=> array('revision_id' => array('revision_id')),
   );
   db_create_table('entity_translation_revision', $table);
+
+  // Don't enable revision support until after the update to avoid fatal errors
+  // on existing sites.
+  variable_set('entity_translation_revision_enabled', TRUE);
 }
