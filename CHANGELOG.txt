@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2378195 by Johnny vd Laar: Node edit notice when author of a translation is deleted.
 #2382713 by seanr: entity_translation_update_7006 fails because of SQL error before
   variable_set('entity_translation_revision_enabled', FALSE); can run.
 #1046282 by plach, good_man, miro_dietiker, Gábor Hojtsy: Make the module work with

@@ -1303,7 +1303,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         );
       }
 
-      $name = $new_translation ? $GLOBALS['user']->name : user_load($translations->data[$form_langcode]['uid'])->name;
+      $translation_author = $new_translation ? $GLOBALS['user'] : user_load($translations->data[$form_langcode]['uid']);
+      $name = isset($translation_author->name) ? $translation_author->name : '';
       $form['translation']['name'] = array(
         '#type' => 'textfield',
         '#title' => t('Authored by'),
