@@ -1721,6 +1721,9 @@ function entity_translation_enabled($entity_type, $entity = NULL, $skip_handler 
 /**
  * Determines whether the given entity bundle is translatable.
  *
+ * NOTE: Does not check for whether the entity type is translatable.
+ * Consider using entity_translation_enabled() instead.
+ *
  * @param $entity_type
  *   The entity type the bundle to be checked belongs to.
  * @param $bundle
