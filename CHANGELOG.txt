@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2395327 by damiankloip: FATAL error when requesting an edit path for a non-existent
+  entity.
 #2342787 by jcisio: Language widget submit handler runs on disabled entity types.
 #2389945 by rafal.enden: Tests don't pass when using different source than original node
   language.
