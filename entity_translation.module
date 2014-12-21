@@ -871,6 +871,13 @@ function entity_translation_field_extra_fields() {
     if (entity_translation_enabled($entity_type)) {
       $bundles = !empty($info[$entity_type]['bundles']) ? array_keys($info[$entity_type]['bundles']) : array($entity_type);
       foreach ($bundles as $bundle) {
+        // @todo Clean this up in https://www.drupal.org/node/1661348.
+        if ($entity_type == 'taxonomy_term') {
+          $vocabulary = taxonomy_vocabulary_machine_name_load($bundle);
+          if ($vocabulary && module_invoke('i18n_taxonomy', 'vocabulary_mode', $vocabulary, I18N_MODE_TRANSLATE)) {
+            continue;
+          }
+        }
         $settings = entity_translation_settings($entity_type, $bundle);
         if (empty($settings['hide_language_selector']) && entity_translation_enabled_bundle($entity_type, $bundle) && ($handler = entity_translation_get_handler($entity_type, $bundle))) {
           $language_key = $handler->getLanguageKey();

@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2218087 by plach: Fixed PHP Fatal error: Unsupported operand types in
+  modules/field_ui/field_ui.admin.inc on line 477.
 #2396653 by SchnWalter: Fix validation handler for the entity language widget.
 #2395327 by damiankloip: FATAL error when requesting an edit path for a
   non-existent entity.
