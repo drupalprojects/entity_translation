@@ -48,4 +48,20 @@ class EntityTranslationTaxonomyTermHandler extends EntityTranslationDefaultHandl
       );
     }
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLanguage() {
+    $translations = $this->getTranslations();
+    if (!empty($translations->original)) {
+      return $translations->original;
+    }
+    else {
+      // When we are creating an entity and no language is specified fall back
+      // to the default language for the current entity and bundle.
+      return $this->getDefaultLanguage();
+    }
+  }
+
 }

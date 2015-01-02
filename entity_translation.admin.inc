@@ -211,8 +211,9 @@ function entity_translation_settings_init($entity_type, $settings = array()) {
  */
 function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   // Entity translation and node translation share the same system path.
-  if ($callback && entity_translation_node($entity_type, $entity)) {
-    return entity_translation_overview_callback($callback, $entity);
+  if ($callback && !entity_translation_enabled($entity_type, $entity)) {
+    $args = array_slice(func_get_args(), 3);
+    return entity_translation_overview_callback($callback, $args);
   }
 
   $handler = entity_translation_get_handler($entity_type, $entity);
@@ -356,13 +357,13 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
 /**
  * Calls the appropriate translation overview callback.
  */
-function entity_translation_overview_callback($callback, $entity) {
+function entity_translation_overview_callback($callback, $args) {
   if (module_exists($callback['module'])) {
     if (isset($callback['file'])) {
       $path = isset($callback['file path']) ? $callback['file path'] : drupal_get_path('module', $callback['module']);
       require_once DRUPAL_ROOT . '/' . $path . '/' . $callback['file'];
     }
-    return $callback['page callback']($entity);
+    return call_user_func_array($callback['page callback'], $args);
   }
 }
 
