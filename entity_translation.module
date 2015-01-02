@@ -874,7 +874,7 @@ function entity_translation_field_extra_fields() {
         // @todo Clean this up in https://www.drupal.org/node/1661348.
         if ($entity_type == 'taxonomy_term') {
           $vocabulary = taxonomy_vocabulary_machine_name_load($bundle);
-          if ($vocabulary && module_invoke('i18n_taxonomy', 'vocabulary_mode', $vocabulary, I18N_MODE_TRANSLATE)) {
+          if ($vocabulary && module_invoke('i18n_taxonomy', 'vocabulary_mode', $vocabulary, 4)) {
             continue;
           }
         }
