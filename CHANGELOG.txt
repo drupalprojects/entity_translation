@@ -1,6 +1,10 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+
+
+Entity Translation 7.x-1.0-beta4, 2015-01-23
+--------------------------------------------
 #2396103 by plach: Fixed [DATA LOSS] Translations deleted.
 #2218087 by plach: Fixed PHP Fatal error: Unsupported operand types in
   modules/field_ui/field_ui.admin.inc on line 477.
