@@ -219,8 +219,7 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   // languages.
   if ($handler->initOriginalTranslation()) {
     // FIXME!
-    field_attach_presave($entity_type, $entity);
-    field_attach_update($entity_type, $entity);
+    entity_translation_entity_save($entity_type, $entity);
   }
 
   $header = array(t('Language'), t('Source language'), t('Translation'), t('Status'), t('Operations'));
@@ -420,8 +419,7 @@ function entity_translation_delete_confirm_submit($form, &$form_state) {
 
   // Remove the translation entry and the related fields.
   $handler->removeTranslation($langcode);
-  field_attach_presave($entity_type, $entity);
-  field_attach_update($entity_type, $entity);
+  entity_translation_entity_save($entity_type, $entity);
 
   $form_state['redirect'] = $handler->getTranslatePath();
 }
@@ -654,8 +652,7 @@ function _entity_translation_update_field($entity_type, $entity, $field_name) {
   // otherwise any stored empty field value would be deleted. If this happens
   // the range queries would be messed up.
   if ($empty < count($entity->{$field_name})) {
-    field_attach_presave($entity_type, $entity);
-    field_attach_update($entity_type, $entity);
+    entity_translation_entity_save($entity_type, $entity);
   }
 }
 

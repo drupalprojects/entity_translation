@@ -2019,3 +2019,23 @@ function path_entity_translation_delete($entity_type, $entity, $langcode) {
   $handler = entity_translation_get_handler($entity_type, $entity);
   path_delete(array('source' => $handler->getViewPath(), 'language' => $langcode));
 }
+
+/**
+ * Wrapper for entity_save().
+ *
+ * @param $entity_type
+ *   The entity type.
+ * @param $entity
+ *   The entity object.
+ */
+function entity_translation_entity_save($entity_type, $entity) {
+  // Entity module isn't required, but use it if it's available.
+  if (module_exists('entity')) {
+    entity_save($entity_type, $entity);
+  }
+  // Fall back to field_attach_* functions otherwise.
+  else {
+    field_attach_presave($entity_type, $entity);
+    field_attach_update($entity_type, $entity);
+  }
+}
