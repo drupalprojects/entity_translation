@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2203801 by idflood: Impossible to update taxonomy term after enabling
+  i18n_taxonomy.
 #2415189 by catch: Translation deletion bypasses entity saving.
 
 Entity Translation 7.x-1.0-beta4, 2015-01-23
