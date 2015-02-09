@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2305547 by das-peter: Fixed undefined index name.
 #1989084 by jsacksick, candelas: Fixed <nolink> and validation.
 #2203801 by idflood: Impossible to update taxonomy term after enabling
   i18n_taxonomy.
