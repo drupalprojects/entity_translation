@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1989084 by jsacksick, candelas: Fixed <nolink> and validation.
 #2203801 by idflood: Impossible to update taxonomy term after enabling
   i18n_taxonomy.
 #2415189 by catch: Translation deletion bypasses entity saving.
