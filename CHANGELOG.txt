@@ -1,8 +1,10 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
-Issue #2423661 by marcoscano: Module api documentation has wrong example ("path
-  sets" instead of "path schemes")
+#2452279 by GeduR: Duplicated variable $language in
+  entity_translation_edit_access().
+#2423661 by marcoscano: Module api documentation has wrong example ("path sets"
+  instead of "path schemes").
 #2305547 by das-peter: Fixed undefined index name.
 #1989084 by jsacksick, candelas: Fixed <nolink> and validation.
 #2203801 by idflood: Impossible to update taxonomy term after enabling

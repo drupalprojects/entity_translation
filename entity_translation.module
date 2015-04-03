@@ -567,7 +567,7 @@ function entity_translation_edit_access() {
   }
 
   $translations = $handler->getTranslations();
-  $langcode = $langcode = entity_translation_get_existing_language($entity_type, $entity, $langcode);
+  $langcode = entity_translation_get_existing_language($entity_type, $entity, $langcode);
 
   // The user must be explicitly allowed to access the original values if
   // workflow permissions are enabled.
