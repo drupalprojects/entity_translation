@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2462909 by GeduR: Misspelling translation exists help in views handler
+  definition.
 #2166157 by rsmylski, ciss: entity translation handler id for new entities not
   unique enough - can cause infinite/circular child reference.
 #2452279 by GeduR: Duplicated variable $language in
