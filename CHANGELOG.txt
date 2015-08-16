@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2444203 by Leksat, badrange, attiks: Show fallback information on the translation
+  overview.
 #2458393 by catch, plach, douggreen: Fixed unindexed query in
   EntityTranslationDefaultHandler::loadMultiple().
 #2462909 by GeduR: Misspelling translation exists help in views handler
