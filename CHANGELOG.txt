@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2339315 by loopduplicate, gnucifer, plopesc, james.williams: Fixed Source
+  language prepopulated values should be also included in $form_state['field'].
 #2648062 by brunoric, cebasqueira, lucasr, mmchristoph: Fixed Fatal error: Call
   to a member function getFormLanguage() on a non-object.
 #S156840 by HelenaEksler, plach: Fixed XSS vulnerability in the translation
