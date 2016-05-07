@@ -1,6 +1,10 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+
+
+Entity Translation 7.x-1.0-beta5, 2016-05-08
+--------------------------------------------
 #929402 by das-peter, bastnic, kristiaanvandeneynde, brockfanning, greenjuls,
   make77, steinmb: Added support for migrate module.
 #1291388 by Jax, poiu, plach: Added support for multilingual core search.
@@ -27,6 +31,7 @@ Entity Translation 7.x-1.x, xxxx-xx-xx
 #2203801 by idflood: Impossible to update taxonomy term after enabling
   i18n_taxonomy.
 #2415189 by catch: Translation deletion bypasses entity saving.
+
 
 Entity Translation 7.x-1.0-beta4, 2015-01-23
 --------------------------------------------
