@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#929402 by das-peter, bastnic, kristiaanvandeneynde, brockfanning, greenjuls,
+  make77, steinmb: Added support for migrate module.
 #1291388 by Jax, poiu, plach: Added support for multilingual core search.
 #2339315 by loopduplicate, gnucifer, plopesc, james.williams: Fixed Source
   language prepopulated values should be also included in $form_state['field'].
