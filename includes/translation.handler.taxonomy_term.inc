@@ -21,7 +21,7 @@ class EntityTranslationTaxonomyTermHandler extends EntityTranslationDefaultHandl
   public function getLanguage() {
     if (isset($this->entity->vid) && module_exists('i18n_taxonomy')) {
       $mode = i18n_taxonomy_vocabulary_mode($this->entity->vid);
-      if ($mode == I18N_MODE_NONE) {
+      if ($mode == I18N_MODE_NONE || $mode == I18N_MODE_ENTITY_TRANSLATION) {
         $translations = $this->getTranslations();
         if (!empty($translations->original)) {
           return $translations->original;
@@ -46,21 +46,6 @@ class EntityTranslationTaxonomyTermHandler extends EntityTranslationDefaultHandl
         $form['translation'],
         $form['actions']['delete_translation']
       );
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getLanguage() {
-    $translations = $this->getTranslations();
-    if (!empty($translations->original)) {
-      return $translations->original;
-    }
-    else {
-      // When we are creating an entity and no language is specified fall back
-      // to the default language for the current entity and bundle.
-      return $this->getDefaultLanguage();
     }
   }
 
