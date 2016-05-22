@@ -46,7 +46,6 @@ function entity_translation_node_menu_alter(&$items, $backup) {
     $page_arguments = array_merge(array('node', 1, $callback), $item['page arguments']);
   }
   else {
-    $callback = FALSE;
     $access_arguments = array(1);
     $page_arguments = array('node', 1);
   }

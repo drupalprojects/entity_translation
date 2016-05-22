@@ -30,7 +30,6 @@ function entity_translation_taxonomy_term_menu_alter(&$items, $backup) {
     $page_arguments = array_merge(array('taxonomy_term', 2, $callback), $item['page arguments']);
   }
   else {
-    $callback = FALSE;
     $access_arguments = array(2);
     $page_arguments = array('taxonomy_term', 2);
   }
@@ -44,7 +43,7 @@ function entity_translation_taxonomy_term_menu_alter(&$items, $backup) {
 }
 
 /**
- * Node specific access callback.
+ * Taxonomy term specific access callback.
  */
 function entity_translation_taxonomy_term_tab_access() {
   $args = func_get_args();
@@ -63,16 +62,20 @@ function entity_translation_taxonomy_term_tab_access() {
  */
 function entity_translation_form_taxonomy_form_vocabulary_alter(&$form, &$form_state) {
   if (entity_translation_enabled('taxonomy_term')) {
+    $name = $form_state['vocabulary']->machine_name;
     if (isset($form['i18n_translation']['i18n_mode'])) {
       $args = array('!url' => url('admin/config/regional/entity_translation'));
       $form['i18n_translation']['i18n_mode']['#options'][I18N_MODE_ENTITY_TRANSLATION] = t('Field translation. Term fields will be translated through the <a href="!url">Entity translation</a> module.', $args);
+      if (entity_translation_enabled_bundle('taxonomy_term', $name)) {
+        $form['i18n_translation']['i18n_mode']['#default_value'] = I18N_MODE_ENTITY_TRANSLATION;
+      }
     }
     else {
       $form['entity_translation_taxonomy'] = array(
         '#title' => t('Enable field translation'),
         '#type' => 'checkbox',
         '#prefix' => '<label>' . t('Translation') . '</label>',
-        '#default_value' => entity_translation_enabled('taxonomy_term', $form_state['vocabulary']->machine_name),
+        '#default_value' => entity_translation_enabled('taxonomy_term', $name),
       );
     }
     $form['#submit'][] = 'entity_translation_form_taxonomy_form_vocabulary_submit';
