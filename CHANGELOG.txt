@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1661348 by plach, badrange, colan, candelas: Added "I18n Taxonomy" integration.
 
 
 Entity Translation 7.x-1.0-beta5, 2016-05-08
