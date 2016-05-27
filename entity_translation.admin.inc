@@ -13,8 +13,8 @@ function entity_translation_admin_form($form, $form_state) {
 
   $form['locale_field_language_fallback'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Enable language fallback'),
-    '#description' => t('When language fallback is enabled, if a translation is not available for the requested language an existing one will be displayed.'),
+    '#title' => t('Allow language fallback'),
+    '#description' => t('When language fallback is allowed, an alternative translation will be displayed if the requested language is not available. Other modules, such as <a href="https://www.drupal.org/project/language_hierarchy" target="_blank">Language Hierarchy</a>, are needed to manage which languages are used as fallbacks. Otherwise, existing translations will be chosen based on their <a href="!url">language weight</a>.', array('!url' => url('admin/config/regional/language'))),
     '#default_value' => variable_get('locale_field_language_fallback', TRUE),
   );
 
