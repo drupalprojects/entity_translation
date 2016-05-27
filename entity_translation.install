@@ -459,12 +459,15 @@ function entity_translation_update_7008() {
     JOIN {taxonomy_term_data} t ON et.entity_type = 'taxonomy_term' AND et.entity_id = t.tid AND et.source != ''
     GROUP BY t.vid";
   $vids = db_query($query)->fetchCol();
-  $query = "SELECT v.machine_name FROM {taxonomy_vocabulary} v WHERE v.vid IN (:vids)";
-  $names = db_query($query, array(':vids' => $vids))->fetchCol();
 
-  $info = variable_get('entity_translation_taxonomy', array());
-  foreach ($names as $name) {
-    $info[$name] = TRUE;
+  if ($vids) {
+    $query = "SELECT v.machine_name FROM {taxonomy_vocabulary} v WHERE v.vid IN (:vids)";
+    $names = db_query($query, array(':vids' => $vids))->fetchCol();
+
+    $info = variable_get('entity_translation_taxonomy', array());
+    foreach ($names as $name) {
+      $info[$name] = TRUE;
+    }
+    variable_set('entity_translation_taxonomy', $info);
   }
-  variable_set('entity_translation_taxonomy', $info);
 }

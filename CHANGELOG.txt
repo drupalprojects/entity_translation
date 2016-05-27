@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2734373 by plach, consulio: "entity_translation_update_7008" is broken when no
+  term is translated.
 #2734301 by plach, sinasalek: Fixed Numeric value out of range: 1264 Out of
   range value for column 'i18n_mode'.
 #1661348 by plach, badrange, colan, candelas: Added "I18n Taxonomy" integration.
