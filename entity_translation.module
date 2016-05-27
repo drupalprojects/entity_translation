@@ -27,7 +27,7 @@ define('ENTITY_TRANSLATION_LANGUAGE_AUTHOR', 'xx-et-author');
 /**
  * Defines an i18n translation mode for Entity Translation.
  */
-define('I18N_MODE_ENTITY_TRANSLATION', 0xF0000000);
+define('I18N_MODE_ENTITY_TRANSLATION', 32768);
 
 
 /**
