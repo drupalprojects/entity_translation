@@ -471,3 +471,16 @@ function entity_translation_update_7008() {
     variable_set('entity_translation_taxonomy', $info);
   }
 }
+
+/**
+ * Make sure "i18n_mode" is correctly set for vocabularies having entity
+ * translation enabled.
+ */
+function entity_translation_update_7009() {
+  $info = array_filter(variable_get('entity_translation_taxonomy', array()));
+  if ($info) {
+    $query = "UPDATE {taxonomy_vocabulary} SET i18n_mode = :et_mode WHERE machine_name IN (:names)";
+    $names = array_keys(array_filter($info));
+    db_query($query, array(':et_mode' => 32768, ':names' => $names));
+  }
+}
