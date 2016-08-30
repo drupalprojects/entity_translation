@@ -299,7 +299,7 @@ function _entity_translation_validate_path_schemes(&$schemes, $entity_type_label
     if (empty($scheme['path wildcard'])) {
       if ($warnings) {
         $t_args = array('%scheme' => $delta, '%entity_type' => $entity_type_label);
-        drupal_set_message(t('Entity Translation path scheme %scheme for entities of type %entity_type does not declare a path wildcard.', $t_args), 'warning');
+        watchdog('entity_translation', 'Entity Translation path scheme %scheme for entities of type %entity_type does not declare a path wildcard.', $t_args);
       }
       unset($schemes[$delta]);
       continue;
@@ -513,7 +513,7 @@ function entity_translation_menu_alter(&$items) {
       }
 
       if ($translate_ui_attached == FALSE) {
-        drupal_set_message(t('The entities of type %entity_type do not define a valid path scheme: it will not be possible to translate them.', array('%entity_type' => $info['label'])), 'warning');
+        watchdog('entity_translation', 'The entities of type %entity_type do not define a valid path scheme: it will not be possible to translate them.', array('%entity_type' => $info['label']));
       }
 
       // Entity-type-specific menu alterations.

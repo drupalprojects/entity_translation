@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2746045 by fengtan: Converted dsm calls to watchdog calls for path scheme definition
+  warnings.
 #2757601 by ctrnz, aks22: Fixed entity_translation_update_7009() assumes i18n_taxonomy is
   enabled.
 #1172104 by james.williams, daro.pl: Improved description of the language fallback option.
