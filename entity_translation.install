@@ -478,7 +478,7 @@ function entity_translation_update_7008() {
  */
 function entity_translation_update_7009() {
   $info = array_filter(variable_get('entity_translation_taxonomy', array()));
-  if ($info) {
+  if ($info && module_exists('i18n_taxonomy')) {
     $query = "UPDATE {taxonomy_vocabulary} SET i18n_mode = :et_mode WHERE machine_name IN (:names)";
     $names = array_keys(array_filter($info));
     db_query($query, array(':et_mode' => 32768, ':names' => $names));
