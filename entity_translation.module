@@ -1464,6 +1464,10 @@ function _entity_translation_element_title_append(&$element, $suffix) {
   if (isset($element['#type']) && isset($fapi_title_elements[$element['#type']]) && isset($element['#title'])) {
     $element['#title'] .= $suffix;
   }
+  // If this is a multi-valued field, apply the suffix to the container.
+  elseif (isset($element['#title']) && isset($element['#cardinality']) && $element['#cardinality'] != 1) {
+    $element['#title'] .= $suffix;
+  }
   // If the current element does not have a (valid) title, try child elements.
   elseif ($children = element_children($element)) {
     foreach ($children as $delta) {
