@@ -1281,7 +1281,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
         '#disabled' => !$enabled,
       );
 
-      $translate = !$new_translation && $translations->data[$form_langcode]['translate'];
+      $translate = !$new_translation && !empty($translations->data[$form_langcode]['translate']);
       if (!$translate) {
         $form['translation']['retranslate'] = array(
           '#type' => 'checkbox',
