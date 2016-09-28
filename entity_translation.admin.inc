@@ -578,6 +578,7 @@ function entity_translation_translatable_batch($translatable, $field_name, $copy
     $query = new EntityFieldQuery();
     $count = $query
       ->fieldCondition($field_name)
+      ->age(FIELD_LOAD_REVISION)
       ->count()
       ->execute();
 
@@ -597,11 +598,16 @@ function entity_translation_translatable_batch($translatable, $field_name, $copy
   $result = $query
     ->fieldCondition($field_name)
     ->entityOrderBy('entity_id')
+    ->age(FIELD_LOAD_REVISION)
     ->range($offset, $limit)
     ->execute();
 
-  foreach ($result as $entity_type => $entities) {
-    foreach (entity_load($entity_type, array_keys($entities)) as $entity) {
+  foreach ($result as $entity_type => $revisions) {
+    foreach ($revisions as $revision) {
+      // $revision is a partial entity object that will be used as an array of
+      // conditions.
+      $conditions = (array) $revision;
+      $entity = reset(entity_load($entity_type, FALSE, $conditions));
       $context['sandbox']['progress']++;
       $handler = entity_translation_get_handler($entity_type, $entity);
       $langcode = $handler->getLanguage();

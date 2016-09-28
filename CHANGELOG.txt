@@ -1,6 +1,9 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2189567 by stefanos.petrakis, jmuzz: Fixed problems enabling and disabling translation on
+  a field with revisions enabled.
+#2798721 by gnucifer: Path scheme not initialized on delete translation confirmation form.
 #2215771 by colan, stefanos.petrakis: Fixed "Undefined index: translate in
   EntityTranslationDefaultHandler->entityForm()".
 #1829636 by bforchhammer, stefanos.petrakis: Fixed "All languages" suffix not
