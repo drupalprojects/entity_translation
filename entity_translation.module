@@ -1217,7 +1217,7 @@ function entity_translation_field_attach_form($entity_type, $entity, &$form, &$f
         // language information from source to target language, this way the
         // user can find the form items already populated with the source values
         // while the field form element holds the correct language information.
-        if ($field['translatable']) {
+        if ($field['translatable'] && isset($form[$field_name])) {
           $element = &$form[$field_name];
           $element['#entity_type'] = $entity_type;
           $element['#entity'] = $entity;
