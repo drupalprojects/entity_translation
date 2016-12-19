@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2826297 by Thomas Cys, dwebpoint, stefanos.petrakis: 'clone' is a reserved keyword
+  introduced in PHP version 5.0 and cannot be invoked as a function.
 #2189567 by stefanos.petrakis, jmuzz: Fixed problems enabling and disabling translation on
   a field with revisions enabled.
 #2798721 by gnucifer: Path scheme not initialized on delete translation confirmation form.
