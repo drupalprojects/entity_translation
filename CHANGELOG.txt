@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2438615 by David_Rothstein, matthiasm11: New nodes are always created using LANGUAGE_NONE
+  (only changed to the correct language during form submission).
 #2820454 by Dylan Donkersgoed: PHP notice when attaching single field
   with field_attach_form.
 #2826297 by Thomas Cys, dwebpoint, stefanos.petrakis: 'clone' is a reserved keyword

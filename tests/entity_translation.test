@@ -190,7 +190,7 @@ class EntityTranslationTestCase extends DrupalWebTestCase {
 
     // Check if the setting works.
     $this->drupalGet('node/add/page');
-    $this->assertFieldById('edit-body-und-add-more', t('Add another item'), t('Add another item button found.'));
+    $this->assertFieldById('edit-body-en-add-more', t('Add another item'), t('Add another item button found.'));
   }
 
   /**
@@ -205,9 +205,8 @@ class EntityTranslationTestCase extends DrupalWebTestCase {
    */
   function createPage($title, $body, $langcode) {
     $edit = array();
-    $language_none = LANGUAGE_NONE;
     $edit["title"] = $title;
-    $edit["body[$language_none][0][value]"] = $body;
+    $edit["body[$langcode][0][value]"] = $body;
     $edit['language'] = $langcode;
     $this->drupalPost('node/add/page', $edit, t('Save'));
     $this->assertRaw(t('Basic page %title has been created.', array('%title' => $title)), t('Basic page created.'));

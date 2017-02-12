@@ -1121,7 +1121,20 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
    * @see EntityTranslationHandlerInterface::getFormLanguage()
    */
   public function getFormLanguage() {
-    return !empty($this->formLanguage) ? $this->formLanguage : $this->getLanguage();
+    if (!empty($this->formLanguage)) {
+      return $this->formLanguage;
+    }
+    // For new entities the form should be built in the default language. The
+    // language stored with the entity itself (for example, $node->language)
+    // may not be reliable since the form builder function (for example,
+    // node_add()) which creates the initial entity object will not know which
+    // language this module is configured to create the entity in.
+    elseif ($this->isNewEntity()) {
+      return $this->getDefaultLanguage();
+    }
+    else {
+      return $this->getLanguage();
+    }
   }
 
   /**
