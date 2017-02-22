@@ -550,7 +550,7 @@ function entity_translation_edit_page() {
   $handler = entity_translation_get_handler($entity_type, $entity);
   $handler->initPathScheme();
   $langcode = entity_translation_get_existing_language($entity_type, $entity, $langcode);
-  $handler->setFormLanguage($langcode);
+  $handler->setActiveLanguage($langcode);
 
   // Display the entity edit form.
   return _entity_translation_callback($edit_form_item['page callback'], $args, $edit_form_item);
@@ -693,7 +693,7 @@ function entity_translation_add_page() {
 
   $handler = entity_translation_get_handler($entity_type, $entity);
   $handler->initPathScheme();
-  $handler->setFormLanguage($langcode);
+  $handler->setActiveLanguage($langcode);
   $handler->setSourceLanguage($source);
 
   // Display the entity edit form.
@@ -1194,7 +1194,7 @@ function entity_translation_field_attach_form($entity_type, $entity, &$form, &$f
   if (empty($form['#entity_translation_source_form']) && entity_translation_enabled($entity_type, $bundle)) {
     $handler = entity_translation_get_handler($entity_type, $entity);
     $langcode = !empty($langcode) ? $langcode : $handler->getLanguage();
-    $form_langcode = $handler->getFormLanguage();
+    $form_langcode = $handler->getActiveLanguage();
     $translations = $handler->getTranslations();
     $update_langcode = $form_langcode && ($form_langcode != $langcode);
     $source = $handler->getSourceLanguage();
@@ -1491,7 +1491,7 @@ function entity_translation_form_alter(&$form, &$form_state) {
       if (!$handler->isNewEntity()) {
         $handler->entityForm($form, $form_state);
         $translations = $handler->getTranslations();
-        $form_langcode = $handler->getFormLanguage();
+        $form_langcode = $handler->getActiveLanguage();
         if (!isset($translations->data[$form_langcode]) || count($translations->data) > 1) {
           // Hide shared form elements if the user is not allowed to edit them.
           $handler->entityFormSharedElements($form);
@@ -1520,7 +1520,7 @@ function entity_translation_form_alter(&$form, &$form_state) {
 function entity_translation_entity_form_source_language_submit($form, &$form_state) {
   $handler = entity_translation_entity_form_get_handler($form, $form_state);
   $langcode = $form_state['values']['source_language']['language'];
-  $path = "{$handler->getEditPath()}/add/$langcode/{$handler->getFormLanguage()}";
+  $path = "{$handler->getEditPath()}/add/$langcode/{$handler->getActiveLanguage()}";
   $options = array();
   if (isset($_GET['destination'])) {
     $options['query'] = drupal_get_destination();
@@ -1536,7 +1536,7 @@ function entity_translation_entity_form_source_language_submit($form, &$form_sta
  */
 function entity_translation_entity_form_delete_translation_submit($form, &$form_state) {
   $handler = entity_translation_entity_form_get_handler($form, $form_state);
-  $path = "{$handler->getTranslatePath()}/delete/{$handler->getFormLanguage()}";
+  $path = "{$handler->getTranslatePath()}/delete/{$handler->getActiveLanguage()}";
   $options = array();
   if (isset($_GET['destination'])) {
     $options['query'] = drupal_get_destination();
@@ -1564,7 +1564,7 @@ function entity_translation_entity_form_language_update($element, &$form_state, 
   // needed when responding to an AJAX request where the languages cannot be set
   // from the usual page callback.
   if (!empty($form_state['entity_translation']['form_langcode'])) {
-    $handler->setFormLanguage($form_state['entity_translation']['form_langcode']);
+    $handler->setActiveLanguage($form_state['entity_translation']['form_langcode']);
   }
   // When responding to an AJAX request we should ignore any change in the
   // language widget as it may alter the field language expected by the AJAX
@@ -1821,23 +1821,23 @@ function entity_translation_settings($entity_type, $bundle) {
  * Entity language callback.
  *
  * This callback changes the entity language from the actual one to the active
- * form language. This overriding allows to obtain language dependent form
- * widgets where multilingual values are supported (e.g. field or path alias
- * widgets) even if the code was not originally written with supporting multiple
- * values per language in mind.
+ * language. This overriding allows to obtain language dependent form widgets
+ * where multilingual values are supported (e.g. field or path alias widgets)
+ * even if the code was not originally written with supporting multiple values
+ * per language in mind.
  *
  * The main drawback of this approach is that code needing to access the actual
  * language in the entity form build/validation/submit workflow cannot rely on
  * the entity_language() function. On the other hand in these scenarios assuming
- * the presence of Entity translation should be safe, thus being able to rely on
- * the EntityTranslationHandlerInterface::getLanguage() method.
+ * the presence of Entity translation should be safe, thus developers can rely
+ * on the EntityTranslationHandlerInterface::getLanguage() method.
  *
  * @param $entity_type
  *    The the type of the entity.
  * @param $entity
  *    The entity whose language has to be returned.
  *
- * @return
+ * @return string
  *   A valid language code.
  */
 function entity_translation_language($entity_type, $entity) {
@@ -1845,7 +1845,7 @@ function entity_translation_language($entity_type, $entity) {
   if (empty($handler)) {
     return LANGUAGE_NONE;
   }
-  $langcode = $handler->getFormLanguage();
+  $langcode = $handler->getActiveLanguage();
   return !empty($langcode) ? $langcode : $handler->getLanguage();
 }
 

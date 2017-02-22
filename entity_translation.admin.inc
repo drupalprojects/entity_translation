@@ -410,7 +410,7 @@ function theme_entity_translation_overview_outdated($variables){
  */
 function entity_translation_delete_confirm($form, $form_state, $entity_type, $entity, $langcode) {
   $handler = entity_translation_get_handler($entity_type, $entity);
-  $handler->setFormLanguage($langcode);
+  $handler->setActiveLanguage($langcode);
   $handler->initPathScheme();
   $languages = language_list();
 
