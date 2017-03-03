@@ -1,6 +1,11 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+
+
+
+Entity Translation 7.x-1.0-beta6, 2017-03-03
+--------------------------------------------
 #2849464 by plach, czigor, stefanos.petrakis: Added an API to set the active
   language.
 #2438615 by David_Rothstein, matthiasm11: New nodes are always created using
