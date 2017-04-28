@@ -18,6 +18,13 @@ function entity_translation_admin_form($form, $form_state) {
     '#default_value' => variable_get('locale_field_language_fallback', TRUE),
   );
 
+  $form['entity_translation_languages_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use only enabled languages'),
+    '#description' => t('If checked, disabled languages will not show up as available languages. This setting does not apply to content types that are configured to use the Multilingual content (i18n_node) module as this module provides its own configuration.'),
+    '#default_value' => variable_get('entity_translation_languages_enabled', FALSE),
+  );
+
   $form['entity_translation_show_fallback_on_overview_pages'] = array(
     '#type' => 'checkbox',
     '#title' => t('Show fallback statuses on overview pages'),

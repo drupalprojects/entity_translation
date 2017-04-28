@@ -137,6 +137,19 @@ class EntityTranslationTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Disable a language which is in the language list.
+   *
+   * @param string $langcode
+   *   The code of the language to disable, which must exist.
+   */
+  function disableLanguage($langcode) {
+    $edit = array(
+      'enabled[' . $langcode . ']' => FALSE,
+    );
+    $this->drupalPost('admin/config/regional/language', $edit, 'Save configuration');
+  }
+
+  /**
    * Install a specified language if it has not been already, otherwise make sure that the language is enabled.
    *
    * @param $langcode
@@ -272,8 +285,25 @@ class EntityTranslationTranslationTestCase extends EntityTranslationTestCase {
     $this->login($this->getAdminUser());
     $this->addLanguage('en');
     $this->addLanguage('es');
+    $this->addLanguage('fr');
+    $this->disableLanguage('fr');
     $this->configureContentType();
     $this->login($this->getTranslatorUser());
+  }
+
+  /**
+   * Test disabled languages.
+   *
+   * Make sure disabled languages are not accessible in the language list when
+   * the option entity_translation_languages_enabled is enabled.
+   */
+  function testDisabledLanguages() {
+    $this->drupalGet('node/add/page');
+    $this->assertRaw('value="fr"', 'French is available even if the language is disabled');
+
+    variable_set('entity_translation_languages_enabled', TRUE);
+    $this->drupalGet('node/add/page');
+    $this->assertNoRaw('value="fr"', 'French is not available when the language is disabled and the option entity_translation_languages_enabled is enabled.');
   }
 
   /**
