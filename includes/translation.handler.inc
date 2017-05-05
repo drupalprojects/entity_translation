@@ -704,7 +704,7 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       foreach (field_info_instances($this->entityType, $this->bundle) as $instance) {
         $field_name = $instance['field_name'];
         $field = field_info_field($field_name);
-        if ($field['translatable'] && isset($values[$field_name])) {
+        if ($field['translatable'] && isset($values[$field_name][$langcode])) {
           $this->entity->{$field_name}[$langcode] = $values[$field_name][$langcode];
         }
       }
