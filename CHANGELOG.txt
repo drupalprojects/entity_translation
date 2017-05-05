@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2750179 by wadmiraal: Allowed default translation handler to be completely
+  overridden.
 #2307937 by meichr, joseph.olstad: Batch API needs $context['results'] handled
   as an array, not a value.
 #1175170 by hgoto, Pisco, alberto56: Optionally enable disabled languages for
