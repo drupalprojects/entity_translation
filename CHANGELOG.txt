@@ -2,6 +2,10 @@
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
 
+#1175170 by hgoto, Pisco, alberto56: Optionally enable disabled languages for
+  entity translation.
+#2870524 by stefanos.petrakis, joseph.olstad: Field copy fails with content
+  translation for fields with entity translation enabled.
 
 
 Entity Translation 7.x-1.0-beta6, 2017-03-03
