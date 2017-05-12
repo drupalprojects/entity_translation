@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2572203 by mattew: Wrong query generated when several Translations 
+  relationships are used.
 #2824255 by ccarrascal, plach: Notice: Undefined index for language in
   setTranslation().
 #2750179 by wadmiraal: Allowed default translation handler to be completely
