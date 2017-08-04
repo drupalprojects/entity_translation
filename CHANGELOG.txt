@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1800158 by meichr: Entity Translation Upgrade, drush extension
 #2885858 by StephaneQ: Can't delete taxonomy term translation since beta6
   update.
 #2572203 by mattew: Wrong query generated when several Translations
