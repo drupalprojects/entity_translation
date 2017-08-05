@@ -614,7 +614,8 @@ function entity_translation_translatable_batch($translatable, $field_name, $copy
       // $revision is a partial entity object that will be used as an array of
       // conditions.
       $conditions = (array) $revision;
-      $entity = reset(entity_load($entity_type, FALSE, $conditions));
+      $entities = entity_load($entity_type, FALSE, $conditions);
+      $entity = reset($entities);
       $context['sandbox']['progress']++;
       $handler = entity_translation_get_handler($entity_type, $entity);
       $langcode = $handler->getLanguage();
