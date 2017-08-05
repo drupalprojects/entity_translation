@@ -3,3 +3,4 @@ description = Provides an upgrade path from node-based translation to field-base
 package = Multilingual - Entity Translation
 core = 7.x
 dependencies[] = entity_translation
+files[] = entity_translation_upgrade.test
