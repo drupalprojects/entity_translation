@@ -1,7 +1,11 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
-#2899658 by joseph.olstad, stefanos.petrakis: entity_translation_upgrade_do needs to automatically create the entity_translation row for the source language in entity_translation
+#2743685 by stefanos.petrakis, bwaindwain: Pathauto update for all translations
+  for a single node
+#2899658 by joseph.olstad, stefanos.petrakis: entity_translation_upgrade_do
+  needs to automatically create the entity_translation row for the source
+  language in entity_translation
 #1800158 by meichr: Entity Translation Upgrade, drush extension
 #2885858 by StephaneQ: Can't delete taxonomy term translation since beta6
   update.

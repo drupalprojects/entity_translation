@@ -693,3 +693,136 @@ class EntityTranslationContentTranslationTestCase extends EntityTranslationTestC
   }
 
 }
+
+/**
+ * Tests for integration of Entity Translation with other modules.
+ */
+class EntityTranslationIntegrationTestCase extends EntityTranslationTestCase {
+
+  /**
+   * Return the test information.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Integration with other modules',
+      'description' => 'Tests for integration of Entity Translation with other modules.',
+      'group' => 'Entity translation',
+      // We need to add this to the test_dependencies[] as well.
+      'dependencies' => array('pathauto'),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    // Activate modules.
+    parent::setUp('locale', 'entity_translation');
+    // Create admin and translator users with one extra permission,
+    // namely the 'administer content' permission for the admin, to
+    // allow enabling the pathauto module during testing. The
+    // Translator user needs to be able to create url aliases.
+    $this->getAdminUser(array(
+      'administer modules',
+    ));
+    $this->getTranslatorUser(array(
+      'create url aliases',
+    ));
+    $this->login($this->getAdminUser());
+    $this->addLanguage('en');
+    $this->addLanguage('es');
+    $this->enableUrlLanguageDetection();
+    $this->configureContentType();
+    $this->login($this->getTranslatorUser());
+  }
+
+  /**
+   * Returns the role id of an $account object.
+   */
+  protected function getUserRole($account) {
+    return reset($account->roles);
+  }
+
+  /**
+   * Tests Pathauto integration.
+   */
+  public function testPathautoIntegration() {
+    $languages = language_list();
+
+    // Enable the path module to add aliases manually.
+    $this->login($this->getAdminUser());
+    if (!module_exists('path')) {
+      module_enable(array('path'));
+    }
+    $this->login($this->getTranslatorUser());
+
+    // Create Basic page in English.
+    $node_title = $this->randomName();
+    $node_body = $this->randomName();
+    $node = $this->createPage($node_title, $node_body, 'en');
+    $node_alias = $this->randomName();
+    $edit = array(
+      'path[alias]' => $node_alias,
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+
+    // Submit translation in Spanish.
+    $node_translation_body = $this->randomName();
+    $this->createTranslation($node, $node_title, $node_translation_body, 'es');
+    $node_translation_alias = $this->randomName();
+    $edit = array(
+      'path[alias]' => $node_translation_alias,
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'), array('language' => $languages['es']));
+
+    // Enable the pathauto module.
+    $this->login($this->getAdminUser());
+    if (!module_exists('pathauto')) {
+      module_enable(array('pathauto'));
+    }
+    $admin_rid = $this->getUserRole($this->getAdminUser());
+    user_role_grant_permissions($admin_rid, array('administer url aliases', 'administer pathauto'));
+    $translator_rid = $this->getUserRole($this->getTranslatorUser());
+    user_role_grant_permissions($translator_rid, array('create url aliases'));
+    $this->login($this->getTranslatorUser());
+
+    // Create pathauto alias for source node.
+    $edit = array(
+      'path[pathauto]' => TRUE,
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    // Clear the static caches in case they interfere.
+    drupal_lookup_path('wipe');
+    $node_pathauto_alias = pathauto_node_update_alias($node, 'return');
+    $node_translation_pathauto_alias = pathauto_node_update_alias($node, 'return', array('language' => 'es'));
+
+    // Check that the new alias for the translation matches the
+    // pathauto's logic.
+    $this->assertEqual($this->getUrl(), url(drupal_get_path_alias($node_pathauto_alias), array('absolute' => TRUE)));
+
+    // Check that a pathauto alias was created for the source and
+    // matches the pathauto's logic.
+    $this->drupalGet('node/' . $node->nid, array('language' => $languages['es']));
+    $this->assertEqual($this->getUrl(), url(drupal_get_path_alias($node_translation_pathauto_alias), array('absolute' => TRUE, 'language' => $languages['es'])));
+
+    // Delete the two aliases.
+    path_delete(array('source' => 'node/' . $node->nid));
+
+    // Create pathauto alias for the translation of the node.
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'), array('language' => $languages['es']));
+    // Clear the static caches in case they interfere.
+    drupal_lookup_path('wipe');
+    $node_pathauto_alias = pathauto_node_update_alias($node, 'return');
+    $node_translation_pathauto_alias = pathauto_node_update_alias($node, 'return', array('language' => 'es'));
+
+    // Check that the new alias for the translation matches the
+    // pathauto's logic.
+    $this->assertEqual($this->getUrl(), url(drupal_get_path_alias($node_translation_pathauto_alias), array('absolute' => TRUE, 'language' => $languages['es'])));
+
+    // Check that a pathauto alias was created for the source and
+    // matches the pathauto's logic.
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertEqual($this->getUrl(), url(drupal_get_path_alias($node_pathauto_alias), array('absolute' => TRUE)));
+  }
+
+}
