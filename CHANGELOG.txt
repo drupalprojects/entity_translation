@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2877074 by plach, stefanos.petrakis, joseph.olstad: Refactor the
+  entity_translation_language() callback to make it bundle-specific
 #2743685 by stefanos.petrakis, bwaindwain: Pathauto update for all translations
   for a single node
 #2899658 by joseph.olstad, stefanos.petrakis: entity_translation_upgrade_do

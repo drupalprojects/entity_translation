@@ -676,6 +676,27 @@ class EntityTranslationContentTranslationTestCase extends EntityTranslationTestC
   }
 
   /**
+   * @see TranslationTestCase::createPage()
+   */
+  function createPage($title, $body, $language = NULL) {
+    $edit = array();
+    $langcode = LANGUAGE_NONE;
+    $edit["title"] = $title;
+    $edit["body[$langcode][0][value]"] = $body;
+    if (!empty($language)) {
+      $edit['language'] = $language;
+    }
+    $this->drupalPost('node/add/page', $edit, t('Save'));
+    $this->assertRaw(t('Basic page %title has been created.', array('%title' => $title)), 'Basic page created.');
+
+    // Check to make sure the node was created.
+    $node = $this->drupalGetNodeByTitle($title);
+    $this->assertTrue($node, 'Node found in database.');
+
+    return $node;
+  }
+
+  /**
    * Tests copying of source node's body value in the add translation form page.
    */
   public function testCopyFieldsUsingContentTranslation() {
