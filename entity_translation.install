@@ -452,6 +452,9 @@ function entity_translation_update_7007() {
  * through it.
  */
 function entity_translation_update_7008() {
+  if (!module_exists('taxonomy')) {
+    return;
+  }
   // According to EXPLAIN joining {taxonomy_vocabulary} here makes the query
   // perform way worse, so we just split into two quick ones.
   $query = "SELECT t.vid

@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2883805 by mikran: entity_translation_update_7008 is broken when taxonomy
+  module is not enabled
 #2877074 by plach, stefanos.petrakis, joseph.olstad: Refactor the
   entity_translation_language() callback to make it bundle-specific
 #2743685 by stefanos.petrakis, bwaindwain: Pathauto update for all translations
