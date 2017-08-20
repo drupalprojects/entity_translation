@@ -1,16 +1,18 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2900094 by joseph.olstad: code sniffer drupal.org recommended code syntax
+  fixes.
 #2883805 by mikran: entity_translation_update_7008 is broken when taxonomy
-  module is not enabled
+  module is not enabled.
 #2877074 by plach, stefanos.petrakis, joseph.olstad: Refactor the
-  entity_translation_language() callback to make it bundle-specific
+  entity_translation_language() callback to make it bundle-specific.
 #2743685 by stefanos.petrakis, bwaindwain: Pathauto update for all translations
-  for a single node
+  for a single node.
 #2899658 by joseph.olstad, stefanos.petrakis: entity_translation_upgrade_do
   needs to automatically create the entity_translation row for the source
-  language in entity_translation
-#1800158 by meichr: Entity Translation Upgrade, drush extension
+  language in entity_translation.
+#1800158 by meichr: Entity Translation Upgrade, drush extension.
 #2885858 by StephaneQ: Can't delete taxonomy term translation since beta6
   update.
 #2572203 by mattew: Wrong query generated when several Translations

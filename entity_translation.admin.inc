@@ -52,7 +52,7 @@ function entity_translation_admin_form($form, $form_state) {
   );
 
   $_null = NULL;
-  list($items, ) = menu_router_build();
+  list($items,) = menu_router_build();
   _entity_translation_validate_path_schemes($_null, FALSE, $items);
 
   foreach (entity_get_info() as $entity_type => $info) {
@@ -396,7 +396,7 @@ function _entity_translation_label($entity_type, $entity, $langcode = NULL) {
 /**
  * Theme wrapper for the entity translation language page.
  */
-function theme_entity_translation_overview($variables){
+function theme_entity_translation_overview($variables) {
   $rows = $variables['rows'];
   return theme('table', array(
     'rows' => $rows,
@@ -407,7 +407,7 @@ function theme_entity_translation_overview($variables){
 /**
  * Theme wrapper for the entity translation language outdated translation.
  */
-function theme_entity_translation_overview_outdated($variables){
+function theme_entity_translation_overview_outdated($variables) {
   $message = $variables['message'];
   return ' - <span class="marker">' . $message . '</span>';
 }
@@ -459,7 +459,7 @@ function entity_translation_delete_confirm_submit($form, &$form_state) {
   $form_state['redirect'] = $handler->getTranslatePath();
 }
 
-/*
+/**
  * Confirm form for changing field translatability.
  */
 function entity_translation_translatable_form($form, &$form_state, $field_name) {
@@ -554,7 +554,7 @@ function entity_translation_translatable_form_submit($form, $form_state) {
   batch_set($batch);
 }
 
-/*
+/**
  * Toggle translatability of the given field.
  *
  * This is called from a batch operation, but should only run once per field.
