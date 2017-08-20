@@ -1,6 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2425825 by jamesrward: Update from before beta4 fails.
 #2900094 by joseph.olstad: code sniffer drupal.org recommended code syntax
   fixes.
 #2883805 by mikran: entity_translation_update_7008 is broken when taxonomy
