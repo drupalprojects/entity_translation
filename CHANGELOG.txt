@@ -1,6 +1,11 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+
+
+
+Entity Translation 7.x-1.0-beta7, 2017-08-21
+--------------------------------------------
 #2903195 by stefanos.petrakis, BAHbKA, plach: Enabling translation for not
   empty taxonomy vocabulary.
 #2425825 by jamesrward: Update from before beta4 fails.
