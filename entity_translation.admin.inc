@@ -609,13 +609,28 @@ function entity_translation_translatable_batch($translatable, $field_name, $copy
     ->range($offset, $limit)
     ->execute();
 
-  foreach ($result as $entity_type => $revisions) {
-    foreach ($revisions as $revision) {
-      // $revision is a partial entity object that will be used as an array of
-      // conditions.
-      $conditions = (array) $revision;
-      $entities = entity_load($entity_type, FALSE, $conditions);
-      $entity = reset($entities);
+  foreach ($result as $entity_type => $partial_entities) {
+
+    // Load all revisionable entities' revisions.
+    if (EntityTranslationDefaultHandler::isEntityTypeRevisionable($entity_type)) {
+      $entities = array();
+      // Extract the revision identifier from the entity's definition.
+      $entity_info = entity_get_info($entity_type);
+      $revision_id_key = $entity_info['entity keys']['revision'];
+      // Load each revisionable entity's revision using $conditions, which
+      // should include the revision id information.
+      foreach ($partial_entities as $partial_entity) {
+        $conditions = (array) $partial_entity;
+        $revision_condition = array_intersect_key($conditions, array($revision_id_key => $revision_id_key));
+        $entity_revisions = entity_load($entity_type, FALSE, $revision_condition);
+        $entities[] = reset($entity_revisions);
+      }
+    }
+    else {
+      $entities = entity_load($entity_type, array_keys($partial_entities));
+    }
+
+    foreach ($entities as $entity) {
       $context['sandbox']['progress']++;
       $handler = entity_translation_get_handler($entity_type, $entity);
       $langcode = $handler->getLanguage();
@@ -634,9 +649,10 @@ function entity_translation_translatable_batch($translatable, $field_name, $copy
       if ($translatable && isset($entity->{$field_name}[LANGUAGE_NONE])) {
         // If the field is being switched to translatable and has data for
         // LANGUAGE_NONE then we need to move the data to the right language.
-
+        // In case the 'Copy translations' option was selected, move the
+        // available LANGUAGE_NONE field data into all existing translation
+        // languages, otherwise only into the entity's language.
         $translations = $handler->getTranslations();
-
         if ($copy_all_languages && !empty($translations->data)) {
           foreach ($translations->data as $translation) {
             $entity->{$field_name}[$translation['language']] = $entity->{$field_name}[LANGUAGE_NONE];
