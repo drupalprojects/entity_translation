@@ -2076,12 +2076,17 @@ function path_entity_translation_delete($entity_type, $entity, $langcode) {
 }
 
 /**
- * Ensure autocomplete taxonomy terms are created in the language of the parent
- * entity.
+ * Implements hook_field_widget_WIDGET_TYPE_form_alter().
  */
-function entity_translation_field_widget_form_alter(&$element, &$form_state, $context) {
-  if ($context['instance']['widget']['type'] == 'taxonomy_autocomplete') {
-    $element['#element_validate'][] = 'entity_translation_taxonomy_autocomplete_validate';
+function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$element, &$form_state, $context) {
+  // Ensure autocomplete taxonomy terms are created in the language of the
+  // parent entity.
+  $field = field_info_field($element['#field_name']);
+  if (!empty($field['settings']['allowed_values'][0]['vocabulary'])) {
+    $bundle = $field['settings']['allowed_values'][0]['vocabulary'];
+    if (entity_translation_enabled('taxonomy_term', $bundle)) {
+      $element['#element_validate'][] = 'entity_translation_taxonomy_autocomplete_validate';
+    }
   }
 }
 
@@ -2090,7 +2095,6 @@ function entity_translation_field_widget_form_alter(&$element, &$form_state, $co
  * created.
  */
 function entity_translation_taxonomy_autocomplete_validate($element, &$form_state) {
-  $field_name = $element['#field_name'];
   if (!empty($form_state['values']['language'])) {
     // This is the language of the parent entity, that we will be appling to
     // terms.
