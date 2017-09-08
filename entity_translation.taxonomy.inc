@@ -123,7 +123,8 @@ function entity_translation_taxonomy_term_autocomplete($langcode = NULL, $field_
   // If the request has a '/' in the search text, then the menu system will have
   // split it into multiple arguments, recover the intended $tags_typed.
   $args = func_get_args();
-  // Shift off the $field_name argument.
+  // Shift off the $langcode and $field_name arguments.
+  array_shift($args);
   array_shift($args);
   $tags_typed = implode('/', $args);
 
