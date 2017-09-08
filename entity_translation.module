@@ -244,6 +244,13 @@ function entity_translation_menu() {
     'file' => 'entity_translation.admin.inc',
   );
 
+  $items['entity_translation/taxonomy_term/autocomplete'] = array(
+    'title' => 'Entity translation autocomplete',
+    'page callback' => 'entity_translation_taxonomy_term_autocomplete',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
