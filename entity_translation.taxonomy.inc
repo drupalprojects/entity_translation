@@ -97,3 +97,49 @@ function entity_translation_form_taxonomy_form_vocabulary_submit($form, &$form_s
   variable_set('entity_translation_taxonomy', $info);
 }
 
+/**
+ * Implements hook_field_widget_WIDGET_TYPE_form_alter().
+ */
+function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$element, &$form_state, $context) {
+  // Ensure autocomplete taxonomy terms are created in the language of the
+  // parent entity.
+  $field = field_info_field($element['#field_name']);
+  if (!empty($field['settings']['allowed_values'][0]['vocabulary'])) {
+    $bundle = $field['settings']['allowed_values'][0]['vocabulary'];
+    if (entity_translation_enabled('taxonomy_term', $bundle)) {
+      $element['#element_validate'][] = 'entity_translation_taxonomy_autocomplete_validate';
+    }
+  }
+}
+
+/**
+ * Add the parent entity language to autocomplete taxonomy terms before they are
+ * created.
+ */
+function entity_translation_taxonomy_autocomplete_validate($element, &$form_state) {
+  if (!empty($form_state['values']['language'])) {
+    // This is the language of the parent entity, that we will be appling to
+    // terms.
+    $language = $form_state['values']['language'];
+    // Fetch the field values, this also works for nested values, such as field
+    // collections.
+    $value = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
+    foreach ($value as $delta => $term) {
+      if ($term['tid'] = 'autocreate') {
+        // Using the "autocreate" term created by taxonomy module, we create a
+        // temporary object and initiate the original translation in the parent
+        // entity language.
+        $term = (object)$term;
+        $handler = entity_translation_get_handler('taxonomy_term', $term);
+        $handler->setOriginalLanguage($language);
+        $handler->initTranslations();
+        // Apply the language and translation structures to the original
+        // "autocreate" term element.
+        $value[$delta]['language'] = $language;
+        $value[$delta]['translations'] = $term->translations;
+      }
+    }
+    // Update form values.
+    form_set_value($element, $value, $form_state);
+  }
+}
