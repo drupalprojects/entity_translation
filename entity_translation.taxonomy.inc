@@ -106,10 +106,86 @@ function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$elem
   $field = field_info_field($element['#field_name']);
   if (!empty($field['settings']['allowed_values'][0]['vocabulary'])) {
     $bundle = $field['settings']['allowed_values'][0]['vocabulary'];
-    if (entity_translation_enabled('taxonomy_term', $bundle)) {
+    $entity_type = 'taxonomy_term';
+    if (entity_translation_enabled($entity_type, $bundle)) {
+      $handler = entity_translation_get_handler($element['#entity_type'], $element['#entity']);
+      $langcode = $handler->getActiveLanguage();
+      $element['#autocomplete_path'] = 'entity_translation/' . $entity_type . '/autocomplete/' . $langcode . '/' . $element['#field_name'];
       $element['#element_validate'][] = 'entity_translation_taxonomy_autocomplete_validate';
     }
   }
+}
+
+/**
+ * TODO
+ */
+function entity_translation_taxonomy_term_autocomplete($langcode = NULL, $field_name = '', $tags_typed = '') {
+  // If the request has a '/' in the search text, then the menu system will have
+  // split it into multiple arguments, recover the intended $tags_typed.
+  $args = func_get_args();
+  // Shift off the $field_name argument.
+  array_shift($args);
+  $tags_typed = implode('/', $args);
+
+  // Make sure the field exists and is a taxonomy field.
+  if (!($field = field_info_field($field_name)) || $field['type'] !== 'taxonomy_term_reference') {
+    // Error string. The JavaScript handler will realize this is not JSON and
+    // will display it as debugging information.
+    // FIXME
+    print t('Taxonomy field @field_name not found.', array('@field_name' => $field_name));
+    exit;
+  }
+
+  // The user enters a comma-separated list of tags. We only autocomplete the last tag.
+  $tags_typed = drupal_explode_tags($tags_typed);
+  $tag_last = drupal_strtolower(array_pop($tags_typed));
+
+  $term_matches = array();
+  if ($tag_last != '') {
+    if (!$langcode) {
+      $langcode = $GLOBALS['language_content']->language;
+    }
+
+    // Part of the criteria for the query come from the field's own settings.
+    $vids = array();
+    $vocabularies = taxonomy_vocabulary_get_names();
+    foreach ($field['settings']['allowed_values'] as $tree) {
+      $vids[] = $vocabularies[$tree['vocabulary']]->vid;
+    }
+
+    $name_field = 'name_field';
+    $entity_type = 'taxonomy_term';
+    $query = new EntityFieldQuery();
+    $query->addTag('taxonomy_term_access');
+    $query->entityCondition('entity_type', $entity_type);
+    $query->fieldLanguageCondition($name_field, $langcode);
+
+    // Do not select already entered terms.
+    if (!empty($tags_typed)) {
+      $query->fieldCondition($name_field, NULL, $tags_typed, 'NOT IN');
+    }
+
+    // Select rows that match by term name.
+    $query->propertyCondition('vid', $vids);
+    $query->fieldCondition($name_field, NULL, $tag_last, 'CONTAINS');
+    $query->range(0, 10);
+    $result = $query->execute();
+
+    $prefix = count($tags_typed) ? drupal_implode_tags($tags_typed) . ', ' : '';
+    $terms = !empty($result[$entity_type]) ? taxonomy_term_load_multiple(array_keys($result[$entity_type])) : array();
+
+    foreach ($terms as $tid => $term) {
+      $name = entity_label('taxonomy_term', $term);
+      $n = $name;
+      // Term names containing commas or quotes must be wrapped in quotes.
+      if (strpos($name, ',') !== FALSE || strpos($name, '"') !== FALSE) {
+        $n = '"' . str_replace('"', '""', $name) . '"';
+      }
+      $term_matches[$prefix . $n] = check_plain($name);
+    }
+  }
+
+  drupal_json_output($term_matches);
 }
 
 /**
@@ -125,7 +201,7 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
     // collections.
     $value = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
     foreach ($value as $delta => $term) {
-      if ($term['tid'] = 'autocreate') {
+      if ($term['tid'] === 'autocreate') {
         // Using the "autocreate" term created by taxonomy module, we create a
         // temporary object and initiate the original translation in the parent
         // entity language.
