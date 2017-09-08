@@ -1,7 +1,7 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
-
+#2907275 by jalpesh: CSS class name misspelled in entity_translation_overview().
 
 
 Entity Translation 7.x-1.0-beta7, 2017-08-21
