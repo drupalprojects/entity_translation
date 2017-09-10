@@ -110,7 +110,9 @@ function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$elem
     if (entity_translation_enabled($entity_type, $bundle)) {
       $handler = entity_translation_get_handler($element['#entity_type'], $element['#entity']);
       $langcode = $handler->getActiveLanguage();
+      // FIXME optional Title support
       $element['#autocomplete_path'] = 'entity_translation/' . $entity_type . '/autocomplete/' . $langcode . '/' . $element['#field_name'];
+      $element['#element_validate'] = array_values(array_diff($element['#element_validate'], array('taxonomy_autocomplete_validate')));
       $element['#element_validate'][] = 'entity_translation_taxonomy_autocomplete_validate';
     }
   }
@@ -190,14 +192,121 @@ function entity_translation_taxonomy_term_autocomplete($langcode = NULL, $field_
 }
 
 /**
+ * Form element validate handler for taxonomy term autocomplete element.
+ */
+function entity_translation_taxonomy_autocomplete_validate($element, &$form_state) {
+  // Autocomplete widgets do not send their tids in the form, so we must detect
+  // them here and process them independently.
+  $value = array();
+  if ($tags = $element['#value']) {
+    // Collect candidate vocabularies.
+    $field = field_widget_field($element, $form_state);
+    $vocabularies = array();
+    foreach ($field['settings']['allowed_values'] as $tree) {
+      if ($vocabulary = taxonomy_vocabulary_machine_name_load($tree['vocabulary'])) {
+        $vocabularies[$vocabulary->vid] = $vocabulary;
+      }
+    }
+    $vocabulary = reset($vocabularies);
+
+    // TODO
+    $entity_type = 'taxonomy_term';
+    $name_field = 'name_field';
+    $typed_tags = drupal_explode_tags($tags);
+
+    // This is the language of the parent entity, that we will be appling to
+    // terms. TODO
+    $parent_handler = entity_translation_get_handler($element['#entity_type'], $element['#entity']);
+    $langcode = $parent_handler->getActiveLanguage();
+    $langcode_key = $parent_handler->getLanguageKey();
+    $original_langcode = !empty($form_state['values'][$langcode_key]) ? $form_state['values'][$langcode_key] : $langcode;
+
+    // Select terms that match by (translated) term name.
+    $query = new EntityFieldQuery();
+    $query->addTag('taxonomy_term_access');
+    $query->entityCondition('entity_type', $entity_type);
+    $query->propertyCondition('vid', $vocabulary->vid);
+    $query->fieldLanguageCondition($name_field, $langcode);
+    $query->fieldCondition($name_field, NULL, $typed_tags);
+    $result = $query->execute();
+
+    $translated_terms = array();
+    if (!empty($result[$entity_type])) {
+      foreach (taxonomy_term_load_multiple(array_keys($result[$entity_type])) as $term) {
+        $name = entity_label($entity_type, $term);
+        $translated_terms[$name] = $term;
+      }
+    }
+
+    // TODO
+    $source_langcode = NULL;
+    $source_values = array();
+    $access = user_access('translate any entity') || user_access("translate $this->entityType entities");
+    if ($access) {
+      $translations = $parent_handler->getTranslations();
+      $source_langcode = isset($translations->data[$langcode]) ? $translations->data[$langcode]['source'] : $parent_handler->getSourceLanguage();
+      if (!empty($element['#entity']->{$element['#field_name']}[LANGUAGE_NONE])) { // FIXME
+        $tids = array_map(function ($item) { return $item['tid']; }, $element['#entity']->{$element['#field_name']}[LANGUAGE_NONE]);
+        if (count($tids) == count($typed_tags)) {
+          $source_values = array_values(taxonomy_term_load_multiple($tids));
+        }
+      }
+    }
+
+    // Translate term names into actual terms.
+    foreach ($typed_tags as $delta => $typed_tag) {
+      // TODO
+      // See if the term exists in the chosen vocabulary and return the tid;
+      // otherwise, create a new 'autocreate' term for insert/update.
+      if (isset($translated_terms[$typed_tag])) {
+        $term = $translated_terms[$typed_tag];
+      }
+      elseif ($access && isset($source_values[$delta])) {
+        $term = $source_values[$delta];
+        $handler = entity_translation_get_handler($entity_type, $term);
+        $translation = array(
+          'language' => $langcode,
+          'source' => $source_langcode,
+          'uid' => $GLOBALS['user']->uid,
+          'status' => 1,
+          'created' => REQUEST_TIME,
+          'changed' => REQUEST_TIME,
+        );
+        $translation_values = array(
+          $name_field => array($langcode => array(array('value' => $typed_tag))),
+        );
+        $handler->setTranslation($translation, $translation_values);
+        entity_translation_entity_save($entity_type, $term);
+      }
+      else {
+        $term = (object) array(
+          'tid' => 'autocreate',
+          'vid' => $vocabulary->vid,
+          'name' => $typed_tag,
+          'vocabulary_machine_name' => $vocabulary->machine_name,
+        );
+        $handler = entity_translation_get_handler('taxonomy_term', $term);
+        $handler->setOriginalLanguage($original_langcode);
+        $handler->initTranslations();
+      }
+      $value[] = (array) $term;
+    }
+  }
+
+  form_set_value($element, $value, $form_state);
+}
+
+/**
  * Add the parent entity language to autocomplete taxonomy terms before they are
  * created.
  */
-function entity_translation_taxonomy_autocomplete_validate($element, &$form_state) {
-  if (!empty($form_state['values']['language'])) {
+function _entity_translation_taxonomy_autocomplete_validate($element, &$form_state) {
+  $parent_handler = entity_translation_get_handler($element['#entity_type'], $element['#entity']);
+  $langcode_key = $parent_handler->getLanguageKey();
+  if (!empty($form_state['values'][$langcode_key])) {
     // This is the language of the parent entity, that we will be appling to
     // terms.
-    $language = $form_state['values']['language'];
+    $original_langcode = $form_state['values'][$langcode_key];
     // Fetch the field values, this also works for nested values, such as field
     // collections.
     $value = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
@@ -206,13 +315,13 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
         // Using the "autocreate" term created by taxonomy module, we create a
         // temporary object and initiate the original translation in the parent
         // entity language.
-        $term = (object)$term;
+        $term = (object) $term;
         $handler = entity_translation_get_handler('taxonomy_term', $term);
-        $handler->setOriginalLanguage($language);
+        $handler->setOriginalLanguage($original_langcode);
         $handler->initTranslations();
         // Apply the language and translation structures to the original
         // "autocreate" term element.
-        $value[$delta]['language'] = $language;
+        $value[$delta]['language'] = $original_langcode;
         $value[$delta]['translations'] = $term->translations;
       }
     }
