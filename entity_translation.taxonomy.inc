@@ -254,7 +254,7 @@ function entity_translation_taxonomy_term_autocomplete($langcode = NULL, $field_
         $query->fieldCondition($name_field, $column, $tags_typed, 'NOT IN', NULL, $language_group);
       }
       $query->fieldCondition($name_field, $column, $tag_last, 'CONTAINS', NULL, $language_group);
-      $query->fieldLanguageCondition($name_field, $langcode, NULL, NULL, $language_group);
+      $query->fieldLanguageCondition($name_field, array($langcode, LANGUAGE_NONE), NULL, NULL, $language_group);
     }
     else {
       $name_field = 'name';
@@ -382,7 +382,7 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
     $query->addTag('taxonomy_term_access');
     $query->entityCondition('entity_type', $entity_type);
     $query->propertyCondition('vid', $vocabulary->vid);
-    if (module_invoke('title', 'field_replacement_enabled', $entity_type, $vocabulary->machine_name, 'name')) {
+    if ($langcode != LANGUAGE_NONE && module_invoke('title', 'field_replacement_enabled', $entity_type, $vocabulary->machine_name, 'name')) {
       $language_group = 0;
       // Do not select already entered terms.
       $name_field = 'name_field';
@@ -390,7 +390,7 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
       $query->fieldCondition($name_field, $column, $typed_tags, NULL, NULL, $language_group);
       // TODO
       if (!$is_new) {
-        $query->fieldLanguageCondition($name_field, $langcode, NULL, NULL, $language_group);
+        $query->fieldLanguageCondition($name_field, array($langcode, LANGUAGE_NONE), NULL, NULL, $language_group);
       }
     }
     else {
@@ -409,6 +409,7 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
       }
     }
 
+    // FIXME: language change
     // Translate term names into actual terms.
     foreach ($typed_tags as $delta => $typed_tag) {
       // See if the term exists in the chosen vocabulary and return the tid.
