@@ -111,6 +111,54 @@ function entity_translation_taxonomy_label($term, $langcode) {
 }
 
 /**
+ * Implements entity_translation_form_field_ui_field_edit_WIDGET_TYPE_form_alter().
+ *
+ * {@inheritdoc}
+ */
+function entity_translation_form_field_ui_field_edit_taxonomy_autocomplete_form_alter(&$form, &$form_state) {
+  $key = 'entity_translation_taxonomy_autocomplete_translate';
+  $instance = $form['#instance'];
+  $field_name = $instance['field_name'];
+  $entity_type = $instance['entity_type'];
+  $field = field_info_field($field_name);
+  $translatable = field_is_translatable($entity_type, $field);
+
+  $form['instance']['settings'][$key] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable in-place translation of terms'),
+    '#description' => t('Check this option if you wish to use translation forms to perform in-place translation for terms entered in the original language.'),
+    '#default_value' => !$translatable && !empty($form['#instance']['settings'][$key]),
+    '#access' => !$form_state['field_has_data'] || !$translatable,
+    '#states' => array(
+      'visible' => array(':input[name="field[translatable]"]' => array('checked' => FALSE)),
+    ),
+    '#weight' => -8,
+  );
+}
+
+/**
+ * TODO
+ */
+function entity_translation_taxonomy_autocomplete_translation_enabled($element) {
+  $field = field_info_field($element['#field_name']);
+  if (field_is_translatable($element['#entity_type'], $field)) {
+    return FALSE;
+  }
+
+  $entity_type = 'taxonomy_term';
+  $parent_handler = entity_translation_get_handler($element['#entity_type'], $element['#entity']);
+  $langcode = $parent_handler->getActiveLanguage();
+  $translations = $parent_handler->getTranslations();
+  list(,, $bundle) = entity_extract_ids($element['#entity_type'], $element['#entity']);
+  $instance = field_info_instance($element['#entity_type'], $field['field_name'], $bundle);
+
+  return
+    isset($translations->original) && $translations->original != $langcode &&
+    !empty($instance['settings']['entity_translation_taxonomy_autocomplete_translate']) &&
+    (user_access('translate any entity') || user_access("translate $entity_type entities"));
+}
+
+/**
  * Implements hook_field_widget_WIDGET_TYPE_form_alter().
  */
 function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$element, &$form_state, $context) {
@@ -165,26 +213,6 @@ function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$elem
       $element['#process'][] = 'entity_translation_taxonomy_autocomplete_process';
     }
   }
-}
-
-/**
- * TODO
- */
-function entity_translation_taxonomy_autocomplete_translation_enabled($element) {
-  $field = field_info_field($element['#field_name']);
-  if (!empty($field['translatable'])) {
-    return FALSE;
-  }
-
-  $entity_type = 'taxonomy_term';
-//  $bundle = !empty($field['settings']['allowed_values'][0]['vocabulary']) ? $field['settings']['allowed_values'][0]['vocabulary'] : NULL;
-  $parent_handler = entity_translation_get_handler($element['#entity_type'], $element['#entity']);
-  $langcode = $parent_handler->getActiveLanguage();
-  $translations = $parent_handler->getTranslations();
-//  $instance = field_info_instance($entity_type, $field['field_name'], $bundle);
-  $access = user_access('translate any entity') || user_access("translate $entity_type entities");
-
-  return $access && isset($translations->original) && $translations->original != $langcode && 1; // FIXME
 }
 
 /**

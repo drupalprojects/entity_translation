@@ -1678,7 +1678,7 @@ function theme_entity_translation_language_tabs($variables) {
  * Adds an option to enable field synchronization.
  * Enable a selector to choose whether a field is translatable.
  */
-function entity_translation_form_field_ui_field_edit_form_alter(&$form, $form_state) {
+function entity_translation_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
   $instance = $form['#instance'];
   $entity_type = $instance['entity_type'];
   $field_name = $instance['field_name'];
@@ -1698,7 +1698,8 @@ function entity_translation_form_field_ui_field_edit_form_alter(&$form, $form_st
   $label = t('Field translation');
   $title = t('Users may translate all occurrences of this field:') . _entity_translation_field_desc($field);
 
-  if (field_has_data($field)) {
+  $form_state['field_has_data'] = field_has_data($field);
+  if ($form_state['field_has_data']) {
     $path = "admin/config/regional/entity_translation/translatable/$field_name";
     $status = $translatable ? $title : (t('All occurrences of this field are untranslatable:') . _entity_translation_field_desc($field));
     $link_title = !$translatable ? t('Enable translation') : t('Disable translation');
@@ -1725,6 +1726,11 @@ function entity_translation_form_field_ui_field_edit_form_alter(&$form, $form_st
       '#title' => $title,
       '#default_value' => $translatable,
     );
+  }
+
+  $function = 'entity_translation_form_field_ui_field_edit_' . $instance['widget']['type'] . '_form_alter';
+  if (function_exists($function)) {
+    $function($form, $form_state);
   }
 }
 
