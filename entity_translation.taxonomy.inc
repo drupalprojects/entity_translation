@@ -98,16 +98,28 @@ function entity_translation_form_taxonomy_form_vocabulary_submit($form, &$form_s
 }
 
 /**
- * TODO
+ * Returns a translated label for the specified taxonomy term.
+ *
+ * @param object $term
+ *   A taxonomy term object.
+ * @param string $langcode
+ *   The language the label should be translated in.
+ *
+ * @return string
+ *   The translated taxonomy term label.
+ *
+ * @internal This is supposed to be used only by the ET taxonomy integration
+ *   code, as it might be removed/replaced in any moment of the ET lifecycle.
  */
-function entity_translation_taxonomy_label($term, $langcode) {
+function _entity_translation_taxonomy_label($term, $langcode) {
   $entity_type = 'taxonomy_term';
   if (function_exists('title_entity_label')) {
-    return title_entity_label($term, $entity_type, $langcode);
+    $label = title_entity_label($term, $entity_type, $langcode);
   }
   else {
-    return entity_label($entity_type, $term);
+    $label = entity_label($entity_type, $term);
   }
+  return (string) $label;
 }
 
 /**
@@ -123,6 +135,7 @@ function entity_translation_form_field_ui_field_edit_taxonomy_autocomplete_form_
   $field = field_info_field($field_name);
   $translatable = field_is_translatable($entity_type, $field);
 
+  // Add a checkbox to toggle in-place translation for autocomplete widgets.
   $form['instance']['settings'][$key] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable in-place translation of terms'),
@@ -137,9 +150,15 @@ function entity_translation_form_field_ui_field_edit_taxonomy_autocomplete_form_
 }
 
 /**
- * TODO
+ * Checks whether in-place translation is enabled for the autocomplete widget.
+ *
+ * @param array $element
+ *   The widget form element.
+ *
+ * @return bool
+ *   TRUE if in-place translation is enabled, FALSE otherwise.
  */
-function entity_translation_taxonomy_autocomplete_translation_enabled($element) {
+function _entity_translation_taxonomy_autocomplete_translation_enabled($element) {
   $field = field_info_field($element['#field_name']);
   if (field_is_translatable($element['#entity_type'], $field)) {
     return FALSE;
@@ -162,7 +181,8 @@ function entity_translation_taxonomy_autocomplete_translation_enabled($element) 
  * Implements hook_field_widget_WIDGET_TYPE_form_alter().
  */
 function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$element, &$form_state, $context) {
-  // TODO
+  // The autocomplete widget is also displayed in the field configuration form,
+  // in which case we do not need to perform any alteration.
   if (!isset($element['#entity'])) {
     return;
   }
@@ -173,7 +193,8 @@ function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$elem
   $field = field_widget_field($element, $form_state);
   $bundle = !empty($field['settings']['allowed_values'][0]['vocabulary']) ? $field['settings']['allowed_values'][0]['vocabulary'] : NULL;
   if ($bundle && entity_translation_enabled($entity_type, $bundle)) {
-    // TODO
+    // The native term save logic is performed at widget validation level, so we
+    // just replace the validation handler to provide our logic instead.
     $element['#element_validate'] = array_values(array_diff($element['#element_validate'], array('taxonomy_autocomplete_validate')));
     $element['#element_validate'][] = 'entity_translation_taxonomy_autocomplete_validate';
 
@@ -187,12 +208,12 @@ function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$elem
     $terms = array_values(taxonomy_term_load_multiple($tids));
 
     // TODO
-    if (!entity_translation_taxonomy_autocomplete_translation_enabled($element)) {
+    if (!_entity_translation_taxonomy_autocomplete_translation_enabled($element)) {
       $element['#autocomplete_path'] = 'entity_translation/' . $entity_type . '/autocomplete/' . $langcode . '/' . $element['#field_name'];
       if (isset($translations->original) && $translations->original != $langcode) {
         $labels = array();
         foreach ($terms as $delta => $term) {
-          $labels[] = entity_translation_taxonomy_label($term, $langcode);
+          $labels[] = _entity_translation_taxonomy_label($term, $langcode);
         }
         $element['#default_value'] = implode(', ', $labels);
       }
@@ -205,7 +226,7 @@ function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$elem
       foreach ($terms as $delta => $term) {
         $element[$delta] = array(
           '#type' => 'textfield',
-          '#default_value' => entity_translation_taxonomy_label($term, $langcode),
+          '#default_value' => _entity_translation_taxonomy_label($term, $langcode),
           '#required' => TRUE,
           '#tid' => $term->tid,
         );
@@ -302,7 +323,7 @@ function entity_translation_taxonomy_term_autocomplete($langcode = NULL, $field_
     $prefix = count($tags_typed) ? drupal_implode_tags($tags_typed) . ', ' : '';
     $terms = !empty($result[$entity_type]) ? taxonomy_term_load_multiple(array_keys($result[$entity_type])) : array();
     foreach ($terms as $tid => $term) {
-      $name = entity_translation_taxonomy_label($term, $langcode);
+      $name = _entity_translation_taxonomy_label($term, $langcode);
       $n = $name;
       // Term names containing commas or quotes must be wrapped in quotes.
       if (strpos($name, ',') !== FALSE || strpos($name, '"') !== FALSE) {
@@ -328,7 +349,7 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
   list($id) = entity_extract_ids($element['#entity_type'], $element['#entity']);
   $is_new = !isset($id);
 
-  if (entity_translation_taxonomy_autocomplete_translation_enabled($element)) {
+  if (_entity_translation_taxonomy_autocomplete_translation_enabled($element)) {
     $deltas = array();
     foreach (element_children($element) as $delta) {
       $tid = $element[$delta]['#tid'];
@@ -371,7 +392,7 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
         entity_translation_entity_save($entity_type, $term);
       }
       // TODO
-      elseif ($term_translation != entity_translation_taxonomy_label($term, $active_langcode)) {
+      elseif ($term_translation != _entity_translation_taxonomy_label($term, $active_langcode)) {
         $term->{$name_field}[$active_langcode][0]['value'] = $term_translation;
         entity_translation_entity_save($entity_type, $term);
       }
@@ -401,7 +422,7 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
 
     $existing_terms = array();
     foreach (taxonomy_term_load_multiple($tids) as $term) {
-      $name = entity_translation_taxonomy_label($term, $langcode);
+      $name = _entity_translation_taxonomy_label($term, $langcode);
       $existing_terms[$name] = $term;
     }
 
@@ -427,11 +448,11 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
     $result = $query->execute();
     if (!empty($result[$entity_type])) {
       foreach (taxonomy_term_load_multiple(array_keys($result[$entity_type])) as $term) {
-        $name = entity_translation_taxonomy_label($term, $langcode);
+        $name = _entity_translation_taxonomy_label($term, $langcode);
         $existing_terms[$name] = $term;
         // TODO
         if ($is_new) {
-          $name = entity_translation_taxonomy_label($term, $GLOBALS['language_content']->language);
+          $name = _entity_translation_taxonomy_label($term, $GLOBALS['language_content']->language);
           $existing_terms[$name] = $term;
         }
       }
