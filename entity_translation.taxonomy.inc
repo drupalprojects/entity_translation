@@ -154,11 +154,13 @@ function entity_translation_form_field_ui_field_edit_taxonomy_autocomplete_form_
  *
  * @param array $element
  *   The widget form element.
+ * @param array $form_state
+ *   The form state array.
  *
  * @return bool
  *   TRUE if in-place translation is enabled, FALSE otherwise.
  */
-function _entity_translation_taxonomy_autocomplete_translation_enabled($element) {
+function _entity_translation_taxonomy_autocomplete_translation_enabled($element, $form_state) {
   $field = field_info_field($element['#field_name']);
   if (field_is_translatable($element['#entity_type'], $field)) {
     return FALSE;
@@ -166,13 +168,18 @@ function _entity_translation_taxonomy_autocomplete_translation_enabled($element)
 
   $entity_type = 'taxonomy_term';
   $parent_handler = entity_translation_get_handler($element['#entity_type'], $element['#entity']);
-  $langcode = $parent_handler->getActiveLanguage();
+  $active_langcode = $parent_handler->getActiveLanguage();
   $translations = $parent_handler->getTranslations();
+  $entity_langcode = isset($translations->original) ? $translations->original : LANGUAGE_NONE;
   list(,, $bundle) = entity_extract_ids($element['#entity_type'], $element['#entity']);
   $instance = field_info_instance($element['#entity_type'], $field['field_name'], $bundle);
 
+  // We need to make sure that we are not dealing with a translation form.
+  // However checking the active language is not enough, because the user may
+  // have changed the entity language.
   return
-    isset($translations->original) && $translations->original != $langcode &&
+    (isset($form_state['entity_translation']['is_translation']) ?
+      $form_state['entity_translation']['is_translation'] : ($active_langcode != $entity_langcode)) &&
     !empty($instance['settings']['entity_translation_taxonomy_autocomplete_translate']) &&
     (user_access('translate any entity') || user_access("translate $entity_type entities"));
 }
@@ -201,7 +208,7 @@ function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$elem
 
     // If we are using the regular autocomplete behavior also in translation
     // forms, we need to set our custom callback.
-    if (!_entity_translation_taxonomy_autocomplete_translation_enabled($element)) {
+    if (!_entity_translation_taxonomy_autocomplete_translation_enabled($element, $form_state)) {
       $element['#autocomplete_path'] = 'entity_translation/' . $entity_type . '/autocomplete/' . $langcode . '/' . $element['#field_name'];
       $translations = $parent_handler->getTranslations();
       if (isset($translations->original) && $translations->original != $langcode) {
@@ -397,10 +404,11 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
   // This is the language of the parent entity, that we will be applying to new
   // terms.
   $parent_handler = entity_translation_get_handler($element['#entity_type'], $element['#entity']);
-  $langcode = $parent_handler->getActiveLanguage();
+  $langcode = !empty($form_state['entity_translation']['form_langcode']) ?
+    $form_state['entity_translation']['form_langcode'] : $parent_handler->getActiveLanguage();
 
   // Handle in-place translation.
-  if (_entity_translation_taxonomy_autocomplete_translation_enabled($element)) {
+  if (_entity_translation_taxonomy_autocomplete_translation_enabled($element, $form_state)) {
     // The referenced terms cannot change, so we just need to collect their term
     // identifiers. We also build a map of the corresponding deltas for later
     // use.
@@ -502,7 +510,6 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
       }
     }
 
-    // FIXME: language change
     // Now collect the identifiers for the various terms and update the taxonomy
     // reference field values.
     foreach ($typed_tags as $delta => $typed_tag) {
