@@ -1604,6 +1604,9 @@ function entity_translation_field_attach_submit($entity_type, $entity, $form, &$
     // Update the wrapped entity with the submitted values.
     $handler->setEntity($entity);
     $handler->entityFormSubmit($form, $form_state);
+
+    // Process in-place translations for the taxonomy autocomplete widget.
+    entity_translation_taxonomy_term_field_attach_submit($entity_type, $entity, $form, $form_state);
   }
 }
 

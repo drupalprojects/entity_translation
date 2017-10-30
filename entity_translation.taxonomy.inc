@@ -423,6 +423,9 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
     $entity_type = 'taxonomy_term';
     $name_field = 'name_field';
     $source_langcode = $parent_handler->getSourceLanguage();
+    // This is a validation handler, so we must defer the actual save to the
+    // submit phase.
+    $terms_to_save = &$form_state['entity_translation']['taxonomy_autocomplete'][$element['#entity_type']][$id][$element['#field_name']];
     foreach (taxonomy_term_load_multiple(array_keys($deltas)) as $term) {
       // This is also the right context to perform validation.
       $term_translation = $element[$deltas[$term->tid]]['#value'];
@@ -451,14 +454,14 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
           $name_field => array($typed_langcode => array(array('value' => $term_translation))),
         );
         $handler->setTranslation($translation, $translation_values);
-        entity_translation_entity_save($entity_type, $term);
+        $terms_to_save[] = $term;
       }
       // Otherwise we just update the existing translation, if it has changed.
       // If the term is language-neutral, we just update its main value. This is
       // expected to happen normally, but could when referencing existing terms.
       elseif ($term_translation != _entity_translation_taxonomy_label($term, $typed_langcode)) {
         $term->{$name_field}[$typed_langcode][0]['value'] = $term_translation;
-        entity_translation_entity_save($entity_type, $term);
+        $terms_to_save[] = $term;
       }
     }
   }
@@ -534,4 +537,22 @@ function entity_translation_taxonomy_autocomplete_validate($element, &$form_stat
   }
 
   form_set_value($element, $value, $form_state);
+}
+
+/**
+ * Term-specific implementation of hook_field_attach_submit().
+ */
+function entity_translation_taxonomy_term_field_attach_submit($entity_type, $entity, $form, &$form_state) {
+  // Finally save in-place translations
+  if (!empty($form_state['entity_translation']['taxonomy_autocomplete'])) {
+    foreach ($form_state['entity_translation']['taxonomy_autocomplete'] as $entity_type => $entity_type_data) {
+      foreach ($entity_type_data as $id => $field_name_data) {
+        foreach ($field_name_data as $field_name => $term_data) {
+          foreach ($term_data as $term) {
+            entity_translation_entity_save('taxonomy_term', $term);
+          }
+        }
+      }
+    }
+  }
 }
