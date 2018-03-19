@@ -6,6 +6,7 @@ configure = admin/config/regional/entity_translation
 dependencies[] = locale (>7.14)
 
 test_dependencies[] = pathauto:pathauto
+test_dependencies[] = title
 
 files[] = includes/translation.handler_factory.inc
 files[] = includes/translation.handler.inc
