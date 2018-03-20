@@ -2063,7 +2063,7 @@ function entity_translation_pathauto_alias_alter(&$alias, array &$context) {
       if (!$pathauto_start_language) {
         $pathauto_start_language = $context['language'];
       }
-      if ($context['language'] == $pathauto_start_language) {
+      if ($context['language'] == $pathauto_start_language && $context['language'] != LANGUAGE_NONE) {
         foreach ($translations->data as $language => $translation) {
           // We already have an alias for the starting language, so let's not
           // create another one.
