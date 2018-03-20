@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1506054 by plach, Owen Barton: Taxonomy term reference: language-aware widget
+  and autocomplete.
 #2907275 by jalpesh: CSS class name misspelled in entity_translation_overview().
 
 
