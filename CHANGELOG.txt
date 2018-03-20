@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#2890683 by tobiberlin, stefanos.petrakis: entity_translation_field_attach_form()
+  adding unwanted fields to form.
 #2907366 by swati.nuna: Invalid hook hook_translation_info() mentioned in
   docblock for entity_translation_edit_form_info().
 #1799770 by plach, bforchhammer: Update id and bundle when setting a wrapped
