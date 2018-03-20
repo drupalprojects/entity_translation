@@ -1929,7 +1929,7 @@ function entity_translation_current_form_get_handler() {
 }
 
 /**
- * Returns an array of edit form info as defined in hook_translation_info().
+ * Returns an array of edit form info as defined in hook_entity_info().
  *
  * @param $form
  *   The entity edit form.
