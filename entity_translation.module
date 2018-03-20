@@ -1883,16 +1883,8 @@ function entity_translation_language($entity_type, $entity) {
  *   A class implementing EntityTranslationHandlerInterface.
  */
 function entity_translation_get_handler($entity_type = NULL, $entity = NULL) {
-  if (class_exists('EntityTranslationHandlerFactory')) {
-    $factory = EntityTranslationHandlerFactory::getInstance();
-    return empty($entity) ? $factory->getLastHandler($entity_type) : $factory->getHandler($entity_type, $entity);
-  }
-  // @todo BC layer. Remove before the first stable release.
-  elseif (!empty($entity_type) && is_object($entity)) {
-    $entity_info = entity_get_info($entity_type);
-    return new EntityTranslationDefaultHandler($entity_type, $entity_info, $entity);
-  }
-  return NULL;
+  $factory = EntityTranslationHandlerFactory::getInstance();
+  return empty($entity) ? $factory->getLastHandler($entity_type) : $factory->getHandler($entity_type, $entity);
 }
 
 /**

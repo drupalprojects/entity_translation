@@ -1,6 +1,8 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+#1799770 by plach, bforchhammer: Update id and bundle when setting a wrapped
+  entity.
 #2339315 by plach: Added documentation for
   hook_entity_translation_source_field_state_alter().
 #1506054 by plach, Owen Barton: Taxonomy term reference: language-aware widget
