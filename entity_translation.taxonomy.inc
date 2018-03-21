@@ -135,6 +135,7 @@ function entity_translation_form_field_ui_field_edit_taxonomy_autocomplete_form_
   $field = field_info_field($field_name);
   $translatable = field_is_translatable($entity_type, $field);
   $bundle = !empty($field['settings']['allowed_values'][0]['vocabulary']) ? $field['settings']['allowed_values'][0]['vocabulary'] : NULL;
+  $access = variable_get('entity_translation_taxonomy_autocomplete', FALSE);
 
   // Add a checkbox to toggle in-place translation for autocomplete widgets.
   $form['instance']['settings'][$key] = array(
@@ -142,7 +143,7 @@ function entity_translation_form_field_ui_field_edit_taxonomy_autocomplete_form_
     '#title' => t('Enable in-place translation of terms'),
     '#description' => t('Check this option if you wish to use translation forms to perform in-place translation for terms entered in the original language.'),
     '#default_value' => !$translatable && !empty($form['#instance']['settings'][$key]),
-    '#access' => (!$form_state['field_has_data'] || !$translatable) && entity_translation_enabled('taxonomy_term', $bundle),
+    '#access' => $access && (!$form_state['field_has_data'] || !$translatable) && entity_translation_enabled('taxonomy_term', $bundle),
     '#states' => array(
       'visible' => array(':input[name="field[translatable]"]' => array('checked' => FALSE)),
     ),
@@ -196,8 +197,9 @@ function _entity_translation_taxonomy_autocomplete_translation_enabled($element,
  */
 function entity_translation_field_widget_taxonomy_autocomplete_form_alter(&$element, &$form_state, $context) {
   // The autocomplete widget is also displayed in the field configuration form,
-  // in which case we do not need to perform any alteration.
-  if (!isset($element['#entity'])) {
+  // in which case we do not need to perform any alteration. To preserve BC, by
+  // default we enable our taxonomy autocomplete override only on new sites.
+  if (!isset($element['#entity']) || !variable_get('entity_translation_taxonomy_autocomplete', FALSE)) {
     return;
   }
 
