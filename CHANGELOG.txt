@@ -1,6 +1,11 @@
 
 Entity Translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
+
+
+
+Entity Translation 7.x-1.0-rc1, 2018-03-21
+------------------------------------------
 #2927815 by Skabbkladden, dawehner: Infinite loop with language neutral alias
   and pathauto.
 #2890683 by tobiberlin, stefanos.petrakis: entity_translation_field_attach_form()
